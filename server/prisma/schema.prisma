@@ -270,6 +270,7 @@ model User {
   role         PortalRole
   displayName  String
   createdAt    DateTime   @default(now())
+  tokenVersion Int        @default(0)
 
   resetTokenHash      String?   @unique
   resetTokenExpiresAt DateTime?

@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
+import { UserModel } from '../models/user.model.js'
 import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 
@@ -9,13 +10,20 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
     throw ApiError.unauthorized('Missing bearer token')
   }
   const token = header.slice('Bearer '.length)
+  let payload
   try {
-    const payload = jwt.verify(token, env.jwtSecret)
-    req.user = payload
-    next()
+    payload = jwt.verify(token, env.jwtSecret)
   } catch {
     throw ApiError.unauthorized('Invalid or expired token')
   }
+
+  const user = await UserModel.findAuthState(payload.sub)
+  if (!user || user.tokenVersion !== payload.tokenVersion) {
+    throw ApiError.unauthorized('Invalid or expired token')
+  }
+
+  req.user = payload
+  next()
 })
 
 export const requireRole =

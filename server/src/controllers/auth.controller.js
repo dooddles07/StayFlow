@@ -6,9 +6,11 @@ import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 
 const signToken = (user) =>
-  jwt.sign({ sub: user.id, email: user.email, role: user.role, residentId: user.residentId ?? null }, env.jwtSecret, {
-    expiresIn: env.jwtExpiresIn,
-  })
+  jwt.sign(
+    { sub: user.id, email: user.email, role: user.role, residentId: user.residentId ?? null, tokenVersion: user.tokenVersion },
+    env.jwtSecret,
+    { expiresIn: env.jwtExpiresIn },
+  )
 
 const sanitize = (user) => {
   const { passwordHash, ...rest } = user

@@ -3,10 +3,15 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-const TEST_PASSWORD = 'StayFlow2026!'
+const TEST_PASSWORD = process.env.TEST_PASSWORD
 const ACCOUNTS = ['member@stayflow.io', 'staff@stayflow.io', 'admin@stayflow.io']
 
 async function main() {
+  if (!TEST_PASSWORD) {
+    console.error('Set TEST_PASSWORD env var before running this script (no hardcoded default).')
+    process.exit(1)
+  }
+
   const passwordHash = await bcrypt.hash(TEST_PASSWORD, 10)
 
   for (const email of ACCOUNTS) {

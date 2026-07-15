@@ -1,10 +1,12 @@
+import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  const passwordHash = await bcrypt.hash('password123', 10)
+  const password = process.env.SEED_PASSWORD || crypto.randomBytes(9).toString('base64url')
+  const passwordHash = await bcrypt.hash(password, 10)
 
   const resident = await prisma.resident.upsert({
     where: { email: 'isabelle.rhodes@stayflow.io' },
@@ -186,7 +188,7 @@ async function main() {
     },
   })
 
-  console.log('Seed complete. Login with isabelle.rhodes@stayflow.io / password123 (MEMBER) or renata.silva@stayflow.io / password123 (STAFF).')
+  console.log(`Seed complete. Login with isabelle.rhodes@stayflow.io / ${password} (MEMBER) or renata.silva@stayflow.io / ${password} (STAFF).`)
 }
 
 main()
