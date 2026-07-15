@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { ArrowLeftRight } from 'lucide-react'
 import { navConfig, portalLabels } from './nav-config'
 import { AvatarInitials } from './avatar-initials'
-import type { Portal } from '#/lib/hooks/use-portal-preference'
+import { clearStoredPortal, type Portal } from '#/lib/hooks/use-portal-preference'
 import { cn } from '#/lib/utils'
 
 interface SidebarProps {
@@ -64,7 +64,10 @@ export function Sidebar({ portal, identityName, identitySubtitle, onNavigate, cl
         </div>
         <button
           type="button"
-          onClick={() => navigate({ to: '/' })}
+          onClick={() => {
+            clearStoredPortal()
+            navigate({ to: '/' })
+          }}
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-sidebar-border px-3 py-2 text-xs font-medium text-muted-text transition-colors hover:border-accent-indigo/50 hover:text-foreground"
         >
           <ArrowLeftRight className="size-3.5" />

@@ -15,6 +15,10 @@ export function setStoredPortal(portal: Portal) {
   window.localStorage.setItem(STORAGE_KEY, portal)
 }
 
+export function clearStoredPortal() {
+  window.localStorage.removeItem(STORAGE_KEY)
+}
+
 export function usePortalPreference() {
   const [portal, setPortalState] = React.useState<Portal | null>(null)
 
