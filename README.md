@@ -5,9 +5,9 @@
 | | |
 | --- | --- |
 | **Project Name** | StayFlow |
-| **Version** | Frontend `stayflowv2` (unversioned, private) · Backend `stayflow-server` `1.0.0` |
+| **Version** | `1.0.0` |
 | **Current Status** | Active · Deployed to production on Railway |
-| **Author** | [dooddles07](https://github.com/dooddles07) |
+| **Author** | QUAN7UM |
 | **Repository** | https://github.com/dooddles07/StayFlow |
 | **Last Updated** | 2026-07-15 |
 | **Supported Platforms** | Web (responsive desktop + mobile browsers) |
@@ -824,7 +824,7 @@ classDiagram
 
 ## Credits
 
-- **Author:** [dooddles07](https://github.com/dooddles07)
+- **Author:** QUAN7UM
 - **Contributors:** > ⚠️ Unable to determine from the current repository.
 - **Company:** > ⚠️ Not specified in the repository.
 - **License:** > ⚠️ No `LICENSE` file present — treat as all-rights-reserved until a license is added.
