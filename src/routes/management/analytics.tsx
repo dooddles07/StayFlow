@@ -19,10 +19,10 @@ function CountBar({ data, xKey, yKey, yLabel, summary, color }: { data: Record<s
   return (
     <div role="img" aria-label={summary} style={{ height: 260 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+        <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
           <XAxis dataKey={xKey} tick={{ fill: 'var(--color-muted-text)', fontSize: 11 }} axisLine={{ stroke: 'var(--border)' }} tickLine={false} />
-          <YAxis tick={{ fill: 'var(--color-muted-text)', fontSize: 11 }} axisLine={false} tickLine={false} width={32} />
+          <YAxis tick={{ fill: 'var(--color-muted-text)', fontSize: 11 }} axisLine={false} tickLine={false} width={38} />
           <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-surface-hover)' }} />
           <Bar dataKey={yKey} name={yLabel} fill={color} radius={[6, 6, 0, 0]} maxBarSize={36} />
         </BarChart>
