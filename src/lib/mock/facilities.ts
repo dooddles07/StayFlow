@@ -73,7 +73,7 @@ export const facilities: Facility[] = [
     category: 'Function',
     description: 'Elegant event space for private celebrations, corporate gatherings, and community events.',
     rules: ['Catering must be pre-approved', 'Deposit required for bookings over 50 guests', 'No confetti or open flame'],
-    image: '/images/facilities/function-room.svg',
+    image: '/images/facilities/function-room.png',
     capacity: 120,
     openHours: '9:00 AM – 11:00 PM',
     status: 'open',
