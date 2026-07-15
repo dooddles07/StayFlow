@@ -13,6 +13,15 @@ import { Route as StaffRouteImport } from './routes/staff'
 import { Route as MemberRouteImport } from './routes/member'
 import { Route as ManagementRouteImport } from './routes/management'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MemberIndexRouteImport } from './routes/member/index'
+import { Route as MemberProfileRouteImport } from './routes/member/profile'
+import { Route as MemberNoticesRouteImport } from './routes/member/notices'
+import { Route as MemberGuestsRouteImport } from './routes/member/guests'
+import { Route as MemberEventsRouteImport } from './routes/member/events'
+import { Route as MemberFacilitiesIndexRouteImport } from './routes/member/facilities/index'
+import { Route as MemberDiningIndexRouteImport } from './routes/member/dining/index'
+import { Route as MemberFacilitiesIdRouteImport } from './routes/member/facilities/$id'
+import { Route as MemberDiningIdRouteImport } from './routes/member/dining/$id'
 
 const StaffRoute = StaffRouteImport.update({
   id: '/staff',
@@ -34,38 +43,148 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MemberIndexRoute = MemberIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberProfileRoute = MemberProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberNoticesRoute = MemberNoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberGuestsRoute = MemberGuestsRouteImport.update({
+  id: '/guests',
+  path: '/guests',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberEventsRoute = MemberEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberFacilitiesIndexRoute = MemberFacilitiesIndexRouteImport.update({
+  id: '/facilities/',
+  path: '/facilities/',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberDiningIndexRoute = MemberDiningIndexRouteImport.update({
+  id: '/dining/',
+  path: '/dining/',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberFacilitiesIdRoute = MemberFacilitiesIdRouteImport.update({
+  id: '/facilities/$id',
+  path: '/facilities/$id',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberDiningIdRoute = MemberDiningIdRouteImport.update({
+  id: '/dining/$id',
+  path: '/dining/$id',
+  getParentRoute: () => MemberRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/management': typeof ManagementRoute
-  '/member': typeof MemberRoute
+  '/member': typeof MemberRouteWithChildren
   '/staff': typeof StaffRoute
+  '/member/events': typeof MemberEventsRoute
+  '/member/guests': typeof MemberGuestsRoute
+  '/member/notices': typeof MemberNoticesRoute
+  '/member/profile': typeof MemberProfileRoute
+  '/member/': typeof MemberIndexRoute
+  '/member/dining/$id': typeof MemberDiningIdRoute
+  '/member/facilities/$id': typeof MemberFacilitiesIdRoute
+  '/member/dining/': typeof MemberDiningIndexRoute
+  '/member/facilities/': typeof MemberFacilitiesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/management': typeof ManagementRoute
-  '/member': typeof MemberRoute
   '/staff': typeof StaffRoute
+  '/member/events': typeof MemberEventsRoute
+  '/member/guests': typeof MemberGuestsRoute
+  '/member/notices': typeof MemberNoticesRoute
+  '/member/profile': typeof MemberProfileRoute
+  '/member': typeof MemberIndexRoute
+  '/member/dining/$id': typeof MemberDiningIdRoute
+  '/member/facilities/$id': typeof MemberFacilitiesIdRoute
+  '/member/dining': typeof MemberDiningIndexRoute
+  '/member/facilities': typeof MemberFacilitiesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/management': typeof ManagementRoute
-  '/member': typeof MemberRoute
+  '/member': typeof MemberRouteWithChildren
   '/staff': typeof StaffRoute
+  '/member/events': typeof MemberEventsRoute
+  '/member/guests': typeof MemberGuestsRoute
+  '/member/notices': typeof MemberNoticesRoute
+  '/member/profile': typeof MemberProfileRoute
+  '/member/': typeof MemberIndexRoute
+  '/member/dining/$id': typeof MemberDiningIdRoute
+  '/member/facilities/$id': typeof MemberFacilitiesIdRoute
+  '/member/dining/': typeof MemberDiningIndexRoute
+  '/member/facilities/': typeof MemberFacilitiesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/management' | '/member' | '/staff'
+  fullPaths:
+    | '/'
+    | '/management'
+    | '/member'
+    | '/staff'
+    | '/member/events'
+    | '/member/guests'
+    | '/member/notices'
+    | '/member/profile'
+    | '/member/'
+    | '/member/dining/$id'
+    | '/member/facilities/$id'
+    | '/member/dining/'
+    | '/member/facilities/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/management' | '/member' | '/staff'
-  id: '__root__' | '/' | '/management' | '/member' | '/staff'
+  to:
+    | '/'
+    | '/management'
+    | '/staff'
+    | '/member/events'
+    | '/member/guests'
+    | '/member/notices'
+    | '/member/profile'
+    | '/member'
+    | '/member/dining/$id'
+    | '/member/facilities/$id'
+    | '/member/dining'
+    | '/member/facilities'
+  id:
+    | '__root__'
+    | '/'
+    | '/management'
+    | '/member'
+    | '/staff'
+    | '/member/events'
+    | '/member/guests'
+    | '/member/notices'
+    | '/member/profile'
+    | '/member/'
+    | '/member/dining/$id'
+    | '/member/facilities/$id'
+    | '/member/dining/'
+    | '/member/facilities/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ManagementRoute: typeof ManagementRoute
-  MemberRoute: typeof MemberRoute
+  MemberRoute: typeof MemberRouteWithChildren
   StaffRoute: typeof StaffRoute
 }
 
@@ -99,15 +218,114 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/member/': {
+      id: '/member/'
+      path: '/'
+      fullPath: '/member/'
+      preLoaderRoute: typeof MemberIndexRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/profile': {
+      id: '/member/profile'
+      path: '/profile'
+      fullPath: '/member/profile'
+      preLoaderRoute: typeof MemberProfileRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/notices': {
+      id: '/member/notices'
+      path: '/notices'
+      fullPath: '/member/notices'
+      preLoaderRoute: typeof MemberNoticesRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/guests': {
+      id: '/member/guests'
+      path: '/guests'
+      fullPath: '/member/guests'
+      preLoaderRoute: typeof MemberGuestsRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/events': {
+      id: '/member/events'
+      path: '/events'
+      fullPath: '/member/events'
+      preLoaderRoute: typeof MemberEventsRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/facilities/': {
+      id: '/member/facilities/'
+      path: '/facilities'
+      fullPath: '/member/facilities/'
+      preLoaderRoute: typeof MemberFacilitiesIndexRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/dining/': {
+      id: '/member/dining/'
+      path: '/dining'
+      fullPath: '/member/dining/'
+      preLoaderRoute: typeof MemberDiningIndexRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/facilities/$id': {
+      id: '/member/facilities/$id'
+      path: '/facilities/$id'
+      fullPath: '/member/facilities/$id'
+      preLoaderRoute: typeof MemberFacilitiesIdRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/dining/$id': {
+      id: '/member/dining/$id'
+      path: '/dining/$id'
+      fullPath: '/member/dining/$id'
+      preLoaderRoute: typeof MemberDiningIdRouteImport
+      parentRoute: typeof MemberRoute
+    }
   }
 }
+
+interface MemberRouteChildren {
+  MemberEventsRoute: typeof MemberEventsRoute
+  MemberGuestsRoute: typeof MemberGuestsRoute
+  MemberNoticesRoute: typeof MemberNoticesRoute
+  MemberProfileRoute: typeof MemberProfileRoute
+  MemberIndexRoute: typeof MemberIndexRoute
+  MemberDiningIdRoute: typeof MemberDiningIdRoute
+  MemberFacilitiesIdRoute: typeof MemberFacilitiesIdRoute
+  MemberDiningIndexRoute: typeof MemberDiningIndexRoute
+  MemberFacilitiesIndexRoute: typeof MemberFacilitiesIndexRoute
+}
+
+const MemberRouteChildren: MemberRouteChildren = {
+  MemberEventsRoute: MemberEventsRoute,
+  MemberGuestsRoute: MemberGuestsRoute,
+  MemberNoticesRoute: MemberNoticesRoute,
+  MemberProfileRoute: MemberProfileRoute,
+  MemberIndexRoute: MemberIndexRoute,
+  MemberDiningIdRoute: MemberDiningIdRoute,
+  MemberFacilitiesIdRoute: MemberFacilitiesIdRoute,
+  MemberDiningIndexRoute: MemberDiningIndexRoute,
+  MemberFacilitiesIndexRoute: MemberFacilitiesIndexRoute,
+}
+
+const MemberRouteWithChildren =
+  MemberRoute._addFileChildren(MemberRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ManagementRoute: ManagementRoute,
-  MemberRoute: MemberRoute,
+  MemberRoute: MemberRouteWithChildren,
   StaffRoute: StaffRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
