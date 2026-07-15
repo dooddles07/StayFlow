@@ -26,6 +26,7 @@ interface LoginResponse {
 interface AuthState {
   token: string | null
   user: AuthUser | null
+  hasHydrated: boolean
   login: (email: string, password: string) => Promise<AuthUser>
   logout: () => void
 }
@@ -35,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       token: null,
       user: null,
+      hasHydrated: false,
       login: async (email, password) => {
         const { token, user } = await api.post<LoginResponse>('/auth/login', { email, password })
         set({ token, user })
@@ -42,7 +44,12 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: () => set({ token: null, user: null }),
     }),
-    { name: 'stayflow.auth' },
+    {
+      name: 'stayflow.auth',
+      onRehydrateStorage: () => (state) => {
+        if (state) state.hasHydrated = true
+      },
+    },
   ),
 )
 

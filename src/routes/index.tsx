@@ -45,16 +45,19 @@ const portals: {
 function LandingPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const hasHydrated = useAuthStore((s) => s.hasHydrated)
   const [checkedStorage, setCheckedStorage] = React.useState(false)
 
   React.useEffect(() => {
+    if (!hasHydrated) return
+
     const stored = getStoredPortal()
     if (stored && user && isPortalRoleMatch(user.role, stored)) {
       navigate({ to: `/${stored}`, replace: true })
       return
     }
     setCheckedStorage(true)
-  }, [navigate, user])
+  }, [navigate, user, hasHydrated])
 
   function selectPortal(id: Portal) {
     if (user && isPortalRoleMatch(user.role, id)) {

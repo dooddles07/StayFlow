@@ -6,15 +6,18 @@ import type { Portal } from '#/lib/hooks/use-portal-preference'
 export function useRequireAuth(portal: Portal) {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const hasHydrated = useAuthStore((s) => s.hasHydrated)
   const [checked, setChecked] = React.useState(false)
 
   React.useEffect(() => {
+    if (!hasHydrated) return
+
     if (!user || !isPortalRoleMatch(user.role, portal)) {
       navigate({ to: `/login/${portal}`, replace: true })
       return
     }
     setChecked(true)
-  }, [user, portal, navigate])
+  }, [user, hasHydrated, portal, navigate])
 
   return checked
 }
