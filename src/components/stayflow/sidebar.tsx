@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { ArrowLeftRight, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { navConfig, portalLabels } from './nav-config'
 import { AvatarInitials } from './avatar-initials'
 import { clearStoredPortal, type Portal } from '#/lib/hooks/use-portal-preference'
@@ -67,22 +67,11 @@ export function Sidebar({ portal, identityName, identitySubtitle, onNavigate, cl
         <button
           type="button"
           onClick={() => {
-            clearStoredPortal()
-            navigate({ to: '/' })
-          }}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-sidebar-border px-3 py-2 text-xs font-medium text-muted-text transition-colors hover:border-accent-indigo/50 hover:text-foreground"
-        >
-          <ArrowLeftRight className="size-3.5" />
-          Switch portal
-        </button>
-        <button
-          type="button"
-          onClick={() => {
             logout()
             clearStoredPortal()
             navigate({ to: `/login/${portal}` })
           }}
-          className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-muted-text/80 transition-colors hover:bg-destructive/10 hover:text-destructive"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-sidebar-border px-3 py-2 text-xs font-medium text-muted-text transition-colors hover:border-destructive/50 hover:text-destructive"
         >
           <LogOut className="size-3.5" />
           Log out
