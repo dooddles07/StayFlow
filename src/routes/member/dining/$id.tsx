@@ -69,10 +69,15 @@ function RestaurantDetail() {
         Back to Dining
       </Link>
 
-      <div
-        className="animate-fade-in relative mb-6 h-56 w-full rounded-2xl bg-cover bg-center sm:h-72"
-        style={{ backgroundImage: `url(${restaurant.image})`, backgroundColor: 'var(--color-surface-hover)' }}
-      >
+      <div className="animate-fade-in relative mb-6 h-56 w-full overflow-hidden rounded-2xl bg-surface-hover sm:h-72">
+        <img
+          src={restaurant.image}
+          alt={restaurant.name}
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 size-full object-cover"
+        />
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-canvas via-canvas/20 to-transparent" />
         <div className="absolute bottom-4 left-5 right-5 flex flex-wrap items-end justify-between gap-3">
           <div>

@@ -14,10 +14,14 @@ export function FacilityCard({ facility, className }: { facility: Facility; clas
         className,
       )}
     >
-      <div
-        className="relative h-36 w-full bg-cover bg-center"
-        style={{ backgroundImage: `url(${facility.image})`, backgroundColor: 'var(--color-surface-hover)' }}
-      >
+      <div className="relative h-36 w-full bg-surface-hover">
+        <img
+          src={facility.image}
+          alt={facility.name}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 size-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
         <div className="absolute right-3 top-3">
           <StatusPill status={facility.status} />

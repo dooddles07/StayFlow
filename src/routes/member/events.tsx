@@ -32,10 +32,14 @@ function EventsPage() {
           const spotsLeft = event.capacity - event.attendeeIds.length
           return (
             <div key={event.id} className="animate-fade-in flex flex-col overflow-hidden rounded-2xl border border-border bg-surface">
-              <div
-                className="relative h-36 w-full bg-cover bg-center"
-                style={{ backgroundImage: `url(${event.image})`, backgroundColor: 'var(--color-surface-hover)' }}
-              >
+              <div className="relative h-36 w-full bg-surface-hover">
+                <img
+                  src={event.image}
+                  alt={event.title}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 size-full object-cover"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
                 <span className="absolute left-3 top-3 rounded-full bg-canvas/60 px-2 py-1 text-[11px] font-medium text-accent-gold backdrop-blur">
                   {event.category}

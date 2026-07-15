@@ -27,10 +27,14 @@ function DiningList() {
             params={{ id: restaurant.id }}
             className="group animate-fade-in flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-all hover:-translate-y-0.5 hover:border-accent-indigo/40"
           >
-            <div
-              className="relative h-36 w-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${restaurant.image})`, backgroundColor: 'var(--color-surface-hover)' }}
-            >
+            <div className="relative h-36 w-full bg-surface-hover">
+              <img
+                src={restaurant.image}
+                alt={restaurant.name}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 size-full object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
               <span className="absolute right-3 top-3 rounded-full bg-canvas/60 px-2 py-1 text-[11px] font-medium text-accent-gold backdrop-blur">
                 {restaurant.priceRange}
