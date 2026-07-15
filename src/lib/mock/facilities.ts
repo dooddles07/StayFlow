@@ -20,7 +20,7 @@ export const facilities: Facility[] = [
     category: 'Sports',
     description: 'Full-service fitness studio with Technogym equipment, free weights, and dedicated stretch zone.',
     rules: ['Wipe down equipment after use', 'Athletic footwear required', 'Personal trainers by appointment only'],
-    image: '/images/facilities/gym.svg',
+    image: '/images/facilities/gym.png',
     capacity: 30,
     openHours: '24 hours',
     status: 'open',
