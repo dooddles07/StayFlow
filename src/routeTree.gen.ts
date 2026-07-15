@@ -15,6 +15,7 @@ import { Route as ManagementRouteImport } from './routes/management'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffIndexRouteImport } from './routes/staff/index'
 import { Route as MemberIndexRouteImport } from './routes/member/index'
+import { Route as ManagementIndexRouteImport } from './routes/management/index'
 import { Route as StaffGuestsRouteImport } from './routes/staff/guests'
 import { Route as StaffFacilitiesRouteImport } from './routes/staff/facilities'
 import { Route as StaffEventsRouteImport } from './routes/staff/events'
@@ -24,6 +25,13 @@ import { Route as MemberProfileRouteImport } from './routes/member/profile'
 import { Route as MemberNoticesRouteImport } from './routes/member/notices'
 import { Route as MemberGuestsRouteImport } from './routes/member/guests'
 import { Route as MemberEventsRouteImport } from './routes/member/events'
+import { Route as ManagementUsersRouteImport } from './routes/management/users'
+import { Route as ManagementRestaurantsRouteImport } from './routes/management/restaurants'
+import { Route as ManagementReportsRouteImport } from './routes/management/reports'
+import { Route as ManagementNoticesRouteImport } from './routes/management/notices'
+import { Route as ManagementFacilitiesRouteImport } from './routes/management/facilities'
+import { Route as ManagementEventsRouteImport } from './routes/management/events'
+import { Route as ManagementAnalyticsRouteImport } from './routes/management/analytics'
 import { Route as MemberFacilitiesIndexRouteImport } from './routes/member/facilities/index'
 import { Route as MemberDiningIndexRouteImport } from './routes/member/dining/index'
 import { Route as MemberFacilitiesIdRouteImport } from './routes/member/facilities/$id'
@@ -58,6 +66,11 @@ const MemberIndexRoute = MemberIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MemberRoute,
+} as any)
+const ManagementIndexRoute = ManagementIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ManagementRoute,
 } as any)
 const StaffGuestsRoute = StaffGuestsRouteImport.update({
   id: '/guests',
@@ -104,6 +117,41 @@ const MemberEventsRoute = MemberEventsRouteImport.update({
   path: '/events',
   getParentRoute: () => MemberRoute,
 } as any)
+const ManagementUsersRoute = ManagementUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementRestaurantsRoute = ManagementRestaurantsRouteImport.update({
+  id: '/restaurants',
+  path: '/restaurants',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementReportsRoute = ManagementReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementNoticesRoute = ManagementNoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementFacilitiesRoute = ManagementFacilitiesRouteImport.update({
+  id: '/facilities',
+  path: '/facilities',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementEventsRoute = ManagementEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementAnalyticsRoute = ManagementAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => ManagementRoute,
+} as any)
 const MemberFacilitiesIndexRoute = MemberFacilitiesIndexRouteImport.update({
   id: '/facilities/',
   path: '/facilities/',
@@ -127,9 +175,16 @@ const MemberDiningIdRoute = MemberDiningIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/management': typeof ManagementRoute
+  '/management': typeof ManagementRouteWithChildren
   '/member': typeof MemberRouteWithChildren
   '/staff': typeof StaffRouteWithChildren
+  '/management/analytics': typeof ManagementAnalyticsRoute
+  '/management/events': typeof ManagementEventsRoute
+  '/management/facilities': typeof ManagementFacilitiesRoute
+  '/management/notices': typeof ManagementNoticesRoute
+  '/management/reports': typeof ManagementReportsRoute
+  '/management/restaurants': typeof ManagementRestaurantsRoute
+  '/management/users': typeof ManagementUsersRoute
   '/member/events': typeof MemberEventsRoute
   '/member/guests': typeof MemberGuestsRoute
   '/member/notices': typeof MemberNoticesRoute
@@ -139,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/staff/events': typeof StaffEventsRoute
   '/staff/facilities': typeof StaffFacilitiesRoute
   '/staff/guests': typeof StaffGuestsRoute
+  '/management/': typeof ManagementIndexRoute
   '/member/': typeof MemberIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/member/dining/$id': typeof MemberDiningIdRoute
@@ -148,7 +204,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/management': typeof ManagementRoute
+  '/management/analytics': typeof ManagementAnalyticsRoute
+  '/management/events': typeof ManagementEventsRoute
+  '/management/facilities': typeof ManagementFacilitiesRoute
+  '/management/notices': typeof ManagementNoticesRoute
+  '/management/reports': typeof ManagementReportsRoute
+  '/management/restaurants': typeof ManagementRestaurantsRoute
+  '/management/users': typeof ManagementUsersRoute
   '/member/events': typeof MemberEventsRoute
   '/member/guests': typeof MemberGuestsRoute
   '/member/notices': typeof MemberNoticesRoute
@@ -158,6 +220,7 @@ export interface FileRoutesByTo {
   '/staff/events': typeof StaffEventsRoute
   '/staff/facilities': typeof StaffFacilitiesRoute
   '/staff/guests': typeof StaffGuestsRoute
+  '/management': typeof ManagementIndexRoute
   '/member': typeof MemberIndexRoute
   '/staff': typeof StaffIndexRoute
   '/member/dining/$id': typeof MemberDiningIdRoute
@@ -168,9 +231,16 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/management': typeof ManagementRoute
+  '/management': typeof ManagementRouteWithChildren
   '/member': typeof MemberRouteWithChildren
   '/staff': typeof StaffRouteWithChildren
+  '/management/analytics': typeof ManagementAnalyticsRoute
+  '/management/events': typeof ManagementEventsRoute
+  '/management/facilities': typeof ManagementFacilitiesRoute
+  '/management/notices': typeof ManagementNoticesRoute
+  '/management/reports': typeof ManagementReportsRoute
+  '/management/restaurants': typeof ManagementRestaurantsRoute
+  '/management/users': typeof ManagementUsersRoute
   '/member/events': typeof MemberEventsRoute
   '/member/guests': typeof MemberGuestsRoute
   '/member/notices': typeof MemberNoticesRoute
@@ -180,6 +250,7 @@ export interface FileRoutesById {
   '/staff/events': typeof StaffEventsRoute
   '/staff/facilities': typeof StaffFacilitiesRoute
   '/staff/guests': typeof StaffGuestsRoute
+  '/management/': typeof ManagementIndexRoute
   '/member/': typeof MemberIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/member/dining/$id': typeof MemberDiningIdRoute
@@ -194,6 +265,13 @@ export interface FileRouteTypes {
     | '/management'
     | '/member'
     | '/staff'
+    | '/management/analytics'
+    | '/management/events'
+    | '/management/facilities'
+    | '/management/notices'
+    | '/management/reports'
+    | '/management/restaurants'
+    | '/management/users'
     | '/member/events'
     | '/member/guests'
     | '/member/notices'
@@ -203,6 +281,7 @@ export interface FileRouteTypes {
     | '/staff/events'
     | '/staff/facilities'
     | '/staff/guests'
+    | '/management/'
     | '/member/'
     | '/staff/'
     | '/member/dining/$id'
@@ -212,7 +291,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/management'
+    | '/management/analytics'
+    | '/management/events'
+    | '/management/facilities'
+    | '/management/notices'
+    | '/management/reports'
+    | '/management/restaurants'
+    | '/management/users'
     | '/member/events'
     | '/member/guests'
     | '/member/notices'
@@ -222,6 +307,7 @@ export interface FileRouteTypes {
     | '/staff/events'
     | '/staff/facilities'
     | '/staff/guests'
+    | '/management'
     | '/member'
     | '/staff'
     | '/member/dining/$id'
@@ -234,6 +320,13 @@ export interface FileRouteTypes {
     | '/management'
     | '/member'
     | '/staff'
+    | '/management/analytics'
+    | '/management/events'
+    | '/management/facilities'
+    | '/management/notices'
+    | '/management/reports'
+    | '/management/restaurants'
+    | '/management/users'
     | '/member/events'
     | '/member/guests'
     | '/member/notices'
@@ -243,6 +336,7 @@ export interface FileRouteTypes {
     | '/staff/events'
     | '/staff/facilities'
     | '/staff/guests'
+    | '/management/'
     | '/member/'
     | '/staff/'
     | '/member/dining/$id'
@@ -253,7 +347,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ManagementRoute: typeof ManagementRoute
+  ManagementRoute: typeof ManagementRouteWithChildren
   MemberRoute: typeof MemberRouteWithChildren
   StaffRoute: typeof StaffRouteWithChildren
 }
@@ -301,6 +395,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/member/'
       preLoaderRoute: typeof MemberIndexRouteImport
       parentRoute: typeof MemberRoute
+    }
+    '/management/': {
+      id: '/management/'
+      path: '/'
+      fullPath: '/management/'
+      preLoaderRoute: typeof ManagementIndexRouteImport
+      parentRoute: typeof ManagementRoute
     }
     '/staff/guests': {
       id: '/staff/guests'
@@ -365,6 +466,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MemberEventsRouteImport
       parentRoute: typeof MemberRoute
     }
+    '/management/users': {
+      id: '/management/users'
+      path: '/users'
+      fullPath: '/management/users'
+      preLoaderRoute: typeof ManagementUsersRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/restaurants': {
+      id: '/management/restaurants'
+      path: '/restaurants'
+      fullPath: '/management/restaurants'
+      preLoaderRoute: typeof ManagementRestaurantsRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/reports': {
+      id: '/management/reports'
+      path: '/reports'
+      fullPath: '/management/reports'
+      preLoaderRoute: typeof ManagementReportsRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/notices': {
+      id: '/management/notices'
+      path: '/notices'
+      fullPath: '/management/notices'
+      preLoaderRoute: typeof ManagementNoticesRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/facilities': {
+      id: '/management/facilities'
+      path: '/facilities'
+      fullPath: '/management/facilities'
+      preLoaderRoute: typeof ManagementFacilitiesRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/events': {
+      id: '/management/events'
+      path: '/events'
+      fullPath: '/management/events'
+      preLoaderRoute: typeof ManagementEventsRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/analytics': {
+      id: '/management/analytics'
+      path: '/analytics'
+      fullPath: '/management/analytics'
+      preLoaderRoute: typeof ManagementAnalyticsRouteImport
+      parentRoute: typeof ManagementRoute
+    }
     '/member/facilities/': {
       id: '/member/facilities/'
       path: '/facilities'
@@ -395,6 +545,32 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ManagementRouteChildren {
+  ManagementAnalyticsRoute: typeof ManagementAnalyticsRoute
+  ManagementEventsRoute: typeof ManagementEventsRoute
+  ManagementFacilitiesRoute: typeof ManagementFacilitiesRoute
+  ManagementNoticesRoute: typeof ManagementNoticesRoute
+  ManagementReportsRoute: typeof ManagementReportsRoute
+  ManagementRestaurantsRoute: typeof ManagementRestaurantsRoute
+  ManagementUsersRoute: typeof ManagementUsersRoute
+  ManagementIndexRoute: typeof ManagementIndexRoute
+}
+
+const ManagementRouteChildren: ManagementRouteChildren = {
+  ManagementAnalyticsRoute: ManagementAnalyticsRoute,
+  ManagementEventsRoute: ManagementEventsRoute,
+  ManagementFacilitiesRoute: ManagementFacilitiesRoute,
+  ManagementNoticesRoute: ManagementNoticesRoute,
+  ManagementReportsRoute: ManagementReportsRoute,
+  ManagementRestaurantsRoute: ManagementRestaurantsRoute,
+  ManagementUsersRoute: ManagementUsersRoute,
+  ManagementIndexRoute: ManagementIndexRoute,
+}
+
+const ManagementRouteWithChildren = ManagementRoute._addFileChildren(
+  ManagementRouteChildren,
+)
 
 interface MemberRouteChildren {
   MemberEventsRoute: typeof MemberEventsRoute
@@ -445,7 +621,7 @@ const StaffRouteWithChildren = StaffRoute._addFileChildren(StaffRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ManagementRoute: ManagementRoute,
+  ManagementRoute: ManagementRouteWithChildren,
   MemberRoute: MemberRouteWithChildren,
   StaffRoute: StaffRouteWithChildren,
 }

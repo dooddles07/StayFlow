@@ -81,6 +81,7 @@ type Action =
   | { type: 'ADD_RESTAURANT'; payload: Restaurant }
   | { type: 'UPDATE_RESTAURANT'; payload: Restaurant }
   | { type: 'DELETE_RESTAURANT'; payload: { id: string } }
+  | { type: 'ADD_RESIDENT'; payload: Resident }
   | { type: 'UPDATE_RESIDENT'; payload: Resident }
   | { type: 'DELETE_RESIDENT'; payload: { id: string } }
   | { type: 'ADD_STAFF'; payload: StaffMember }
@@ -168,6 +169,8 @@ function reducer(state: MockState, action: Action): MockState {
       return { ...state, restaurants: state.restaurants.map((r) => (r.id === action.payload.id ? action.payload : r)) }
     case 'DELETE_RESTAURANT':
       return { ...state, restaurants: state.restaurants.filter((r) => r.id !== action.payload.id) }
+    case 'ADD_RESIDENT':
+      return { ...state, residents: [action.payload, ...state.residents] }
     case 'UPDATE_RESIDENT':
       return { ...state, residents: state.residents.map((r) => (r.id === action.payload.id ? action.payload : r)) }
     case 'DELETE_RESIDENT':
