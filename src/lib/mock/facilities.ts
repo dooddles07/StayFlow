@@ -33,7 +33,7 @@ export const facilities: Facility[] = [
     category: 'Entertainment',
     description: 'Private 20-seat cinema with 4K laser projection, Dolby Atmos sound, and reclining leather seats.',
     rules: ['Book minimum 24 hours in advance', 'No outside food without approval', 'Maximum party size 20'],
-    image: '/images/facilities/cinema.svg',
+    image: '/images/facilities/cinema.png',
     capacity: 20,
     openHours: '10:00 AM – 12:00 AM',
     status: 'open',
