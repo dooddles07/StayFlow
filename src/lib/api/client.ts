@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'
+// Same-origin in production (frontend and API served by the same process/service).
+// Override with VITE_API_URL for local dev if running the backend separately.
+const API_URL = import.meta.env.VITE_API_URL ?? '/api'
 
 export class ApiError extends Error {
   status: number
