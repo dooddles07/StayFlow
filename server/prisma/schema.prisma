@@ -271,6 +271,7 @@ model User {
   displayName  String
   createdAt    DateTime   @default(now())
   tokenVersion Int        @default(0)
+  isActive     Boolean    @default(true)
 
   failedLoginCount Int       @default(0)
   lockedUntil      DateTime?

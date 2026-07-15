@@ -35,7 +35,18 @@ const LOCK_DURATION_MS = 15 * 60 * 1000
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000
 const MIN_PASSWORD_LENGTH = 8
+// bcrypt silently truncates input past 72 bytes — reject longer so the stored hash matches what the user typed.
+const MAX_PASSWORD_LENGTH = 72
 const hashResetToken = (raw) => crypto.createHash('sha256').update(raw).digest('hex')
+
+const assertValidPassword = (password) => {
+  if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+    throw ApiError.badRequest(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
+  }
+  if (Buffer.byteLength(password, 'utf8') > MAX_PASSWORD_LENGTH) {
+    throw ApiError.badRequest(`Password must be at most ${MAX_PASSWORD_LENGTH} bytes`)
+  }
+}
 
 // Strip password hash and all internal auth bookkeeping from API responses.
 const sanitize = (user) => {
@@ -48,6 +59,7 @@ export const register = asyncHandler(async (req, res) => {
   if (!email || !password || !displayName) {
     throw ApiError.badRequest('email, password, displayName are required')
   }
+  assertValidPassword(password)
 
   const existing = await UserModel.findByEmail(email)
   if (existing) throw ApiError.conflict('Email already registered')
@@ -80,6 +92,9 @@ export const login = asyncHandler(async (req, res) => {
     })
     throw ApiError.unauthorized('Invalid credentials')
   }
+
+  // Disabled accounts: only revealed to someone who already has the correct password (the legit owner).
+  if (!user.isActive) throw ApiError.forbidden('This account has been disabled. Contact your administrator.')
 
   if (user.failedLoginCount > 0 || user.lockedUntil) {
     await UserModel.setLoginState(user.id, { failedLoginCount: 0, lockedUntil: null })
@@ -115,9 +130,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 export const resetPassword = asyncHandler(async (req, res) => {
   const { token, password } = req.body
   if (!token || !password) throw ApiError.badRequest('token and password are required')
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    throw ApiError.badRequest(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`)
-  }
+  assertValidPassword(password)
 
   const user = await UserModel.findByResetTokenHash(hashResetToken(token))
   if (!user || !user.resetTokenExpiresAt || user.resetTokenExpiresAt < new Date()) {

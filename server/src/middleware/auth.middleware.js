@@ -34,7 +34,7 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
   }
 
   const user = await UserModel.findAuthState(payload.sub)
-  if (!user || user.tokenVersion !== payload.tokenVersion) {
+  if (!user || !user.isActive || user.tokenVersion !== payload.tokenVersion) {
     throw ApiError.unauthorized('Invalid or expired token')
   }
 
