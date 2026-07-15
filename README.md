@@ -1,4 +1,18 @@
-Welcome to your new TanStack Start app! 
+# StayFlow
+
+Community / residential living management app. React 19 + TanStack Start frontend with an Express + Prisma (PostgreSQL) backend, served as a single Node service in production.
+
+## Portals & Demo Credentials
+
+Three role-based portals, each with its own login page. An account can only sign in to the portal matching its role (cross-portal login is blocked).
+
+| Portal | Login page | Email | Password |
+| --- | --- | --- | --- |
+| Member | `/login/member` | `member@stayflow.io` | `StayFlow2026!` |
+| Staff | `/login/staff` | `staff@stayflow.io` | `StayFlow2026!` |
+| Management | `/login/management` | `admin@stayflow.io` | `StayFlow2026!` |
+
+> ⚠️ **Demo credentials only.** These are shared test logins and are committed to this repo — treat them as public. **Rotate them before any real/production use** (there is no self-service password-change endpoint yet; use the password-reset flow or update the hashes directly).
 
 # Getting Started
 
