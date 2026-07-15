@@ -68,6 +68,10 @@ export const residentSelfController = {
     for (const field of SELF_EDITABLE_FIELDS) {
       if (field in req.body) data[field] = req.body[field]
     }
+    if ('dietary' in data) {
+      if (!Array.isArray(data.dietary)) throw ApiError.badRequest('dietary must be a list')
+      data.dietary = [...new Set(data.dietary.map((d) => String(d).trim()).filter(Boolean))]
+    }
     const resident = await ResidentModel.update(residentId, data)
     res.json(resident)
   }),

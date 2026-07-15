@@ -62,6 +62,7 @@ export interface ResidentProfileUpdate {
   emergencyPhone: string
   notifications: boolean
   newsletter: boolean
+  dietary: string[]
 }
 
 const toProfile = (r: ResidentApiResponse): ResidentProfile => ({

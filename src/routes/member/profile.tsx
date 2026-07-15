@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
 import { toast } from 'sonner'
-import { Car, Heart, Pencil, Plus, Shield, SlidersHorizontal, Trash2, User as UserIcon } from 'lucide-react'
+import { Car, Heart, Pencil, Plus, Shield, SlidersHorizontal, Trash2, User as UserIcon, X } from 'lucide-react'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { AvatarInitials } from '#/components/stayflow/avatar-initials'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
@@ -53,15 +53,35 @@ export const Route = createFileRoute('/member/profile')({
 
 const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
 
+const PHONE_RE = /^[+()\-\s\d]{7,}$/
+const isBlank = (s: string) => s.trim() === ''
+const phoneError = (v: string) => (isBlank(v) ? 'Phone is required' : !PHONE_RE.test(v) ? 'Enter a valid phone number' : '')
+
+function computeErrors(f: ResidentProfile) {
+  return {
+    name: isBlank(f.name) ? 'Name is required' : '',
+    phone: phoneError(f.phone),
+    emName: isBlank(f.emergencyContact.name) ? 'Contact name is required' : '',
+    emRelation: isBlank(f.emergencyContact.relation) ? 'Relation is required' : '',
+    emPhone: phoneError(f.emergencyContact.phone),
+  }
+}
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null
+  return <p className="mt-1 text-xs text-red-500">{msg}</p>
+}
+
 function toUpdate(f: ResidentProfile): ResidentProfileUpdate {
   return {
-    name: f.name,
-    phone: f.phone,
-    emergencyName: f.emergencyContact.name,
-    emergencyRelation: f.emergencyContact.relation,
-    emergencyPhone: f.emergencyContact.phone,
+    name: f.name.trim(),
+    phone: f.phone.trim(),
+    emergencyName: f.emergencyContact.name.trim(),
+    emergencyRelation: f.emergencyContact.relation.trim(),
+    emergencyPhone: f.emergencyContact.phone.trim(),
     notifications: f.preferences.notifications,
     newsletter: f.preferences.newsletter,
+    dietary: f.preferences.dietary,
   }
 }
 
@@ -259,6 +279,7 @@ function ProfilePage() {
   const { profile, status, setProfile } = useMyProfile()
   const [form, setForm] = React.useState<ResidentProfile | null>(null)
   const [saving, setSaving] = React.useState(false)
+  const [dietaryInput, setDietaryInput] = React.useState('')
 
   // Sync the editable copy when the identity loads/changes — but not on every
   // child mutation, so unsaved text edits aren't clobbered by a family/vehicle save.
@@ -268,6 +289,10 @@ function ProfilePage() {
 
   async function save(message: string) {
     if (!form) return
+    if (Object.values(computeErrors(form)).some(Boolean)) {
+      toast.error('Fix the highlighted fields before saving.')
+      return
+    }
     setSaving(true)
     try {
       const updated = await updateMyProfile(toUpdate(form))
@@ -308,6 +333,34 @@ function ProfilePage() {
     )
   }
 
+  const errors = computeErrors(form)
+  const personalDirty = form.name !== profile.name || form.phone !== profile.phone
+  const emergencyDirty =
+    form.emergencyContact.name !== profile.emergencyContact.name ||
+    form.emergencyContact.relation !== profile.emergencyContact.relation ||
+    form.emergencyContact.phone !== profile.emergencyContact.phone
+  const prefsDirty =
+    form.preferences.notifications !== profile.preferences.notifications ||
+    form.preferences.newsletter !== profile.preferences.newsletter ||
+    form.preferences.dietary.join('|') !== profile.preferences.dietary.join('|')
+
+  function addDietary() {
+    if (!form) return
+    const value = dietaryInput.trim()
+    if (!value) return
+    if (form.preferences.dietary.some((d) => d.toLowerCase() === value.toLowerCase())) {
+      setDietaryInput('')
+      return
+    }
+    setForm({ ...form, preferences: { ...form.preferences, dietary: [...form.preferences.dietary, value] } })
+    setDietaryInput('')
+  }
+
+  function removeDietary(tag: string) {
+    if (!form) return
+    setForm({ ...form, preferences: { ...form.preferences, dietary: form.preferences.dietary.filter((d) => d !== tag) } })
+  }
+
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader eyebrow="Account" title="Profile" description="Manage your personal information and preferences." />
@@ -343,7 +396,8 @@ function ProfilePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="profile-name" className="mb-1.5 text-xs text-muted-text">Full name</Label>
-              <Input id="profile-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border-border bg-canvas" />
+              <Input id="profile-name" value={form.name} aria-invalid={!!errors.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border-border bg-canvas" />
+              <FieldError msg={errors.name} />
             </div>
             <div>
               <Label htmlFor="profile-unit" className="mb-1.5 text-xs text-muted-text">Unit</Label>
@@ -355,10 +409,15 @@ function ProfilePage() {
             </div>
             <div>
               <Label htmlFor="profile-phone" className="mb-1.5 text-xs text-muted-text">Phone</Label>
-              <Input id="profile-phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="border-border bg-canvas" />
+              <Input id="profile-phone" value={form.phone} aria-invalid={!!errors.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="border-border bg-canvas" />
+              <FieldError msg={errors.phone} />
             </div>
           </div>
-          <Button onClick={() => save('Personal details saved')} disabled={saving} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <Button
+            onClick={() => save('Personal details saved')}
+            disabled={saving || !personalDirty || !!errors.name || !!errors.phone}
+            className="bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             {saving ? 'Saving…' : 'Save Changes'}
           </Button>
         </TabsContent>
@@ -449,30 +508,40 @@ function ProfilePage() {
               <Input
                 id="emergency-name"
                 value={form.emergencyContact.name}
+                aria-invalid={!!errors.emName}
                 onChange={(e) => setForm({ ...form, emergencyContact: { ...form.emergencyContact, name: e.target.value } })}
                 className="border-border bg-canvas"
               />
+              <FieldError msg={errors.emName} />
             </div>
             <div>
               <Label htmlFor="emergency-relation" className="mb-1.5 text-xs text-muted-text">Relation</Label>
               <Input
                 id="emergency-relation"
                 value={form.emergencyContact.relation}
+                aria-invalid={!!errors.emRelation}
                 onChange={(e) => setForm({ ...form, emergencyContact: { ...form.emergencyContact, relation: e.target.value } })}
                 className="border-border bg-canvas"
               />
+              <FieldError msg={errors.emRelation} />
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="emergency-phone" className="mb-1.5 text-xs text-muted-text">Phone</Label>
               <Input
                 id="emergency-phone"
                 value={form.emergencyContact.phone}
+                aria-invalid={!!errors.emPhone}
                 onChange={(e) => setForm({ ...form, emergencyContact: { ...form.emergencyContact, phone: e.target.value } })}
                 className="border-border bg-canvas"
               />
+              <FieldError msg={errors.emPhone} />
             </div>
           </div>
-          <Button onClick={() => save('Emergency contact saved')} disabled={saving} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <Button
+            onClick={() => save('Emergency contact saved')}
+            disabled={saving || !emergencyDirty || !!errors.emName || !!errors.emRelation || !!errors.emPhone}
+            className="bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             {saving ? 'Saving…' : 'Save Changes'}
           </Button>
         </TabsContent>
@@ -499,12 +568,48 @@ function ProfilePage() {
             />
           </div>
           <div>
-            <Label className="mb-1.5 text-xs text-muted-text">Dietary preferences</Label>
-            <p className="text-sm text-foreground">
-              {form.preferences.dietary.length > 0 ? form.preferences.dietary.join(', ') : 'None specified'}
-            </p>
+            <Label htmlFor="dietary-input" className="mb-1.5 text-xs text-muted-text">Dietary preferences</Label>
+            {form.preferences.dietary.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {form.preferences.dietary.map((tag) => (
+                  <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-accent-indigo/15 px-3 py-1 text-xs font-medium text-foreground">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeDietary(tag)}
+                      aria-label={`Remove ${tag}`}
+                      className="text-muted-text transition-colors hover:text-red-500"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Input
+                id="dietary-input"
+                value={dietaryInput}
+                placeholder="e.g. Vegetarian, Gluten-free"
+                onChange={(e) => setDietaryInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addDietary()
+                  }
+                }}
+                className="border-border bg-canvas"
+              />
+              <Button type="button" variant="outline" onClick={addDietary} className="border-border">
+                Add
+              </Button>
+            </div>
           </div>
-          <Button onClick={() => save('Preferences saved')} disabled={saving} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <Button
+            onClick={() => save('Preferences saved')}
+            disabled={saving || !prefsDirty}
+            className="bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             {saving ? 'Saving…' : 'Save Changes'}
           </Button>
         </TabsContent>
