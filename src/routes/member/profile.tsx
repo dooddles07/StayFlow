@@ -9,29 +9,96 @@ import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
 import { Switch } from '#/components/ui/switch'
-import { useMockStore } from '#/lib/store/mock-store'
-import { CURRENT_RESIDENT_ID } from '#/lib/session'
+import { ApiError } from '#/lib/api/client'
+import {
+  getMyProfile,
+  tierLabel,
+  updateMyProfile,
+  type ResidentProfile,
+  type ResidentProfileUpdate,
+} from '#/lib/api/resident'
 
 export const Route = createFileRoute('/member/profile')({
   head: () => ({ meta: [{ title: 'Profile — StayFlow Member' }] }),
   component: ProfilePage,
 })
 
+function toUpdate(f: ResidentProfile): ResidentProfileUpdate {
+  return {
+    name: f.name,
+    phone: f.phone,
+    emergencyName: f.emergencyContact.name,
+    emergencyRelation: f.emergencyContact.relation,
+    emergencyPhone: f.emergencyContact.phone,
+    notifications: f.preferences.notifications,
+    newsletter: f.preferences.newsletter,
+  }
+}
+
 function ProfilePage() {
-  const { state, dispatch } = useMockStore()
-  const resident = state.residents.find((r) => r.id === CURRENT_RESIDENT_ID)
-  const [form, setForm] = React.useState(resident)
+  const [form, setForm] = React.useState<ResidentProfile | null>(null)
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
+  const [saving, setSaving] = React.useState(false)
 
   React.useEffect(() => {
-    setForm(resident)
-  }, [resident])
+    let active = true
+    setStatus('loading')
+    getMyProfile()
+      .then((profile) => {
+        if (!active) return
+        setForm(profile)
+        setStatus('ready')
+      })
+      .catch(() => {
+        if (active) setStatus('error')
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
-  if (!form) return null
-
-  function save(message: string) {
+  async function save(message: string) {
     if (!form) return
-    dispatch({ type: 'UPDATE_RESIDENT', payload: form })
-    toast.success(message)
+    setSaving(true)
+    try {
+      const updated = await updateMyProfile(toUpdate(form))
+      setForm(updated)
+      toast.success(message)
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Could not save your changes. Try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className="mx-auto max-w-4xl">
+        <PageHeader eyebrow="Account" title="Profile" description="Manage your personal information and preferences." />
+        <div className="animate-pulse space-y-4">
+          <div className="h-24 rounded-2xl border border-border bg-surface" />
+          <div className="h-10 w-full max-w-md rounded-xl bg-surface" />
+          <div className="h-64 rounded-2xl border border-border bg-surface" />
+        </div>
+      </div>
+    )
+  }
+
+  if (status === 'error' || !form) {
+    return (
+      <div className="mx-auto max-w-4xl">
+        <PageHeader eyebrow="Account" title="Profile" description="Manage your personal information and preferences." />
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center">
+          <p className="text-sm text-muted-text">We couldn't load your profile right now.</p>
+          <Button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -39,10 +106,10 @@ function ProfilePage() {
       <PageHeader eyebrow="Account" title="Profile" description="Manage your personal information and preferences." />
 
       <div className="mb-6 flex items-center gap-4 rounded-2xl border border-border bg-surface p-5">
-        <AvatarInitials seed={form.name} className="size-14" />
+        <AvatarInitials seed={form.avatarSeed} className="size-14" />
         <div>
           <p className="text-base font-semibold text-foreground">{form.name}</p>
-          <p className="text-sm text-muted-text">{form.unit} · {form.tier} Member</p>
+          <p className="text-sm text-muted-text">{form.unit} · {tierLabel(form.tier)} Member</p>
         </div>
       </div>
 
@@ -68,24 +135,24 @@ function ProfilePage() {
         <TabsContent value="personal" className="space-y-4 rounded-2xl border border-border bg-surface p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label className="mb-1.5 text-xs text-muted-text">Full name</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border-border bg-canvas" />
+              <Label htmlFor="profile-name" className="mb-1.5 text-xs text-muted-text">Full name</Label>
+              <Input id="profile-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border-border bg-canvas" />
             </div>
             <div>
-              <Label className="mb-1.5 text-xs text-muted-text">Unit</Label>
-              <Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="border-border bg-canvas" />
+              <Label htmlFor="profile-unit" className="mb-1.5 text-xs text-muted-text">Unit</Label>
+              <Input id="profile-unit" value={form.unit} readOnly disabled className="border-border bg-canvas" />
             </div>
             <div>
-              <Label className="mb-1.5 text-xs text-muted-text">Email</Label>
-              <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="border-border bg-canvas" />
+              <Label htmlFor="profile-email" className="mb-1.5 text-xs text-muted-text">Email</Label>
+              <Input id="profile-email" value={form.email} readOnly disabled className="border-border bg-canvas" />
             </div>
             <div>
-              <Label className="mb-1.5 text-xs text-muted-text">Phone</Label>
-              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="border-border bg-canvas" />
+              <Label htmlFor="profile-phone" className="mb-1.5 text-xs text-muted-text">Phone</Label>
+              <Input id="profile-phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="border-border bg-canvas" />
             </div>
           </div>
-          <Button onClick={() => save('Personal details saved')} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft">
-            Save Changes
+          <Button onClick={() => save('Personal details saved')} disabled={saving} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+            {saving ? 'Saving…' : 'Save Changes'}
           </Button>
         </TabsContent>
 
@@ -126,32 +193,35 @@ function ProfilePage() {
         <TabsContent value="emergency" className="space-y-4 rounded-2xl border border-border bg-surface p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label className="mb-1.5 text-xs text-muted-text">Contact name</Label>
+              <Label htmlFor="emergency-name" className="mb-1.5 text-xs text-muted-text">Contact name</Label>
               <Input
+                id="emergency-name"
                 value={form.emergencyContact.name}
                 onChange={(e) => setForm({ ...form, emergencyContact: { ...form.emergencyContact, name: e.target.value } })}
                 className="border-border bg-canvas"
               />
             </div>
             <div>
-              <Label className="mb-1.5 text-xs text-muted-text">Relation</Label>
+              <Label htmlFor="emergency-relation" className="mb-1.5 text-xs text-muted-text">Relation</Label>
               <Input
+                id="emergency-relation"
                 value={form.emergencyContact.relation}
                 onChange={(e) => setForm({ ...form, emergencyContact: { ...form.emergencyContact, relation: e.target.value } })}
                 className="border-border bg-canvas"
               />
             </div>
             <div className="sm:col-span-2">
-              <Label className="mb-1.5 text-xs text-muted-text">Phone</Label>
+              <Label htmlFor="emergency-phone" className="mb-1.5 text-xs text-muted-text">Phone</Label>
               <Input
+                id="emergency-phone"
                 value={form.emergencyContact.phone}
                 onChange={(e) => setForm({ ...form, emergencyContact: { ...form.emergencyContact, phone: e.target.value } })}
                 className="border-border bg-canvas"
               />
             </div>
           </div>
-          <Button onClick={() => save('Emergency contact saved')} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft">
-            Save Changes
+          <Button onClick={() => save('Emergency contact saved')} disabled={saving} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+            {saving ? 'Saving…' : 'Save Changes'}
           </Button>
         </TabsContent>
 
@@ -182,8 +252,8 @@ function ProfilePage() {
               {form.preferences.dietary.length > 0 ? form.preferences.dietary.join(', ') : 'None specified'}
             </p>
           </div>
-          <Button onClick={() => save('Preferences saved')} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft">
-            Save Changes
+          <Button onClick={() => save('Preferences saved')} disabled={saving} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+            {saving ? 'Saving…' : 'Save Changes'}
           </Button>
         </TabsContent>
       </Tabs>
