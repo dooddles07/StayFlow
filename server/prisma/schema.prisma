@@ -286,3 +286,21 @@ model User {
 
   @@map("users")
 }
+
+// Immutable auth audit trail. Intentionally NOT related to User (no FK) so events
+// outlive the account they describe — deleting a user must not erase their history.
+model AuthEvent {
+  id        String   @id @default(cuid())
+  type      String
+  userId    String?
+  email     String?
+  ip        String?
+  userAgent String?
+  success   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("auth_events")
+}

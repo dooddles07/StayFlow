@@ -5,6 +5,7 @@ import { env } from '../config/env.js'
 import { UserModel } from '../models/user.model.js'
 import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { AuthEventType, logAuthEvent } from '../utils/authLog.js'
 import { deliverResetToken } from '../utils/mailer.js'
 
 const signToken = (user) =>
@@ -66,6 +67,7 @@ export const register = asyncHandler(async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 10)
   const user = await UserModel.create({ email, passwordHash, role: 'MEMBER', displayName, residentId })
+  logAuthEvent(req, AuthEventType.REGISTER, { userId: user.id, email: user.email })
   const token = signToken(user)
   setAuthCookie(res, token)
   res.status(201).json({ token, user: sanitize(user) })
@@ -76,9 +78,13 @@ export const login = asyncHandler(async (req, res) => {
   if (!email || !password) throw ApiError.badRequest('email and password are required')
 
   const user = await UserModel.findByEmail(email)
-  if (!user) throw ApiError.unauthorized('Invalid credentials')
+  if (!user) {
+    logAuthEvent(req, AuthEventType.LOGIN_FAILED, { email, success: false })
+    throw ApiError.unauthorized('Invalid credentials')
+  }
 
   if (user.lockedUntil && user.lockedUntil > new Date()) {
+    logAuthEvent(req, AuthEventType.LOGIN_LOCKED, { userId: user.id, email: user.email, success: false })
     throw ApiError.tooManyRequests('Account temporarily locked after repeated failed logins. Try again later.')
   }
 
@@ -90,22 +96,32 @@ export const login = asyncHandler(async (req, res) => {
       failedLoginCount: locked ? 0 : count,
       lockedUntil: locked ? new Date(Date.now() + LOCK_DURATION_MS) : null,
     })
+    logAuthEvent(req, locked ? AuthEventType.LOGIN_LOCKED : AuthEventType.LOGIN_FAILED, {
+      userId: user.id,
+      email: user.email,
+      success: false,
+    })
     throw ApiError.unauthorized('Invalid credentials')
   }
 
   // Disabled accounts: only revealed to someone who already has the correct password (the legit owner).
-  if (!user.isActive) throw ApiError.forbidden('This account has been disabled. Contact your administrator.')
+  if (!user.isActive) {
+    logAuthEvent(req, AuthEventType.LOGIN_DISABLED, { userId: user.id, email: user.email, success: false })
+    throw ApiError.forbidden('This account has been disabled. Contact your administrator.')
+  }
 
   if (user.failedLoginCount > 0 || user.lockedUntil) {
     await UserModel.setLoginState(user.id, { failedLoginCount: 0, lockedUntil: null })
   }
 
+  logAuthEvent(req, AuthEventType.LOGIN_SUCCESS, { userId: user.id, email: user.email })
   const token = signToken(user)
   setAuthCookie(res, token)
   res.json({ token, user: sanitize(user) })
 })
 
 export const logout = asyncHandler(async (req, res) => {
+  logAuthEvent(req, AuthEventType.LOGOUT)
   res.clearCookie(AUTH_COOKIE, { ...cookieOptions, maxAge: undefined })
   res.status(204).send()
 })
@@ -123,6 +139,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     await UserModel.setResetToken(user.id, hashResetToken(rawToken), new Date(Date.now() + RESET_TOKEN_TTL_MS))
     await deliverResetToken(user, rawToken)
   }
+  logAuthEvent(req, AuthEventType.PASSWORD_RESET_REQUEST, { userId: user?.id ?? null, email })
 
   res.json(GENERIC_RESET_RESPONSE)
 })
@@ -139,6 +156,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 10)
   await UserModel.applyPasswordReset(user.id, passwordHash)
+  logAuthEvent(req, AuthEventType.PASSWORD_RESET_SUCCESS, { userId: user.id, email: user.email })
   // tokenVersion was bumped, so any existing sessions are now revoked — user must sign in again.
   res.json({ message: 'Password updated. Please sign in with your new password.' })
 })
