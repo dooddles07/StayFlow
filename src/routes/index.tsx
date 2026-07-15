@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowRight, BarChart3, ShieldCheck, UserCircle2 } from 'lucide-react'
 import * as React from 'react'
 import type { Portal } from '#/lib/hooks/use-portal-preference'
-import { getStoredPortal, setStoredPortal } from '#/lib/hooks/use-portal-preference'
+import { getStoredPortal } from '#/lib/hooks/use-portal-preference'
+import { isPortalRoleMatch, useAuthStore } from '#/lib/store/auth-store'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/')({
@@ -43,20 +44,24 @@ const portals: {
 
 function LandingPage() {
   const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
   const [checkedStorage, setCheckedStorage] = React.useState(false)
 
   React.useEffect(() => {
     const stored = getStoredPortal()
-    if (stored) {
+    if (stored && user && isPortalRoleMatch(user.role, stored)) {
       navigate({ to: `/${stored}`, replace: true })
       return
     }
     setCheckedStorage(true)
-  }, [navigate])
+  }, [navigate, user])
 
   function selectPortal(id: Portal) {
-    setStoredPortal(id)
-    navigate({ to: `/${id}` })
+    if (user && isPortalRoleMatch(user.role, id)) {
+      navigate({ to: `/${id}` })
+      return
+    }
+    navigate({ to: `/login/${id}` })
   }
 
   if (!checkedStorage) return null
@@ -113,7 +118,7 @@ function LandingPage() {
         })}
       </div>
 
-      <p className="relative mt-12 text-[11px] text-muted-text/60">All demo data. No account required.</p>
+      <p className="relative mt-12 text-[11px] text-muted-text/60">Demo data. Sign in with your portal credentials.</p>
     </div>
   )
 }

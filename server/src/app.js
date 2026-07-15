@@ -7,7 +7,12 @@ import routes from './routes/index.js'
 
 const app = express()
 
-app.use(cors({ origin: env.corsOrigin }))
+app.use(
+  cors({
+    origin: env.corsOrigins.includes('*') ? true : env.corsOrigins,
+    credentials: true,
+  }),
+)
 app.use(express.json())
 app.use(morgan('dev'))
 

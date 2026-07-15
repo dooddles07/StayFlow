@@ -12,5 +12,5 @@ export const env = {
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  corsOrigin: process.env.CORS_ORIGIN || '*',
+  corsOrigins: (process.env.CORS_ORIGIN || '*').split(',').map((o) => o.trim()),
 }
