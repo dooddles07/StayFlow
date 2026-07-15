@@ -1,0 +1,18 @@
+<svg width="800" height="450" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g-restaurants-ember-oak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141432"/>
+      <stop offset="55%" stop-color="#0a0a1a"/>
+      <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.22"/>
+    </linearGradient>
+    <radialGradient id="glow-restaurants-ember-oak" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#g-restaurants-ember-oak)"/>
+  <rect width="800" height="450" fill="url(#glow-restaurants-ember-oak)"/>
+  <g clip-path="url(#clip-restaurants-ember-oak)"><rect x="-340" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="-280" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="-220" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="-160" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="-100" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="-40" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="20" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="80" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="140" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="200" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="260" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="320" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="380" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="440" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="500" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="560" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="620" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="680" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="740" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="800" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="860" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="920" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="980" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/><rect x="1040" y="-20" width="18" height="500" fill="#c9a84c" opacity="0.06" transform="rotate(18 400 225)"/></g>
+  <clipPath id="clip-restaurants-ember-oak"><rect width="800" height="450"/></clipPath>
+  <text x="40" y="405" font-family="Poppins, sans-serif" font-size="15" letter-spacing="2" fill="#c9a84c" opacity="0.55">EMBER & OAK</text>
+</svg>

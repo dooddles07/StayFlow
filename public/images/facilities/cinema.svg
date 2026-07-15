@@ -1,0 +1,18 @@
+<svg width="800" height="450" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g-facilities-cinema" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141432"/>
+      <stop offset="55%" stop-color="#0a0a1a"/>
+      <stop offset="100%" stop-color="#ddc178" stop-opacity="0.22"/>
+    </linearGradient>
+    <radialGradient id="glow-facilities-cinema" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#4f46e5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#g-facilities-cinema)"/>
+  <rect width="800" height="450" fill="url(#glow-facilities-cinema)"/>
+  <g clip-path="url(#clip-facilities-cinema)"><circle cx="560" cy="160" r="40" stroke="#4f46e5" stroke-width="1.5" fill="none" opacity="0.32"/><circle cx="560" cy="160" r="78" stroke="#4f46e5" stroke-width="1.5" fill="none" opacity="0.26"/><circle cx="560" cy="160" r="116" stroke="#4f46e5" stroke-width="1.5" fill="none" opacity="0.2"/><circle cx="560" cy="160" r="154" stroke="#4f46e5" stroke-width="1.5" fill="none" opacity="0.14"/><circle cx="160" cy="340" r="40" stroke="#ddc178" stroke-width="1.5" fill="none" opacity="0.32"/><circle cx="160" cy="340" r="78" stroke="#ddc178" stroke-width="1.5" fill="none" opacity="0.26"/><circle cx="160" cy="340" r="116" stroke="#ddc178" stroke-width="1.5" fill="none" opacity="0.2"/><circle cx="160" cy="340" r="154" stroke="#ddc178" stroke-width="1.5" fill="none" opacity="0.14"/></g>
+  <clipPath id="clip-facilities-cinema"><rect width="800" height="450"/></clipPath>
+  <text x="40" y="405" font-family="Poppins, sans-serif" font-size="15" letter-spacing="2" fill="#4f46e5" opacity="0.55">AURORA SCREENING ROOM</text>
+</svg>
