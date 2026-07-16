@@ -124,6 +124,9 @@ export interface VehicleInput {
 
 export const getMyProfile = () => api.get<ResidentApiResponse>('/residents/me').then(toProfile)
 
+// STAFF/MANAGEMENT only (enforced server-side) — the full resident directory.
+export const getAllResidents = () => api.get<ResidentApiResponse[]>('/residents').then((rows) => rows.map(toProfile))
+
 // Partial: each caller sends only the fields it owns (tab isolation). Server whitelists.
 export const updateMyProfile = (patch: Partial<ResidentProfileUpdate>) =>
   api.put<ResidentApiResponse>('/residents/me', patch).then(toProfile)
