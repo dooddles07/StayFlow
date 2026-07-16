@@ -37,7 +37,20 @@ const CONDITION_LABELS: Record<number, string> = {
 export interface WeatherSnapshot {
   tempF: number
   condition: string
-  sunset: Date
+  sunsetLabel: string
+}
+
+// Open-Meteo returns the sunset as a naive local-time string for the requested
+// timezone (e.g. "2026-07-16T20:14", no UTC offset). Parsing it with `Date` would
+// reinterpret those numbers in the *viewer's* timezone instead of San Francisco's,
+// so format it straight from the string instead of going through Date at all.
+function formatSunset(isoLocal: string): string {
+  const [, timePart] = isoLocal.split('T')
+  const [hourStr, minuteStr] = timePart.split(':')
+  const hour24 = Number(hourStr)
+  const period = hour24 >= 12 ? 'PM' : 'AM'
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
+  return `${hour12}:${minuteStr} ${period}`
 }
 
 export async function getWeather(): Promise<WeatherSnapshot> {
@@ -48,6 +61,6 @@ export async function getWeather(): Promise<WeatherSnapshot> {
   return {
     tempF: Math.round(data.current.temperature_2m),
     condition: CONDITION_LABELS[data.current.weather_code] ?? 'Unknown',
-    sunset: new Date(data.daily.sunset[0]),
+    sunsetLabel: formatSunset(data.daily.sunset[0]),
   }
 }

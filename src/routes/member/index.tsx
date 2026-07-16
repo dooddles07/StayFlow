@@ -178,9 +178,7 @@ function MemberDashboard() {
             <div className="flex items-center gap-2.5 rounded-xl border border-border bg-canvas/40 px-4 py-3">
               <Sunset className="size-5 text-accent-gold" />
               <div>
-                <p className="text-sm font-medium text-foreground">
-                  {weather.sunset.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
-                </p>
+                <p className="text-sm font-medium text-foreground">{weather.sunsetLabel}</p>
                 <p className="text-[11px] text-muted-text">Sunset tonight</p>
               </div>
             </div>
