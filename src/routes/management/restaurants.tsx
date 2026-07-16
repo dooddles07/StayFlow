@@ -18,9 +18,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog'
-import { useMockStore, genId } from '#/lib/store/mock-store'
-import { tables as allTables } from '#/lib/mock/tables'
-import type { Restaurant } from '#/lib/mock/types'
+import { ApiError } from '#/lib/api/client'
+import { createRestaurant, deleteRestaurant, getRestaurants, updateRestaurant } from '#/lib/api/restaurant'
+import { getAllTables } from '#/lib/api/table'
+import type { DiningTable, Restaurant } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/management/restaurants')({
   head: () => ({ meta: [{ title: 'Restaurants — StayFlow Management' }] }),
@@ -28,38 +29,95 @@ export const Route = createFileRoute('/management/restaurants')({
 })
 
 const priceRanges: Restaurant['priceRange'][] = ['$', '$$', '$$$', '$$$$']
+const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const DEFAULT_RESTAURANT_IMAGE = '/images/restaurants/ember-oak.webp'
+
+function newDraft(): Restaurant {
+  return {
+    id: '',
+    name: '',
+    cuisine: '',
+    description: '',
+    image: '',
+    openHours: '11:00 AM – 10:00 PM',
+    priceRange: '$$$',
+    rating: 4.5,
+    location: '',
+  }
+}
 
 function RestaurantsPage() {
-  const { state, dispatch } = useMockStore()
+  const [restaurants, setRestaurants] = React.useState<Restaurant[]>([])
+  const [tables, setTables] = React.useState<DiningTable[]>([])
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
   const [editing, setEditing] = React.useState<Restaurant | null>(null)
   const [deleteTarget, setDeleteTarget] = React.useState<Restaurant | null>(null)
+  const [saving, setSaving] = React.useState(false)
 
-  function newRestaurant(): Restaurant {
-    return {
-      id: genId('rst'),
-      name: '',
-      cuisine: '',
-      description: '',
-      image: '/images/restaurants/ember-oak.jpg',
-      openHours: '11:00 AM – 10:00 PM',
-      priceRange: '$$$',
-      rating: 4.5,
-      location: '',
+  const load = React.useCallback(() => {
+    let active = true
+    setStatus('loading')
+    Promise.all([getRestaurants(), getAllTables()])
+      .then(([r, t]) => {
+        if (!active) return
+        setRestaurants(r)
+        setTables(t)
+        setStatus('ready')
+      })
+      .catch(() => {
+        if (active) setStatus('error')
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  React.useEffect(() => load(), [load])
+
+  async function save() {
+    if (!editing) return
+    if (editing.name.trim() === '' || editing.cuisine.trim() === '' || editing.location.trim() === '') {
+      toast.error('Name, cuisine, and location are required.')
+      return
+    }
+    setSaving(true)
+    try {
+      const payload = {
+        name: editing.name.trim(),
+        cuisine: editing.cuisine.trim(),
+        description: editing.description.trim(),
+        image: editing.image.trim() || DEFAULT_RESTAURANT_IMAGE,
+        openHours: editing.openHours.trim(),
+        priceRange: editing.priceRange,
+        rating: editing.rating,
+        location: editing.location.trim(),
+      }
+      const saved = editing.id ? await updateRestaurant(editing.id, payload) : await createRestaurant(payload)
+      setRestaurants((prev) => {
+        const exists = prev.some((r) => r.id === saved.id)
+        const next = exists ? prev.map((r) => (r.id === saved.id ? saved : r)) : [...prev, saved]
+        return next.sort((a, b) => a.name.localeCompare(b.name))
+      })
+      toast.success(editing.id ? 'Restaurant updated' : 'Restaurant added')
+      setEditing(null)
+    } catch (err) {
+      toast.error(errText(err))
+    } finally {
+      setSaving(false)
     }
   }
 
-  function save(restaurant: Restaurant) {
-    const exists = state.restaurants.some((r) => r.id === restaurant.id)
-    dispatch({ type: exists ? 'UPDATE_RESTAURANT' : 'ADD_RESTAURANT', payload: restaurant })
-    setEditing(null)
-    toast.success(exists ? 'Restaurant updated' : 'Restaurant added')
-  }
-
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteTarget) return
-    dispatch({ type: 'DELETE_RESTAURANT', payload: { id: deleteTarget.id } })
-    toast.success(`${deleteTarget.name} removed`)
+    const target = deleteTarget
     setDeleteTarget(null)
+    try {
+      await deleteRestaurant(target.id)
+      setRestaurants((prev) => prev.filter((r) => r.id !== target.id))
+      toast.success(`${target.name} removed`)
+    } catch (err) {
+      toast.error(errText(err))
+    }
   }
 
   return (
@@ -69,46 +127,77 @@ function RestaurantsPage() {
         title="Restaurants"
         description="Manage dining venues, tables, and menus."
         actions={
-          <Button className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => setEditing(newRestaurant())}>
+          <Button className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => setEditing(newDraft())}>
             <Plus className="size-4" /> Add Restaurant
           </Button>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {state.restaurants.map((restaurant) => {
-          const tableCount = allTables.filter((t) => t.restaurantId === restaurant.id).length
-          return (
-            <div key={restaurant.id} className="rounded-2xl border border-border bg-surface p-5">
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{restaurant.name}</p>
-                  <p className="text-xs text-muted-text">{restaurant.cuisine}</p>
+      {status === 'loading' ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="h-32 animate-pulse rounded-2xl border border-border bg-surface" />
+          ))}
+        </div>
+      ) : status === 'error' ? (
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center">
+          <p className="text-sm text-muted-text">We couldn't load restaurants right now.</p>
+          <Button onClick={load} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+            Retry
+          </Button>
+        </div>
+      ) : restaurants.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted-text">
+          No restaurants yet. Add your first dining venue.
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {restaurants.map((restaurant) => {
+            const tableCount = tables.filter((t) => t.restaurantId === restaurant.id).length
+            return (
+              <div key={restaurant.id} className="rounded-2xl border border-border bg-surface p-5">
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{restaurant.name}</p>
+                    <p className="text-xs text-muted-text">{restaurant.cuisine}</p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-7 text-muted-text hover:text-foreground"
+                      aria-label={`Edit ${restaurant.name}`}
+                      onClick={() => setEditing(restaurant)}
+                    >
+                      <Pencil className="size-3.5" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-7 text-rose-400 hover:bg-rose-500/10"
+                      aria-label={`Remove ${restaurant.name}`}
+                      onClick={() => setDeleteTarget(restaurant)}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-1.5">
-                  <Button size="icon" variant="ghost" className="size-7 text-muted-text hover:text-foreground" onClick={() => setEditing(restaurant)}>
-                    <Pencil className="size-3.5" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="size-7 text-rose-400 hover:bg-rose-500/10" onClick={() => setDeleteTarget(restaurant)}>
-                    <Trash2 className="size-3.5" />
-                  </Button>
+                <div className="flex flex-wrap gap-4 text-xs text-muted-text">
+                  <span>{restaurant.priceRange}</span>
+                  <span>{restaurant.openHours}</span>
+                  <span>{tableCount} tables</span>
+                  <span>★ {restaurant.rating}</span>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-4 text-xs text-muted-text">
-                <span>{restaurant.priceRange}</span>
-                <span>{restaurant.openHours}</span>
-                <span>{tableCount} tables</span>
-                <span>★ {restaurant.rating}</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
 
       <Sheet open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <SheetContent className="border-border bg-surface text-foreground">
           <SheetHeader>
-            <SheetTitle className="text-foreground">{state.restaurants.some((r) => r.id === editing?.id) ? 'Edit Restaurant' : 'Add Restaurant'}</SheetTitle>
+            <SheetTitle className="text-foreground">{editing?.id ? 'Edit Restaurant' : 'Add Restaurant'}</SheetTitle>
           </SheetHeader>
           {editing && (
             <div className="space-y-4 px-4 pb-6">
@@ -149,8 +238,8 @@ function RestaurantsPage() {
                 <Label className="mb-1.5 text-xs text-muted-text">Location</Label>
                 <Input value={editing.location} onChange={(e) => setEditing({ ...editing, location: e.target.value })} className="border-border bg-canvas" />
               </div>
-              <Button className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => save(editing)}>
-                Save Restaurant
+              <Button className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft" disabled={saving} onClick={save}>
+                {saving ? 'Saving…' : 'Save Restaurant'}
               </Button>
             </div>
           )}

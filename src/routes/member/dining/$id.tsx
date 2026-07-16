@@ -6,17 +6,21 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
-import { useMockStore, genId } from '#/lib/store/mock-store'
-import { CURRENT_RESIDENT_ID } from '#/lib/session'
-import { getRestaurantById } from '#/lib/mock/restaurants'
+import { ApiError } from '#/lib/api/client'
+import { getRestaurant } from '#/lib/api/restaurant'
+import { requestReservation } from '#/lib/api/diningReservation'
+import { useMyProfile } from '#/lib/store/member-profile'
 import { nextDays, toDateKey } from '#/lib/booking-slots'
 import type { DiningReservation } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/member/dining/$id')({
-  loader: ({ params }) => {
-    const restaurant = getRestaurantById(params.id)
-    if (!restaurant) throw notFound()
-    return { restaurant }
+  loader: async ({ params }) => {
+    try {
+      const restaurant = await getRestaurant(params.id)
+      return { restaurant }
+    } catch {
+      throw notFound()
+    }
   },
   head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.restaurant.name ?? 'Restaurant'} — StayFlow` }] }),
   component: RestaurantDetail,
@@ -24,10 +28,11 @@ export const Route = createFileRoute('/member/dining/$id')({
 
 const TIME_OPTIONS = ['11:30 AM', '12:30 PM', '1:30 PM', '5:30 PM', '6:30 PM', '7:30 PM', '8:30 PM', '9:30 PM']
 const SEATING_OPTIONS: DiningReservation['seating'][] = ['Indoor', 'Outdoor', 'Private Room', 'Bar']
+const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
 
 function RestaurantDetail() {
   const { restaurant } = Route.useLoaderData()
-  const { dispatch } = useMockStore()
+  const { profile } = useMyProfile()
   const days = React.useMemo(() => nextDays(14), [])
 
   const [date, setDate] = React.useState(days[0]!)
@@ -36,30 +41,34 @@ function RestaurantDetail() {
   const [occasion, setOccasion] = React.useState('')
   const [dietary, setDietary] = React.useState('')
   const [seating, setSeating] = React.useState<DiningReservation['seating']>('Indoor')
+  const [submitting, setSubmitting] = React.useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    dispatch({
-      type: 'ADD_DINING_RESERVATION',
-      payload: {
-        id: genId('dine'),
+    if (!profile || submitting) return
+    setSubmitting(true)
+    try {
+      // Full ISO — the API's date column rejects a bare "YYYY-MM-DD".
+      const dateIso = new Date(toDateKey(date)).toISOString()
+      await requestReservation({
         restaurantId: restaurant.id,
-        residentId: CURRENT_RESIDENT_ID,
-        date: toDateKey(date),
+        date: dateIso,
         time,
         partySize,
-        occasion: occasion || undefined,
-        dietary: dietary || undefined,
+        occasion: occasion.trim() || undefined,
+        dietary: dietary.trim() || undefined,
         seating,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-      },
-    })
-    toast.success('Reservation requested', {
-      description: `${restaurant.name} · ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ${time}`,
-    })
-    setOccasion('')
-    setDietary('')
+      })
+      toast.success('Reservation requested', {
+        description: `${restaurant.name} · ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ${time}`,
+      })
+      setOccasion('')
+      setDietary('')
+    } catch (err) {
+      toast.error(errText(err))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -194,8 +203,8 @@ function RestaurantDetail() {
             />
           </div>
 
-          <Button type="submit" className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft">
-            Request Reservation
+          <Button type="submit" disabled={submitting || !profile} className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+            {submitting ? 'Requesting…' : 'Request Reservation'}
           </Button>
         </form>
       </div>
