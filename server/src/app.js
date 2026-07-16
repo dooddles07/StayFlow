@@ -21,7 +21,9 @@ if (env.corsOrigins.includes('*')) {
 } else if (env.corsOrigins.length > 0) {
   app.use(cors({ origin: env.corsOrigins, credentials: true }))
 }
-app.use(express.json())
+// Default 100kb is too small for a base64-encoded photo upload (event/notice images are
+// stored as data URIs, not files); 5mb comfortably covers the 2MB raw-file cap those flows enforce.
+app.use(express.json({ limit: '5mb' }))
 app.use(morgan('dev'))
 
 app.use('/api', routes)

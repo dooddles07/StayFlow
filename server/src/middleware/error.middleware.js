@@ -8,6 +8,9 @@ export const errorMiddleware = (err, req, res, next) => {
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({ error: err.message, details: err.details })
   }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'That upload is too large. Please use a smaller file.' })
+  }
   if (err.code === 'P2002') {
     return res.status(409).json({ error: `Duplicate value for ${err.meta?.target}` })
   }
