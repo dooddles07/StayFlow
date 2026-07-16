@@ -5,8 +5,8 @@ const includeRsvps = { rsvps: { include: { resident: true } } }
 export const EventModel = {
   findAll: () => prisma.communityEvent.findMany({ include: includeRsvps, orderBy: { date: 'asc' } }),
   findById: (id) => prisma.communityEvent.findUnique({ where: { id }, include: includeRsvps }),
-  create: (data) => prisma.communityEvent.create({ data }),
-  update: (id, data) => prisma.communityEvent.update({ where: { id }, data }),
+  create: (data) => prisma.communityEvent.create({ data, include: includeRsvps }),
+  update: (id, data) => prisma.communityEvent.update({ where: { id }, data, include: includeRsvps }),
   remove: (id) => prisma.communityEvent.delete({ where: { id } }),
   addAttendee: (id, residentId) =>
     prisma.eventRsvp.upsert({

@@ -45,7 +45,8 @@ const toEvent = (e: EventApiResponse): CommunityEventView => ({
   time: e.time,
   location: e.location,
   capacity: e.capacity,
-  attendeeIds: e.rsvps.map((r) => r.residentId),
+  // Defensive: an endpoint that forgets to include the rsvps relation shouldn't crash the mapper.
+  attendeeIds: (e.rsvps ?? []).map((r) => r.residentId),
 })
 
 export const getEvents = () => api.get<EventApiResponse[]>('/events').then((rows) => rows.map(toEvent))
