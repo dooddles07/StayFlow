@@ -9,6 +9,17 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
 import { checkInGuest, checkOutGuest, getAllGuests, setGuestStatus, type GuestView } from '#/lib/api/guest'
 import { toDateKey } from '#/lib/booking-slots'
@@ -176,9 +187,25 @@ function StaffGuestsPage() {
                       </Button>
                     )}
                     {guest.status === 'checked-in' && (
-                      <Button size="sm" variant="outline" disabled={busy} className="gap-1.5 border-border text-foreground hover:bg-surface-hover" onClick={() => checkOut(guest.id)}>
-                        <LogOut className="size-3.5" /> {busy ? 'Checking out…' : 'Check Out'}
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline" disabled={busy} className="gap-1.5 border-border text-foreground hover:bg-surface-hover">
+                            <LogOut className="size-3.5" /> {busy ? 'Checking out…' : 'Check Out'}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="border-border bg-surface">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Check out {guest.name}?</AlertDialogTitle>
+                            <AlertDialogDescription>This marks their visit as complete. Make sure they're actually leaving before confirming.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="border-border">Not yet</AlertDialogCancel>
+                            <AlertDialogAction className="bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => checkOut(guest.id)}>
+                              Check Out
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </div>
                 </div>
