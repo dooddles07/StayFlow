@@ -79,3 +79,14 @@ export const checkOutGuest = (id: string) => api.post<GuestApiResponse>(`/guests
 
 // Owner-guarded server-side — a resident can only cancel a guest they registered themselves.
 export const cancelGuest = (id: string) => api.del<void>(`/guests/${id}`)
+
+export interface GuestDetailsEdit {
+  purpose: string
+  vehiclePlate?: string
+  arrivalDate: string
+  arrivalTime: string
+}
+
+// Owner-guarded server-side, same as cancelGuest. name/status/passNumber aren't editable here.
+export const updateGuestDetails = (id: string, data: GuestDetailsEdit) =>
+  api.put<GuestApiResponse>(`/guests/${id}`, data).then(toGuest)

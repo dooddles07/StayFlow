@@ -23,7 +23,7 @@ import {
   AlertDialogTrigger,
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
-import { cancelGuest, getMyGuests, registerGuest, type GuestView } from '#/lib/api/guest'
+import { cancelGuest, getMyGuests, registerGuest, updateGuestDetails, type GuestView } from '#/lib/api/guest'
 import { useMyProfile } from '#/lib/store/member-profile'
 import { nextDays, toDateKey } from '#/lib/booking-slots'
 
@@ -48,6 +48,12 @@ function GuestsPage() {
   const [newGuest, setNewGuest] = React.useState<GuestView | null>(null)
   const [submitting, setSubmitting] = React.useState(false)
   const [canceling, setCanceling] = React.useState(false)
+  const [editing, setEditing] = React.useState(false)
+  const [savingEdit, setSavingEdit] = React.useState(false)
+  const [editPurpose, setEditPurpose] = React.useState('')
+  const [editPlate, setEditPlate] = React.useState('')
+  const [editDate, setEditDate] = React.useState(days[0]!)
+  const [editTime, setEditTime] = React.useState('')
 
   const load = React.useCallback((residentId: string) => {
     let active = true
@@ -114,8 +120,43 @@ function GuestsPage() {
     }
   }
 
-  // Once a guest has arrived (or left), there's nothing to cancel — the visit already happened.
-  const canCancel = newGuest?.status === 'pending' || newGuest?.status === 'approved'
+  // Once a guest has arrived (or left), there's nothing to cancel or edit — the visit already happened.
+  const canModify = newGuest?.status === 'pending' || newGuest?.status === 'approved'
+
+  function closeDialog() {
+    setNewGuest(null)
+    setEditing(false)
+  }
+
+  function startEdit() {
+    if (!newGuest) return
+    setEditPurpose(newGuest.purpose)
+    setEditPlate(newGuest.vehiclePlate ?? '')
+    setEditDate(days.find((d) => toDateKey(d) === newGuest.arrivalDate.slice(0, 10)) ?? days[0]!)
+    setEditTime(newGuest.arrivalTime)
+    setEditing(true)
+  }
+
+  async function handleSaveEdit() {
+    if (!newGuest || savingEdit) return
+    setSavingEdit(true)
+    try {
+      const updated = await updateGuestDetails(newGuest.id, {
+        purpose: editPurpose.trim() || 'Personal visit',
+        vehiclePlate: editPlate.trim() || undefined,
+        arrivalDate: new Date(toDateKey(editDate)).toISOString(),
+        arrivalTime: editTime,
+      })
+      setGuests((prev) => prev.map((g) => (g.id === updated.id ? updated : g)))
+      setNewGuest(updated)
+      setEditing(false)
+      toast.success('Guest details updated')
+    } catch (err) {
+      toast.error(errText(err))
+    } finally {
+      setSavingEdit(false)
+    }
+  }
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -210,7 +251,10 @@ function GuestsPage() {
                 <button
                   key={guest.id}
                   type="button"
-                  onClick={() => setNewGuest(guest)}
+                  onClick={() => {
+                    setNewGuest(guest)
+                    setEditing(false)
+                  }}
                   className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 text-left transition-colors hover:border-accent-indigo/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-indigo/50"
                 >
                   <div className="min-w-0">
@@ -228,12 +272,52 @@ function GuestsPage() {
         </div>
       </div>
 
-      <Dialog open={!!newGuest} onOpenChange={(open) => !open && setNewGuest(null)}>
+      <Dialog open={!!newGuest} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="border-border bg-surface text-foreground">
           <DialogHeader>
-            <DialogTitle>Guest Pass</DialogTitle>
+            <DialogTitle>{editing ? 'Edit Guest Details' : 'Guest Pass'}</DialogTitle>
           </DialogHeader>
-          {newGuest && (
+          {newGuest && editing ? (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-purpose" className="mb-1.5 text-xs text-muted-text">Purpose of visit</Label>
+                <Input id="edit-purpose" value={editPurpose} onChange={(e) => setEditPurpose(e.target.value)} className="border-border bg-canvas" />
+              </div>
+              <div>
+                <Label htmlFor="edit-plate" className="mb-1.5 text-xs text-muted-text">Vehicle plate (optional)</Label>
+                <Input id="edit-plate" value={editPlate} onChange={(e) => setEditPlate(e.target.value)} className="border-border bg-canvas" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="edit-date" className="mb-1.5 text-xs text-muted-text">Arrival date</Label>
+                  <select
+                    id="edit-date"
+                    value={toDateKey(editDate)}
+                    onChange={(e) => setEditDate(days.find((d) => toDateKey(d) === e.target.value) ?? days[0]!)}
+                    className="h-9 w-full rounded-md border border-border bg-canvas px-2 text-sm text-foreground"
+                  >
+                    {days.map((d) => (
+                      <option key={toDateKey(d)} value={toDateKey(d)}>
+                        {d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-time" className="mb-1.5 text-xs text-muted-text">Arrival time</Label>
+                  <Input id="edit-time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="border-border bg-canvas" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 border-border" onClick={() => setEditing(false)}>
+                  Cancel
+                </Button>
+                <Button disabled={savingEdit} className="flex-1 bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={handleSaveEdit}>
+                  {savingEdit ? 'Saving…' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          ) : newGuest ? (
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-canvas p-6 text-center">
               <QrCode value={newGuest.passNumber} />
               <div>
@@ -249,31 +333,36 @@ function GuestsPage() {
                 </p>
               </div>
               <StatusPill status={newGuest.status} />
-              {canCancel && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" disabled={canceling} className="w-full border-border text-rose-400 hover:bg-rose-500/10 hover:text-rose-400">
-                      {canceling ? 'Cancelling…' : 'Cancel Registration'}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="border-border bg-surface">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancel this guest pass?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {newGuest.name} will no longer be expected, and this pass number stops working. This can't be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="border-border">Keep it</AlertDialogCancel>
-                      <AlertDialogAction className="bg-rose-600 text-white hover:bg-rose-700" onClick={handleCancel}>
-                        Cancel Registration
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+              {canModify && (
+                <div className="flex w-full gap-2">
+                  <Button variant="outline" className="flex-1 border-border" onClick={startEdit}>
+                    Edit Details
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" disabled={canceling} className="flex-1 border-border text-rose-400 hover:bg-rose-500/10 hover:text-rose-400">
+                        {canceling ? 'Cancelling…' : 'Cancel'}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="border-border bg-surface">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel this guest pass?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {newGuest.name} will no longer be expected, and this pass number stops working. This can't be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-border">Keep it</AlertDialogCancel>
+                        <AlertDialogAction className="bg-rose-600 text-white hover:bg-rose-700" onClick={handleCancel}>
+                          Cancel Registration
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               )}
             </div>
-          )}
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>

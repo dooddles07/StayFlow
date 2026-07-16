@@ -28,6 +28,7 @@ function StaffGuestsPage() {
   const [scannerOpen, setScannerOpen] = React.useState(false)
   const [passInput, setPassInput] = React.useState('')
   const [busyIds, setBusyIds] = React.useState<Set<string>>(new Set())
+  const [query, setQuery] = React.useState('')
 
   const load = React.useCallback(() => {
     let active = true
@@ -48,12 +49,21 @@ function StaffGuestsPage() {
 
   React.useEffect(() => load(), [load])
 
+  const q = query.trim().toLowerCase()
+  const matchesQuery = (g: GuestView) =>
+    q === '' ||
+    g.name.toLowerCase().includes(q) ||
+    g.passNumber.toLowerCase().includes(q) ||
+    (g.hostName ?? '').toLowerCase().includes(q)
+
   const arriving = guests
     .filter((g) => g.arrivalDate.slice(0, 10) === today && (g.status === 'pending' || g.status === 'approved' || g.status === 'checked-in'))
+    .filter(matchesQuery)
     .sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime))
 
   const history = guests
     .filter((g) => g.status === 'checked-out' || g.arrivalDate.slice(0, 10) < today)
+    .filter(matchesQuery)
     .sort((a, b) => b.arrivalDate.localeCompare(a.arrivalDate))
 
   async function withBusy(id: string, action: () => Promise<GuestView>, successMessage: string) {
@@ -103,6 +113,17 @@ function StaffGuestsPage() {
         }
       />
 
+      <div className="relative mb-4">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-text" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by guest, host, or pass number…"
+          aria-label="Search guests"
+          className="border-border bg-surface pl-9"
+        />
+      </div>
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mb-6">
         <TabsList className="bg-surface">
           <TabsTrigger value="arriving" className="data-[state=active]:bg-accent-indigo/20 data-[state=active]:text-accent-gold">
@@ -129,7 +150,7 @@ function StaffGuestsPage() {
         </div>
       ) : tab === 'arriving' ? (
         arriving.length === 0 ? (
-          <EmptyState icon={UserCheck} title="No guests arriving today" />
+          <EmptyState icon={UserCheck} title={q ? 'No guests match your search' : 'No guests arriving today'} />
         ) : (
           <div className="space-y-3">
             {arriving.map((guest) => {
@@ -166,7 +187,7 @@ function StaffGuestsPage() {
           </div>
         )
       ) : history.length === 0 ? (
-        <EmptyState icon={UserCheck} title="No guest history yet" />
+        <EmptyState icon={UserCheck} title={q ? 'No guests match your search' : 'No guest history yet'} />
       ) : (
         <>
           <div className="space-y-3 sm:hidden">
