@@ -29,6 +29,7 @@ export const Route = createFileRoute('/management/events')({
 
 const categories: EventCategory[] = ['Social', 'Wellness', 'Kids', 'Seasonal', 'Cultural']
 const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const DEFAULT_EVENT_IMAGE = '/images/events/wine-tasting.webp'
 
 interface EventDraft {
   id?: string
@@ -47,7 +48,7 @@ function newDraft(): EventDraft {
     title: '',
     category: 'Social',
     description: '',
-    image: '/images/events/wine-tasting.webp',
+    image: '',
     date: new Date().toISOString().slice(0, 10),
     time: '6:00 PM',
     location: '',
@@ -88,11 +89,11 @@ function ManagementEventsPage() {
       return
     }
     if (editing.capacity < 1) {
-      toast.error('Capacity must be at least 1.')
+      toast.error('Please allow room for at least 1 guest.')
       return
     }
     if (Number.isNaN(new Date(editing.date).getTime())) {
-      toast.error('Enter a valid date.')
+      toast.error('Please pick a valid date.')
       return
     }
     setSaving(true)
@@ -101,7 +102,7 @@ function ManagementEventsPage() {
         title: editing.title.trim(),
         category: editing.category,
         description: editing.description.trim(),
-        image: editing.image,
+        image: editing.image.trim() || DEFAULT_EVENT_IMAGE,
         // The <input type="date"> value is a bare "YYYY-MM-DD"; the API's date column needs
         // a full ISO datetime, or Prisma rejects it with an unhandled validation error.
         date: new Date(editing.date).toISOString(),
@@ -265,6 +266,29 @@ function ManagementEventsPage() {
               <div>
                 <Label className="mb-1.5 text-xs text-muted-text">Description</Label>
                 <Textarea value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className="border-border bg-canvas" rows={3} />
+              </div>
+              <div>
+                <Label className="mb-1.5 text-xs text-muted-text">
+                  Event photo <span className="font-normal text-muted-text/70">· optional</span>
+                </Label>
+                <div className="flex items-center gap-3">
+                  <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-surface-hover">
+                    <img
+                      src={editing.image.trim() || DEFAULT_EVENT_IMAGE}
+                      alt=""
+                      className="size-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = DEFAULT_EVENT_IMAGE
+                      }}
+                    />
+                  </div>
+                  <Input
+                    value={editing.image}
+                    onChange={(e) => setEditing({ ...editing, image: e.target.value })}
+                    placeholder="Paste a photo link, or leave blank for a default picture"
+                    className="border-border bg-canvas"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
