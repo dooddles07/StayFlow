@@ -10,9 +10,8 @@ import { EmptyState } from '#/components/stayflow/empty-state'
 import { getNotices } from '#/lib/api/notice'
 import { getFacilities } from '#/lib/api/facility'
 import { getMyBookings, type BookingView } from '#/lib/api/booking'
+import { tierLabel } from '#/lib/api/resident'
 import { useMyProfile } from '#/lib/store/member-profile'
-import { CURRENT_RESIDENT_ID } from '#/lib/session'
-import { getResidentById } from '#/lib/mock/residents'
 import type { Facility, Notice } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/member/')({
@@ -22,8 +21,7 @@ export const Route = createFileRoute('/member/')({
 
 function MemberDashboard() {
   const { profile } = useMyProfile()
-  const resident = getResidentById(CURRENT_RESIDENT_ID)
-  const firstName = resident?.name.split(' ')[0] ?? 'Resident'
+  const firstName = profile?.name.split(' ')[0] ?? 'Resident'
 
   const [facilities, setFacilities] = React.useState<Facility[]>([])
   const [bookings, setBookings] = React.useState<BookingView[]>([])
@@ -76,7 +74,7 @@ function MemberDashboard() {
           <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             Good evening, {firstName}
           </h1>
-          <p className="mt-1.5 text-sm text-muted-text">{resident?.unit} · {resident?.tier} Member</p>
+          <p className="mt-1.5 text-sm text-muted-text">{profile?.unit} · {profile ? tierLabel(profile.tier) : ''} Member</p>
         </div>
         <div className="flex gap-3">
           <div className="flex items-center gap-2.5 rounded-xl border border-border bg-canvas/40 px-4 py-3">
