@@ -91,6 +91,10 @@ function ManagementEventsPage() {
       toast.error('Capacity must be at least 1.')
       return
     }
+    if (Number.isNaN(new Date(editing.date).getTime())) {
+      toast.error('Enter a valid date.')
+      return
+    }
     setSaving(true)
     try {
       const payload = {
@@ -98,7 +102,9 @@ function ManagementEventsPage() {
         category: editing.category,
         description: editing.description.trim(),
         image: editing.image,
-        date: editing.date,
+        // The <input type="date"> value is a bare "YYYY-MM-DD"; the API's date column needs
+        // a full ISO datetime, or Prisma rejects it with an unhandled validation error.
+        date: new Date(editing.date).toISOString(),
         time: editing.time.trim(),
         location: editing.location.trim(),
         capacity: editing.capacity,
