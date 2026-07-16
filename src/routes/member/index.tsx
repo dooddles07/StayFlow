@@ -10,6 +10,7 @@ import { EmptyState } from '#/components/stayflow/empty-state'
 import { getNotices } from '#/lib/api/notice'
 import { getFacilities } from '#/lib/api/facility'
 import { getMyBookings, type BookingView } from '#/lib/api/booking'
+import { getMyReservations, type ReservationView } from '#/lib/api/diningReservation'
 import { tierLabel } from '#/lib/api/resident'
 import { useMyProfile } from '#/lib/store/member-profile'
 import type { Facility, Notice } from '#/lib/mock/types'
@@ -25,6 +26,7 @@ function MemberDashboard() {
 
   const [facilities, setFacilities] = React.useState<Facility[]>([])
   const [bookings, setBookings] = React.useState<BookingView[]>([])
+  const [reservations, setReservations] = React.useState<ReservationView[]>([])
   React.useEffect(() => {
     let active = true
     getFacilities()
@@ -37,16 +39,40 @@ function MemberDashboard() {
   React.useEffect(() => {
     if (!profile) return
     let active = true
-    getMyBookings(profile.id)
-      .then((data) => active && setBookings(data))
+    Promise.all([getMyBookings(profile.id), getMyReservations(profile.id)])
+      .then(([b, r]) => {
+        if (!active) return
+        setBookings(b)
+        setReservations(r)
+      })
       .catch(() => {})
     return () => {
       active = false
     }
   }, [profile])
 
-  const upcomingBookings = bookings
-    .filter((b) => b.status !== 'cancelled')
+  const upcoming = [
+    ...bookings
+      .filter((b) => b.status !== 'cancelled')
+      .map((b) => ({
+        id: b.id,
+        date: b.date,
+        title: b.facilityName ?? 'Facility',
+        subtitle: b.timeSlot,
+        status: b.status,
+        meta: `Party of ${b.partySize}`,
+      })),
+    ...reservations
+      .filter((r) => r.status !== 'cancelled')
+      .map((r) => ({
+        id: r.id,
+        date: r.date,
+        title: r.restaurantName ?? 'Restaurant',
+        subtitle: r.time,
+        status: r.status,
+        meta: `Party of ${r.partySize}`,
+      })),
+  ]
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 4)
 
@@ -103,19 +129,19 @@ function MemberDashboard() {
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <SectionHeader title="Upcoming Reservations" viewAllHref="/member/facilities" />
-          {upcomingBookings.length === 0 ? (
-            <EmptyState icon={Waves} title="No upcoming reservations" description="Book a facility to see it here." />
+          <SectionHeader title="Upcoming Reservations" />
+          {upcoming.length === 0 ? (
+            <EmptyState icon={Waves} title="No upcoming reservations" description="Book a facility or reserve dining to see it here." />
           ) : (
             <div className="space-y-3">
-              {upcomingBookings.map((booking) => (
+              {upcoming.map((item) => (
                 <ReservationRow
-                  key={booking.id}
-                  date={booking.date}
-                  title={booking.facilityName ?? 'Facility'}
-                  subtitle={booking.timeSlot}
-                  status={booking.status}
-                  meta={`Party of ${booking.partySize}`}
+                  key={item.id}
+                  date={item.date}
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  status={item.status}
+                  meta={item.meta}
                 />
               ))}
             </div>
