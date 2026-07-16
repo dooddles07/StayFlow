@@ -19,7 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog'
-import { useMockStore, genId } from '#/lib/store/mock-store'
+import { ApiError } from '#/lib/api/client'
+import { createFacility, deleteFacility, getFacilities, updateFacility } from '#/lib/api/facility'
 import type { Facility, FacilityCategory, FacilityStatus } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/management/facilities')({
@@ -29,40 +30,98 @@ export const Route = createFileRoute('/management/facilities')({
 
 const categories: FacilityCategory[] = ['Wellness', 'Recreation', 'Entertainment', 'Sports', 'Function']
 const statuses: FacilityStatus[] = ['open', 'maintenance', 'closed']
+const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const DEFAULT_FACILITY_IMAGE = '/images/facilities/pool.webp'
+
+function newDraft(): Facility {
+  return {
+    id: '',
+    name: '',
+    category: 'Wellness',
+    description: '',
+    rules: [],
+    image: '',
+    capacity: 10,
+    openHours: '9:00 AM – 9:00 PM',
+    status: 'open',
+    rating: 4.5,
+    location: '',
+  }
+}
 
 function ManagementFacilitiesPage() {
-  const { state, dispatch } = useMockStore()
+  const [facilities, setFacilities] = React.useState<Facility[]>([])
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
   const [editing, setEditing] = React.useState<Facility | null>(null)
   const [deleteTarget, setDeleteTarget] = React.useState<Facility | null>(null)
+  const [saving, setSaving] = React.useState(false)
 
-  function newFacility(): Facility {
-    return {
-      id: genId('fac'),
-      name: '',
-      category: 'Wellness',
-      description: '',
-      rules: [],
-      image: '/images/facilities/pool.jpg',
-      capacity: 10,
-      openHours: '9:00 AM – 9:00 PM',
-      status: 'open',
-      rating: 4.5,
-      location: '',
+  const load = React.useCallback(() => {
+    let active = true
+    setStatus('loading')
+    getFacilities()
+      .then((rows) => {
+        if (!active) return
+        setFacilities(rows)
+        setStatus('ready')
+      })
+      .catch(() => {
+        if (active) setStatus('error')
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  React.useEffect(() => load(), [load])
+
+  async function save() {
+    if (!editing) return
+    if (editing.name.trim() === '' || editing.location.trim() === '') {
+      toast.error('Name and location are required.')
+      return
+    }
+    setSaving(true)
+    try {
+      const payload = {
+        name: editing.name.trim(),
+        category: editing.category,
+        description: editing.description.trim(),
+        rules: editing.rules,
+        image: editing.image.trim() || DEFAULT_FACILITY_IMAGE,
+        capacity: editing.capacity,
+        openHours: editing.openHours.trim(),
+        location: editing.location.trim(),
+        rating: editing.rating,
+        status: editing.status,
+        statusReason: editing.statusReason,
+      }
+      const saved = editing.id ? await updateFacility(editing.id, payload) : await createFacility(payload)
+      setFacilities((prev) => {
+        const exists = prev.some((f) => f.id === saved.id)
+        const next = exists ? prev.map((f) => (f.id === saved.id ? saved : f)) : [...prev, saved]
+        return next.sort((a, b) => a.name.localeCompare(b.name))
+      })
+      toast.success(editing.id ? 'Facility updated' : 'Facility added')
+      setEditing(null)
+    } catch (err) {
+      toast.error(errText(err))
+    } finally {
+      setSaving(false)
     }
   }
 
-  function save(facility: Facility) {
-    const exists = state.facilities.some((f) => f.id === facility.id)
-    dispatch({ type: exists ? 'UPDATE_FACILITY' : 'ADD_FACILITY', payload: facility })
-    setEditing(null)
-    toast.success(exists ? 'Facility updated' : 'Facility added')
-  }
-
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteTarget) return
-    dispatch({ type: 'DELETE_FACILITY', payload: { id: deleteTarget.id } })
-    toast.success(`${deleteTarget.name} removed`)
+    const target = deleteTarget
     setDeleteTarget(null)
+    try {
+      await deleteFacility(target.id)
+      setFacilities((prev) => prev.filter((f) => f.id !== target.id))
+      toast.success(`${target.name} removed`)
+    } catch (err) {
+      toast.error(errText(err))
+    }
   }
 
   return (
@@ -72,74 +131,95 @@ function ManagementFacilitiesPage() {
         title="Facilities"
         description="Manage community amenities and their availability."
         actions={
-          <Button className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => setEditing(newFacility())}>
+          <Button className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => setEditing(newDraft())}>
             <Plus className="size-4" /> Add Facility
           </Button>
         }
       />
 
-      <div className="space-y-3 sm:hidden">
-        {state.facilities.map((f) => (
-          <div key={f.id} className="rounded-2xl border border-border bg-surface p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-sm font-medium text-foreground">{f.name}</p>
-                <p className="text-xs text-muted-text">{f.category} · Capacity {f.capacity}</p>
-              </div>
-              <StatusPill status={f.status} />
-            </div>
-            <div className="mt-3 flex justify-end gap-1.5">
-              <Button size="icon" variant="ghost" className="size-7 text-muted-text hover:text-foreground" onClick={() => setEditing(f)}>
-                <Pencil className="size-3.5" />
-              </Button>
-              <Button size="icon" variant="ghost" className="size-7 text-rose-400 hover:bg-rose-500/10" onClick={() => setDeleteTarget(f)}>
-                <Trash2 className="size-3.5" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="hidden overflow-x-auto rounded-2xl border border-border sm:block">
-        <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="bg-surface-hover text-xs uppercase tracking-wide text-muted-text">
-            <tr>
-              <th className="px-4 py-3 font-medium">Facility</th>
-              <th className="px-4 py-3 font-medium">Category</th>
-              <th className="px-4 py-3 font-medium">Capacity</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border bg-surface">
-            {state.facilities.map((f) => (
-              <tr key={f.id}>
-                <td className="px-4 py-3 font-medium text-foreground">{f.name}</td>
-                <td className="px-4 py-3 text-muted-text">{f.category}</td>
-                <td className="px-4 py-3 text-muted-text">{f.capacity}</td>
-                <td className="px-4 py-3">
-                  <StatusPill status={f.status} />
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1.5">
-                    <Button size="icon" variant="ghost" className="size-7 text-muted-text hover:text-foreground" onClick={() => setEditing(f)}>
-                      <Pencil className="size-3.5" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="size-7 text-rose-400 hover:bg-rose-500/10" onClick={() => setDeleteTarget(f)}>
-                      <Trash2 className="size-3.5" />
-                    </Button>
+      {status === 'loading' ? (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-16 animate-pulse rounded-2xl border border-border bg-surface" />
+          ))}
+        </div>
+      ) : status === 'error' ? (
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center">
+          <p className="text-sm text-muted-text">We couldn't load facilities right now.</p>
+          <Button onClick={load} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+            Retry
+          </Button>
+        </div>
+      ) : facilities.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted-text">
+          No facilities yet. Add your first community amenity.
+        </div>
+      ) : (
+        <>
+          <div className="space-y-3 sm:hidden">
+            {facilities.map((f) => (
+              <div key={f.id} className="rounded-2xl border border-border bg-surface p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{f.name}</p>
+                    <p className="text-xs text-muted-text">{f.category} · Capacity {f.capacity}</p>
                   </div>
-                </td>
-              </tr>
+                  <StatusPill status={f.status} />
+                </div>
+                <div className="mt-3 flex justify-end gap-1.5">
+                  <Button size="icon" variant="ghost" className="size-7 text-muted-text hover:text-foreground" onClick={() => setEditing(f)}>
+                    <Pencil className="size-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="size-7 text-rose-400 hover:bg-rose-500/10" onClick={() => setDeleteTarget(f)}>
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-2xl border border-border sm:block">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead className="bg-surface-hover text-xs uppercase tracking-wide text-muted-text">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Facility</th>
+                  <th className="px-4 py-3 font-medium">Category</th>
+                  <th className="px-4 py-3 font-medium">Capacity</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border bg-surface">
+                {facilities.map((f) => (
+                  <tr key={f.id}>
+                    <td className="px-4 py-3 font-medium text-foreground">{f.name}</td>
+                    <td className="px-4 py-3 text-muted-text">{f.category}</td>
+                    <td className="px-4 py-3 text-muted-text">{f.capacity}</td>
+                    <td className="px-4 py-3">
+                      <StatusPill status={f.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1.5">
+                        <Button size="icon" variant="ghost" className="size-7 text-muted-text hover:text-foreground" onClick={() => setEditing(f)}>
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="size-7 text-rose-400 hover:bg-rose-500/10" onClick={() => setDeleteTarget(f)}>
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       <Sheet open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <SheetContent className="border-border bg-surface text-foreground">
           <SheetHeader>
-            <SheetTitle className="text-foreground">{state.facilities.some((f) => f.id === editing?.id) ? 'Edit Facility' : 'Add Facility'}</SheetTitle>
+            <SheetTitle className="text-foreground">{editing?.id ? 'Edit Facility' : 'Add Facility'}</SheetTitle>
           </SheetHeader>
           {editing && (
             <div className="space-y-4 px-4 pb-6">
@@ -197,8 +277,8 @@ function ManagementFacilitiesPage() {
                 <Label className="mb-1.5 text-xs text-muted-text">Location</Label>
                 <Input value={editing.location} onChange={(e) => setEditing({ ...editing, location: e.target.value })} className="border-border bg-canvas" />
               </div>
-              <Button className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => save(editing)}>
-                Save Facility
+              <Button className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft" disabled={saving} onClick={save}>
+                {saving ? 'Saving…' : 'Save Facility'}
               </Button>
             </div>
           )}

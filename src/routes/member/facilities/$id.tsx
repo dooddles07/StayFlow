@@ -18,63 +18,81 @@ import {
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog'
 import { FACILITY_TIME_SLOTS, nextDays, toDateKey } from '#/lib/booking-slots'
-import { useMockStore, genId } from '#/lib/store/mock-store'
-import { CURRENT_RESIDENT_ID } from '#/lib/session'
+import { ApiError } from '#/lib/api/client'
+import { getFacility } from '#/lib/api/facility'
+import { getFacilityBookings, requestBooking, type FacilitySlot } from '#/lib/api/booking'
+import { useMyProfile } from '#/lib/store/member-profile'
 import { cn } from '#/lib/utils'
-import { getFacilityById } from '#/lib/mock/facilities'
 
 export const Route = createFileRoute('/member/facilities/$id')({
-  loader: ({ params }) => {
-    const facility = getFacilityById(params.id)
-    if (!facility) throw notFound()
-    return { facility }
+  loader: async ({ params }) => {
+    try {
+      const facility = await getFacility(params.id)
+      return { facility }
+    } catch {
+      throw notFound()
+    }
   },
   head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.facility.name ?? 'Facility'} — StayFlow` }] }),
   component: FacilityDetail,
 })
 
+const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+
 function FacilityDetail() {
   const { facility } = Route.useLoaderData()
-  const { state, dispatch } = useMockStore()
+  const { profile } = useMyProfile()
   const days = React.useMemo(() => nextDays(14), [])
   const [selectedDay, setSelectedDay] = React.useState(days[0]!)
   const [selectedSlot, setSelectedSlot] = React.useState<string | null>(null)
   const [partySize, setPartySize] = React.useState(1)
   const [notes, setNotes] = React.useState('')
   const [confirmOpen, setConfirmOpen] = React.useState(false)
+  const [submitting, setSubmitting] = React.useState(false)
+  const [slots, setSlots] = React.useState<FacilitySlot[]>([])
+
+  React.useEffect(() => {
+    let active = true
+    getFacilityBookings(facility.id).then((rows) => {
+      if (active) setSlots(rows)
+    })
+    return () => {
+      active = false
+    }
+  }, [facility.id])
 
   const dateKey = toDateKey(selectedDay)
 
   function slotStatus(slot: string): 'available' | 'pending' | 'booked' {
-    const match = state.bookings.find(
-      (b) => b.facilityId === facility.id && b.date === dateKey && b.timeSlot === slot && b.status !== 'cancelled',
-    )
+    const match = slots.find((s) => s.date.slice(0, 10) === dateKey && s.timeSlot === slot)
     if (!match) return 'available'
     return match.status === 'pending' ? 'pending' : 'booked'
   }
 
-  function handleConfirmBooking() {
-    if (!selectedSlot) return
-    dispatch({
-      type: 'ADD_BOOKING',
-      payload: {
-        id: genId('bkg'),
+  async function handleConfirmBooking() {
+    if (!selectedSlot || submitting) return
+    setSubmitting(true)
+    try {
+      const dateIso = new Date(dateKey).toISOString()
+      await requestBooking({
         facilityId: facility.id,
-        residentId: CURRENT_RESIDENT_ID,
-        date: dateKey,
+        date: dateIso,
         timeSlot: selectedSlot,
         partySize,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        notes: notes || undefined,
-      },
-    })
-    setConfirmOpen(false)
-    setSelectedSlot(null)
-    setNotes('')
-    toast.success('Booking requested', {
-      description: `${facility.name} · ${selectedDay.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ${selectedSlot}`,
-    })
+        notes: notes.trim() || undefined,
+      })
+      setSlots((prev) => [...prev, { date: dateIso, timeSlot: selectedSlot, status: 'pending' }])
+      setConfirmOpen(false)
+      setSelectedSlot(null)
+      setNotes('')
+      toast.success('Booking requested', {
+        description: `${facility.name} · ${selectedDay.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ${selectedSlot}`,
+      })
+    } catch (err) {
+      toast.error(errText(err))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const isDisabled = facility.status !== 'open'
@@ -239,7 +257,7 @@ function FacilityDetail() {
 
               <Button
                 className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft"
-                disabled={!selectedSlot}
+                disabled={!selectedSlot || !profile}
                 onClick={() => setConfirmOpen(true)}
               >
                 Request Booking
@@ -269,8 +287,8 @@ function FacilityDetail() {
             <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-surface-hover">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction className="bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={handleConfirmBooking}>
-              Confirm Booking
+            <AlertDialogAction disabled={submitting} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={handleConfirmBooking}>
+              {submitting ? 'Confirming…' : 'Confirm Booking'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
