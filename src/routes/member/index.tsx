@@ -11,6 +11,7 @@ import { getNotices } from '#/lib/api/notice'
 import { getFacilities } from '#/lib/api/facility'
 import { getMyBookings, type BookingView } from '#/lib/api/booking'
 import { getMyReservations, type ReservationView } from '#/lib/api/diningReservation'
+import { getRestaurants } from '#/lib/api/restaurant'
 import { tierLabel } from '#/lib/api/resident'
 import { useMyProfile } from '#/lib/store/member-profile'
 import type { Facility, Notice } from '#/lib/mock/types'
@@ -27,10 +28,20 @@ function MemberDashboard() {
   const [facilities, setFacilities] = React.useState<Facility[]>([])
   const [bookings, setBookings] = React.useState<BookingView[]>([])
   const [reservations, setReservations] = React.useState<ReservationView[]>([])
+  const [restaurantCount, setRestaurantCount] = React.useState<number | null>(null)
   React.useEffect(() => {
     let active = true
     getFacilities()
       .then((data) => active && setFacilities(data))
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
+  React.useEffect(() => {
+    let active = true
+    getRestaurants()
+      .then((data) => active && setRestaurantCount(data.length))
       .catch(() => {})
     return () => {
       active = false
@@ -122,7 +133,12 @@ function MemberDashboard() {
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <QuickActionCard icon={Waves} label="Book a Facility" description="Pool, gym & more" to="/member/facilities" />
-        <QuickActionCard icon={UtensilsCrossed} label="Reserve Dining" description="4 restaurants" to="/member/dining" />
+        <QuickActionCard
+          icon={UtensilsCrossed}
+          label="Reserve Dining"
+          description={restaurantCount === null ? 'Book a table' : `${restaurantCount} restaurant${restaurantCount === 1 ? '' : 's'}`}
+          to="/member/dining"
+        />
         <QuickActionCard icon={UserPlus} label="Register Guest" description="Get a pass" to="/member/guests" />
         <QuickActionCard icon={CalendarPlus} label="Browse Events" description="This week" to="/member/events" />
       </div>
