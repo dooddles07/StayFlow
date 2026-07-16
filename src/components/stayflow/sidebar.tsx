@@ -10,13 +10,14 @@ interface SidebarProps {
   portal: Portal
   identityName: string
   identitySubtitle: string
+  identityLoading?: boolean
   avatarSeed?: string
   avatarStyle?: string | null
   onNavigate?: () => void
   className?: string
 }
 
-export function Sidebar({ portal, identityName, identitySubtitle, avatarSeed, avatarStyle, onNavigate, className }: SidebarProps) {
+export function Sidebar({ portal, identityName, identitySubtitle, identityLoading, avatarSeed, avatarStyle, onNavigate, className }: SidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
@@ -60,10 +61,23 @@ export function Sidebar({ portal, identityName, identitySubtitle, avatarSeed, av
 
       <div className="mt-auto space-y-3 border-t border-sidebar-border p-4">
         <div className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5">
-          <UserAvatar seed={avatarSeed ?? identityName} style={avatarStyle} name={identityName} />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground">{identityName}</p>
-            <p className="truncate text-xs text-muted-text">{identitySubtitle}</p>
+          {identityLoading ? (
+            <div className="size-9 shrink-0 animate-pulse rounded-full bg-surface-hover" />
+          ) : (
+            <UserAvatar seed={avatarSeed ?? identityName} style={avatarStyle} name={identityName} />
+          )}
+          <div className="min-w-0 flex-1">
+            {identityLoading ? (
+              <>
+                <div className="mb-1 h-3.5 w-28 animate-pulse rounded bg-surface-hover" />
+                <div className="h-3 w-20 animate-pulse rounded bg-surface-hover" />
+              </>
+            ) : (
+              <>
+                <p className="truncate text-sm font-medium text-foreground">{identityName}</p>
+                <p className="truncate text-xs text-muted-text">{identitySubtitle}</p>
+              </>
+            )}
           </div>
         </div>
         <button

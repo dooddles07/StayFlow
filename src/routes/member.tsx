@@ -8,13 +8,14 @@ export const Route = createFileRoute('/member')({
 })
 
 function MemberShell() {
-  const { profile } = useMyProfile()
+  const { profile, status } = useMyProfile()
 
   return (
     <AppShell
       portal="member"
       identityName={profile?.name ?? 'Member'}
       identitySubtitle={profile?.unit ?? ''}
+      identityLoading={status === 'loading'}
       avatarSeed={profile?.avatarSeed}
       avatarStyle={profile?.avatarStyle}
     >

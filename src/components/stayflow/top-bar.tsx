@@ -6,12 +6,13 @@ import { useUiStore } from '#/lib/store/ui-store'
 interface TopBarProps {
   identityName: string
   identitySubtitle: string
+  identityLoading?: boolean
   avatarSeed?: string
   avatarStyle?: string | null
   onOpenMobileNav: () => void
 }
 
-export function TopBar({ identityName, identitySubtitle, avatarSeed, avatarStyle, onOpenMobileNav }: TopBarProps) {
+export function TopBar({ identityName, identitySubtitle, identityLoading, avatarSeed, avatarStyle, onOpenMobileNav }: TopBarProps) {
   const setSearchOpen = useUiStore((s) => s.setSearchOpen)
 
   return (
@@ -41,10 +42,23 @@ export function TopBar({ identityName, identitySubtitle, avatarSeed, avatarStyle
         <NotificationBell />
         <div className="mx-1 hidden h-6 w-px bg-border sm:block" />
         <div className="hidden items-center gap-2.5 sm:flex">
-          <UserAvatar seed={avatarSeed ?? identityName} style={avatarStyle} name={identityName} />
+          {identityLoading ? (
+            <div className="size-9 shrink-0 animate-pulse rounded-full bg-surface-hover" />
+          ) : (
+            <UserAvatar seed={avatarSeed ?? identityName} style={avatarStyle} name={identityName} />
+          )}
           <div className="max-w-[10rem]">
-            <p className="truncate text-sm font-medium leading-tight text-foreground">{identityName}</p>
-            <p className="truncate text-xs leading-tight text-muted-text">{identitySubtitle}</p>
+            {identityLoading ? (
+              <>
+                <div className="mb-1 h-3.5 w-24 animate-pulse rounded bg-surface-hover" />
+                <div className="h-3 w-16 animate-pulse rounded bg-surface-hover" />
+              </>
+            ) : (
+              <>
+                <p className="truncate text-sm font-medium leading-tight text-foreground">{identityName}</p>
+                <p className="truncate text-xs leading-tight text-muted-text">{identitySubtitle}</p>
+              </>
+            )}
           </div>
         </div>
         <UserAvatar seed={avatarSeed ?? identityName} style={avatarStyle} name={identityName} className="sm:hidden" />

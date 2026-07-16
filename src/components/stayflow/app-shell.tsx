@@ -9,12 +9,13 @@ interface AppShellProps {
   portal: Portal
   identityName: string
   identitySubtitle: string
+  identityLoading?: boolean
   avatarSeed?: string
   avatarStyle?: string | null
   children: React.ReactNode
 }
 
-export function AppShell({ portal, identityName, identitySubtitle, avatarSeed, avatarStyle, children }: AppShellProps) {
+export function AppShell({ portal, identityName, identitySubtitle, identityLoading, avatarSeed, avatarStyle, children }: AppShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false)
 
   return (
@@ -23,6 +24,7 @@ export function AppShell({ portal, identityName, identitySubtitle, avatarSeed, a
         portal={portal}
         identityName={identityName}
         identitySubtitle={identitySubtitle}
+        identityLoading={identityLoading}
         avatarSeed={avatarSeed}
         avatarStyle={avatarStyle}
         className="hidden lg:flex"
@@ -35,6 +37,7 @@ export function AppShell({ portal, identityName, identitySubtitle, avatarSeed, a
             portal={portal}
             identityName={identityName}
             identitySubtitle={identitySubtitle}
+            identityLoading={identityLoading}
             avatarSeed={avatarSeed}
             avatarStyle={avatarStyle}
             onNavigate={() => setMobileNavOpen(false)}
@@ -47,6 +50,7 @@ export function AppShell({ portal, identityName, identitySubtitle, avatarSeed, a
         <TopBar
           identityName={identityName}
           identitySubtitle={identitySubtitle}
+          identityLoading={identityLoading}
           avatarSeed={avatarSeed}
           avatarStyle={avatarStyle}
           onOpenMobileNav={() => setMobileNavOpen(true)}
