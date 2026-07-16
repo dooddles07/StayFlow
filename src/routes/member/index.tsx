@@ -15,6 +15,7 @@ import { getMyReservations, type ReservationView } from '#/lib/api/diningReserva
 import { getRestaurants } from '#/lib/api/restaurant'
 import { tierLabel } from '#/lib/api/resident'
 import { useMyProfile } from '#/lib/store/member-profile'
+import { getWeather, type WeatherSnapshot } from '#/lib/weather'
 import type { Facility, Notice } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/member/')({
@@ -54,6 +55,24 @@ function MemberDashboard() {
     getRestaurants()
       .then((data) => active && setRestaurantCount(data.length))
       .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const [weather, setWeather] = React.useState<WeatherSnapshot | null>(null)
+  const [weatherStatus, setWeatherStatus] = React.useState<LoadStatus>('loading')
+  React.useEffect(() => {
+    let active = true
+    getWeather()
+      .then((data) => {
+        if (!active) return
+        setWeather(data)
+        setWeatherStatus('ready')
+      })
+      .catch(() => {
+        if (active) setWeatherStatus('error')
+      })
     return () => {
       active = false
     }
@@ -142,22 +161,31 @@ function MemberDashboard() {
           </h1>
           <p className="mt-1.5 text-sm text-muted-text">{profile?.unit} · {profile ? tierLabel(profile.tier) : ''} Member</p>
         </div>
-        <div className="flex gap-3">
-          <div className="flex items-center gap-2.5 rounded-xl border border-border bg-canvas/40 px-4 py-3">
-            <CloudSun className="size-5 text-accent-gold" />
-            <div>
-              <p className="text-sm font-medium text-foreground">72°F · Clear</p>
-              <p className="text-[11px] text-muted-text">Perfect pool weather</p>
+        {weatherStatus === 'loading' ? (
+          <div className="flex gap-3">
+            <div className="h-[52px] w-40 animate-pulse rounded-xl border border-border bg-canvas/40" />
+            <div className="h-[52px] w-32 animate-pulse rounded-xl border border-border bg-canvas/40" />
+          </div>
+        ) : weatherStatus === 'ready' && weather ? (
+          <div className="flex gap-3">
+            <div className="flex items-center gap-2.5 rounded-xl border border-border bg-canvas/40 px-4 py-3">
+              <CloudSun className="size-5 text-accent-gold" />
+              <div>
+                <p className="text-sm font-medium text-foreground">{weather.tempF}°F · {weather.condition}</p>
+                <p className="text-[11px] text-muted-text">San Francisco</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-xl border border-border bg-canvas/40 px-4 py-3">
+              <Sunset className="size-5 text-accent-gold" />
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {weather.sunset.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                </p>
+                <p className="text-[11px] text-muted-text">Sunset tonight</p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 rounded-xl border border-border bg-canvas/40 px-4 py-3">
-            <Sunset className="size-5 text-accent-gold" />
-            <div>
-              <p className="text-sm font-medium text-foreground">7:42 PM</p>
-              <p className="text-[11px] text-muted-text">Sunset tonight</p>
-            </div>
-          </div>
-        </div>
+        ) : null}
       </div>
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
