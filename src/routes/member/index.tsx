@@ -14,6 +14,7 @@ import { getMyBookings, type BookingView } from '#/lib/api/booking'
 import { getMyReservations, type ReservationView } from '#/lib/api/diningReservation'
 import { getRestaurants } from '#/lib/api/restaurant'
 import { tierLabel } from '#/lib/api/resident'
+import { isPastDate } from '#/lib/history'
 import { useMyProfile } from '#/lib/store/member-profile'
 import { getWeather, type WeatherSnapshot } from '#/lib/weather'
 import type { Facility, Notice } from '#/lib/mock/types'
@@ -109,9 +110,10 @@ function MemberDashboard() {
   }, [])
   React.useEffect(() => loadUpcoming(profile?.id), [profile, loadUpcoming])
 
+  // Match the facilities/dining list pages: only still-active requests whose date hasn't passed.
   const upcoming = [
     ...bookings
-      .filter((b) => b.status !== 'cancelled')
+      .filter((b) => (b.status === 'pending' || b.status === 'confirmed') && !isPastDate(b.date))
       .map((b) => ({
         id: b.id,
         date: b.date,
@@ -121,7 +123,7 @@ function MemberDashboard() {
         meta: `Party of ${b.partySize}`,
       })),
     ...reservations
-      .filter((r) => r.status !== 'cancelled')
+      .filter((r) => (r.status === 'pending' || r.status === 'confirmed') && !isPastDate(r.date))
       .map((r) => ({
         id: r.id,
         date: r.date,
