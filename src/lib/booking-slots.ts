@@ -38,3 +38,12 @@ export function toDateKey(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
+
+// Whole numbers only, 1..max — a party can't be negative, zero, or fractional. Native
+// number-input min/max are cosmetic here since these forms preventDefault() on submit,
+// so this is the only thing actually stopping "-5" or "2.5" from reaching the API.
+export function clampPartySize(raw: string, max: number): number {
+  const n = Math.floor(Number(raw))
+  if (!Number.isFinite(n) || n < 1) return 1
+  return Math.min(n, max)
+}

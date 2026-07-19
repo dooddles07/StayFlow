@@ -20,7 +20,7 @@ import { ApiError } from '#/lib/api/client'
 import { getRestaurant } from '#/lib/api/restaurant'
 import { requestReservation } from '#/lib/api/diningReservation'
 import { useMyProfile } from '#/lib/store/member-profile'
-import { nextDays, toDateKey } from '#/lib/booking-slots'
+import { clampPartySize, nextDays, toDateKey } from '#/lib/booking-slots'
 import { hideBrokenImg } from '#/lib/utils'
 import type { DiningReservation } from '#/lib/mock/types'
 
@@ -175,7 +175,7 @@ function RestaurantDetail() {
               min={1}
               max={restaurant.maxPartySize}
               value={partySize}
-              onChange={(e) => setPartySize(Math.min(Number(e.target.value) || 1, restaurant.maxPartySize))}
+              onChange={(e) => setPartySize(clampPartySize(e.target.value, restaurant.maxPartySize))}
               className="border-border bg-canvas"
             />
             {partySize >= restaurant.maxPartySize && (

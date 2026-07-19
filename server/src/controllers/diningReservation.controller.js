@@ -2,6 +2,7 @@ import { DiningReservationModel } from '../models/diningReservation.model.js'
 import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
+import { requirePositiveInt } from '../utils/validate.js'
 
 const base = buildCrudController(DiningReservationModel, 'Dining reservation')
 
@@ -13,7 +14,8 @@ const toFullDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$
 export const diningReservationController = {
   ...base,
   create: asyncHandler(async (req, res) => {
-    const reservation = await DiningReservationModel.create({ ...req.body, date: toFullDate(req.body.date) })
+    const partySize = requirePositiveInt(req.body.partySize, 'partySize')
+    const reservation = await DiningReservationModel.create({ ...req.body, date: toFullDate(req.body.date), partySize })
     res.status(201).json(reservation)
   }),
   // Status transitions carry real-world side effects on the table map — a plain field
@@ -21,6 +23,7 @@ export const diningReservationController = {
   update: asyncHandler(async (req, res) => {
     const data = { ...req.body }
     if ('date' in data) data.date = toFullDate(data.date)
+    if ('partySize' in data) data.partySize = requirePositiveInt(data.partySize, 'partySize')
 
     if (data.status) {
       const current = await DiningReservationModel.findById(req.params.id)

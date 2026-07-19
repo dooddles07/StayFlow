@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog'
-import { FACILITY_TIME_SLOTS, nextDays, toDateKey } from '#/lib/booking-slots'
+import { FACILITY_TIME_SLOTS, clampPartySize, nextDays, toDateKey } from '#/lib/booking-slots'
 import { ApiError } from '#/lib/api/client'
 import { getFacility } from '#/lib/api/facility'
 import { getFacilityBookings, requestBooking, type FacilitySlot } from '#/lib/api/booking'
@@ -237,7 +237,7 @@ function FacilityDetail() {
                     min={1}
                     max={facility.capacity}
                     value={partySize}
-                    onChange={(e) => setPartySize(Number(e.target.value) || 1)}
+                    onChange={(e) => setPartySize(clampPartySize(e.target.value, facility.capacity))}
                     className="border-border bg-canvas"
                   />
                 </div>

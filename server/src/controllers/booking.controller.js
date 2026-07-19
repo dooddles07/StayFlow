@@ -2,6 +2,7 @@ import { BookingModel } from '../models/booking.model.js'
 import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
+import { requirePositiveInt } from '../utils/validate.js'
 
 const base = buildCrudController(BookingModel, 'Booking')
 
@@ -14,14 +15,16 @@ export const bookingController = {
   ...base,
   create: asyncHandler(async (req, res) => {
     const date = toFullDate(req.body.date)
+    const partySize = requirePositiveInt(req.body.partySize, 'partySize')
     const conflict = await BookingModel.findSlotConflict(req.body.facilityId, date, req.body.timeSlot)
     if (conflict) throw ApiError.conflict('That slot was just taken. Pick another time.')
-    const booking = await BookingModel.create({ ...req.body, date })
+    const booking = await BookingModel.create({ ...req.body, date, partySize })
     res.status(201).json(booking)
   }),
   update: asyncHandler(async (req, res) => {
     const data = { ...req.body }
     if ('date' in data) data.date = toFullDate(data.date)
+    if ('partySize' in data) data.partySize = requirePositiveInt(data.partySize, 'partySize')
     res.json(await BookingModel.update(req.params.id, data))
   }),
   byResident: asyncHandler(async (req, res) => {
