@@ -1,4 +1,5 @@
 import { DiningReservationModel } from '../models/diningReservation.model.js'
+import { RestaurantModel } from '../models/restaurant.model.js'
 import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
@@ -11,10 +12,21 @@ const base = buildCrudController(DiningReservationModel, 'Dining reservation')
 // events and guests; hardening it here rather than trusting every future caller.
 const toFullDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00.000Z` : value)
 
+// The client's party-size input caps at restaurant.maxPartySize, but that's UI-only —
+// a direct API call could skip it entirely. Enforce it here too.
+async function assertWithinCapacity(restaurantId, partySize) {
+  const restaurant = await RestaurantModel.findById(restaurantId)
+  if (!restaurant) throw ApiError.badRequest('Restaurant not found.')
+  if (partySize > restaurant.maxPartySize) {
+    throw ApiError.badRequest(`Party of ${partySize} exceeds this restaurant's max online party size of ${restaurant.maxPartySize}. Call the restaurant directly for larger groups.`)
+  }
+}
+
 export const diningReservationController = {
   ...base,
   create: asyncHandler(async (req, res) => {
     const partySize = requirePositiveInt(req.body.partySize, 'partySize')
+    await assertWithinCapacity(req.body.restaurantId, partySize)
     const reservation = await DiningReservationModel.create({ ...req.body, date: toFullDate(req.body.date), partySize })
     res.status(201).json(reservation)
   }),
@@ -25,13 +37,19 @@ export const diningReservationController = {
     if ('date' in data) data.date = toFullDate(data.date)
     if ('partySize' in data) data.partySize = requirePositiveInt(data.partySize, 'partySize')
 
-    if (data.status) {
+    if (data.status || 'partySize' in data) {
       const current = await DiningReservationModel.findById(req.params.id)
       if (!current) throw ApiError.notFound('Dining reservation not found')
 
+      if ('partySize' in data) {
+        await assertWithinCapacity(data.restaurantId ?? current.restaurantId, data.partySize)
+      }
+
+      const effectivePartySize = data.partySize ?? current.partySize
+
       if (data.status === 'CONFIRMED' && !current.tableId) {
-        const table = await DiningReservationModel.findAvailableTable(current.restaurantId, current.partySize)
-        if (!table) throw ApiError.conflict(`No available table seats a party of ${current.partySize} right now.`)
+        const table = await DiningReservationModel.findAvailableTable(current.restaurantId, effectivePartySize)
+        if (!table) throw ApiError.conflict(`No available table seats a party of ${effectivePartySize} right now.`)
         await DiningReservationModel.setTableStatus(table.id, 'RESERVED')
         data.tableId = table.id
       }
