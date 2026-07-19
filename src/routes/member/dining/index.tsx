@@ -34,7 +34,7 @@ export const Route = createFileRoute('/member/dining/')({
 const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
 
 function DiningList() {
-  const { profile } = useMyProfile()
+  const { profile, status: profileStatus, reload: reloadProfile } = useMyProfile()
   const [restaurants, setRestaurants] = React.useState<Restaurant[]>([])
   const [reservations, setReservations] = React.useState<ReservationView[]>([])
   const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
@@ -62,7 +62,10 @@ function DiningList() {
 
   React.useEffect(() => {
     if (profile) return load(profile.id)
-  }, [profile, load])
+    // Profile fetch itself failed — without this the page sits on the loading
+    // skeleton forever since load() never fires and never flips local status.
+    if (profileStatus === 'error') setStatus('error')
+  }, [profile, profileStatus, load])
 
   // Upcoming = still-active reservations whose date hasn't passed; everything else is history.
   const upcoming = [...reservations]
@@ -199,7 +202,10 @@ function DiningList() {
       ) : status === 'error' ? (
         <div className="rounded-2xl border border-border bg-surface p-8 text-center">
           <p className="text-sm text-muted-text">We couldn't load restaurants right now.</p>
-          <Button onClick={() => load(profile?.id)} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <Button
+            onClick={() => (profile ? load(profile.id) : reloadProfile())}
+            className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             Retry
           </Button>
         </div>

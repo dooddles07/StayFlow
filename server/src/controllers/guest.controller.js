@@ -36,7 +36,15 @@ export const guestController = {
     res.status(201).json(guest)
   }),
   update: asyncHandler(async (req, res) => {
-    const data = { ...req.body }
+    // A MEMBER owns the record (route guard) but may only edit visit details — never
+    // status, check-in timestamps, the host link, or the pass number. Without this
+    // allowlist an owner could self-approve/check-in their guest (otherwise staff-only)
+    // or reassign the guest to another resident. STAFF/MANAGEMENT keep full control.
+    const MEMBER_EDITABLE = ['purpose', 'vehiclePlate', 'arrivalDate', 'arrivalTime']
+    const data =
+      req.user.role === 'MEMBER'
+        ? Object.fromEntries(MEMBER_EDITABLE.filter((f) => f in req.body).map((f) => [f, req.body[f]]))
+        : { ...req.body }
     if ('arrivalDate' in data) data.arrivalDate = toFullDate(data.arrivalDate)
     // passNumber is server-assigned at creation and never client-editable afterward.
     delete data.passNumber

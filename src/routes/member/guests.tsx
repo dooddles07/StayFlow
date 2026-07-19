@@ -37,7 +37,7 @@ export const Route = createFileRoute('/member/guests')({
 const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
 
 function GuestsPage() {
-  const { profile } = useMyProfile()
+  const { profile, status: profileStatus, reload: reloadProfile } = useMyProfile()
   const days = React.useMemo(() => nextDays(14), [])
 
   const [guests, setGuests] = React.useState<GuestView[]>([])
@@ -78,7 +78,10 @@ function GuestsPage() {
 
   React.useEffect(() => {
     if (profile) return load(profile.id)
-  }, [profile, load])
+    // Profile fetch itself failed — without this the page sits on the loading
+    // skeleton forever since load() never fires and never flips local status.
+    if (profileStatus === 'error') setStatus('error')
+  }, [profile, profileStatus, load])
 
   // Upcoming = still-expected visits whose arrival date hasn't passed; everything
   // else (checked-out, or any past date) drops into a collapsible history.
@@ -275,7 +278,7 @@ function GuestsPage() {
             <div className="rounded-2xl border border-border bg-surface p-8 text-center">
               <p className="text-sm text-muted-text">We couldn't load your guests right now.</p>
               <Button
-                onClick={() => profile && load(profile.id)}
+                onClick={() => (profile ? load(profile.id) : reloadProfile())}
                 className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
               >
                 Retry
