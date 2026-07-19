@@ -24,16 +24,18 @@ function NotificationList({
   items,
   onMarkRead,
   onMarkAllRead,
+  onOpenChange,
 }: {
   items: { id: string; kind: NotificationKind; title: string; body: string; createdAt: string; read: boolean }[]
   onMarkRead: (id: string) => void
   onMarkAllRead: () => void
+  onOpenChange?: (open: boolean) => void
 }) {
   const unread = items.filter((n) => !n.read)
   const sorted = [...items].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
 
   return (
-    <Popover>
+    <Popover onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -124,7 +126,16 @@ function MemberNotificationBell({ residentId }: { residentId: string }) {
       active = false
     }
   }, [residentId])
-  React.useEffect(() => load(), [load])
+
+  // Poll so new notifications surface without a full page reload; also refetch on open.
+  React.useEffect(() => {
+    const cleanup = load()
+    const timer = setInterval(load, 60_000)
+    return () => {
+      cleanup()
+      clearInterval(timer)
+    }
+  }, [load])
 
   async function handleMarkRead(id: string) {
     setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
@@ -144,7 +155,14 @@ function MemberNotificationBell({ residentId }: { residentId: string }) {
     }
   }
 
-  return <NotificationList items={items} onMarkRead={handleMarkRead} onMarkAllRead={handleMarkAllRead} />
+  return (
+    <NotificationList
+      items={items}
+      onMarkRead={handleMarkRead}
+      onMarkAllRead={handleMarkAllRead}
+      onOpenChange={(open) => open && load()}
+    />
+  )
 }
 
 function MockNotificationBell() {

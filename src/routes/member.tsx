@@ -16,15 +16,20 @@ function MemberShell() {
   React.useEffect(() => {
     if (!profile) return
     let active = true
-    getNotices()
-      .then((notices) => {
-        if (!active) return
-        const seen = profile.noticesLastSeenAt
-        setHasUnreadNotices(notices.some((n) => seen === null || n.postedAt > seen))
-      })
-      .catch(() => {})
+    const seen = profile.noticesLastSeenAt
+    const check = () =>
+      getNotices()
+        .then((notices) => {
+          if (!active) return
+          setHasUnreadNotices(notices.some((n) => seen === null || n.postedAt > seen))
+        })
+        .catch(() => {})
+    check()
+    // Poll so a freshly posted notice lights the badge without a full page reload.
+    const timer = setInterval(check, 60_000)
     return () => {
       active = false
+      clearInterval(timer)
     }
   }, [profile])
 
