@@ -29,9 +29,8 @@ export const bookingController = {
     const date = toFullDate(req.body.date)
     const partySize = requirePositiveInt(req.body.partySize, 'partySize')
     await assertWithinCapacity(req.body.facilityId, partySize)
-    const conflict = await BookingModel.findSlotConflict(req.body.facilityId, date, req.body.timeSlot)
-    if (conflict) throw ApiError.conflict('That slot was just taken. Pick another time.')
-    const booking = await BookingModel.create({ ...req.body, date, partySize })
+    const booking = await BookingModel.createIfNoConflict({ ...req.body, date, partySize })
+    if (!booking) throw ApiError.conflict('That slot was just taken. Pick another time.')
     res.status(201).json(booking)
   }),
   update: asyncHandler(async (req, res) => {
