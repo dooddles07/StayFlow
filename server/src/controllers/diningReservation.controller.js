@@ -47,4 +47,16 @@ export const diningReservationController = {
   byResident: asyncHandler(async (req, res) => {
     res.json(await DiningReservationModel.findByResident(req.params.residentId))
   }),
+  // A confirmed/arrived reservation holds a table (RESERVED/OCCUPIED). Deleting the
+  // reservation without releasing it would strand that table — nothing else ever
+  // assigns it again, since findAvailableTable only looks at AVAILABLE tables. The
+  // generic crudController.remove doesn't know about this side effect, so it's
+  // overridden here rather than inherited from `base`.
+  remove: asyncHandler(async (req, res) => {
+    const current = await DiningReservationModel.findById(req.params.id)
+    if (!current) throw ApiError.notFound('Dining reservation not found')
+    if (current.tableId) await DiningReservationModel.setTableStatus(current.tableId, 'AVAILABLE')
+    await DiningReservationModel.remove(req.params.id)
+    res.status(204).send()
+  }),
 }
