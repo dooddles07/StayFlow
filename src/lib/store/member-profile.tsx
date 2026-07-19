@@ -1,7 +1,11 @@
 import * as React from 'react'
+import { ApiError } from '#/lib/api/client'
 import { getMyProfile, type ResidentProfile } from '#/lib/api/resident'
 
-type ProfileStatus = 'loading' | 'ready' | 'error'
+// 'no-resident' = the account authenticated fine but has no resident record linked
+// (404 from /residents/me) — a setup problem, not a transient failure, so it's kept
+// distinct from 'error' and never worth retrying the same way.
+type ProfileStatus = 'loading' | 'ready' | 'error' | 'no-resident'
 
 interface MemberProfileContextValue {
   profile: ResidentProfile | null
@@ -25,8 +29,9 @@ export function MemberProfileProvider({ children }: { children: React.ReactNode 
         setProfile(data)
         setStatus('ready')
       })
-      .catch(() => {
-        if (active) setStatus('error')
+      .catch((err) => {
+        if (!active) return
+        setStatus(err instanceof ApiError && err.status === 404 ? 'no-resident' : 'error')
       })
     return () => {
       active = false
