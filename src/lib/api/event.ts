@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api, cachedGet, invalidateCache } from './client'
 import type { EventCategory } from '#/lib/mock/types'
 
 interface EventRsvpRow {
@@ -52,13 +52,17 @@ const toEvent = (e: EventApiResponse): CommunityEventView => ({
   attendeeIds: (e.rsvps ?? []).map((r) => r.residentId),
 })
 
-export const getEvents = () => api.get<EventApiResponse[]>('/events').then((rows) => rows.map(toEvent))
+export const getEvents = () => cachedGet<EventApiResponse[]>('/events').then((rows) => rows.map(toEvent))
+
+// RSVP changes attendee counts — bust the list cache so the next visit reads fresh.
+const bust = () => invalidateCache('/events')
 
 // residentId is ignored server-side for MEMBER callers (forced to the caller's own id by
 // requireOwnResidentBody) — sending {} is enough; STAFF/MANAGEMENT would need to pass one.
-export const rsvpToEvent = (eventId: string) => api.post<EventApiResponse>(`/events/${eventId}/rsvp`, {}).then(toEvent)
+export const rsvpToEvent = (eventId: string) =>
+  api.post<EventApiResponse>(`/events/${eventId}/rsvp`, {}).then(toEvent).finally(bust)
 export const cancelEventRsvp = (eventId: string) =>
-  api.post<EventApiResponse>(`/events/${eventId}/rsvp/cancel`, {}).then(toEvent)
+  api.post<EventApiResponse>(`/events/${eventId}/rsvp/cancel`, {}).then(toEvent).finally(bust)
 
 export interface EventInput {
   title: string
@@ -73,6 +77,7 @@ export interface EventInput {
 }
 
 // Writes require STAFF/MANAGEMENT (enforced server-side). id/rsvps are set by the server.
-export const createEvent = (data: EventInput) => api.post<EventApiResponse>('/events', data).then(toEvent)
-export const updateEvent = (id: string, data: EventInput) => api.put<EventApiResponse>(`/events/${id}`, data).then(toEvent)
-export const deleteEvent = (id: string) => api.del<void>(`/events/${id}`)
+export const createEvent = (data: EventInput) => api.post<EventApiResponse>('/events', data).then(toEvent).finally(bust)
+export const updateEvent = (id: string, data: EventInput) =>
+  api.put<EventApiResponse>(`/events/${id}`, data).then(toEvent).finally(bust)
+export const deleteEvent = (id: string) => api.del<void>(`/events/${id}`).finally(bust)

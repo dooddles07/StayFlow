@@ -36,3 +36,38 @@ export const api = {
   put: <T>(path: string, data: unknown) => request<T>(path, { method: 'PUT', body: JSON.stringify(data) }),
   del: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
 }
+
+// --- Shared read cache -------------------------------------------------------
+// Only for reference reads that are shared across pages and low-churn (facilities,
+// restaurants, notices, events). Two things at once:
+//   1. In-flight dedupe — concurrent callers for the same path share one request
+//      (kills the dashboard's double /notices fetch).
+//   2. Short TTL — repeat mounts within the window reuse the last value instead of
+//      re-hitting the network on every navigation.
+// Per-resident lists (bookings/guests/reservations/notifications) are NOT cached —
+// they mutate and must read fresh right after a write.
+interface CacheEntry {
+  expires: number
+  promise: Promise<unknown>
+}
+const readCache = new Map<string, CacheEntry>()
+
+export function cachedGet<T>(path: string, ttlMs = 30_000): Promise<T> {
+  const hit = readCache.get(path)
+  if (hit && hit.expires > Date.now()) return hit.promise as Promise<T>
+
+  const promise = request<T>(path)
+  readCache.set(path, { expires: Date.now() + ttlMs, promise })
+  // A failed request must not stay cached — drop it so the next call retries.
+  promise.catch(() => {
+    if (readCache.get(path)?.promise === promise) readCache.delete(path)
+  })
+  return promise
+}
+
+// Drop every cached path that starts with the given prefix (call after a write).
+export function invalidateCache(prefix: string): void {
+  for (const key of readCache.keys()) {
+    if (key.startsWith(prefix)) readCache.delete(key)
+  }
+}

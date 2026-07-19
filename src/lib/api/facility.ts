@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api, cachedGet, invalidateCache } from './client'
 import type { Facility, FacilityStatus } from '#/lib/mock/types'
 
 type ApiFacilityStatus = 'OPEN' | 'MAINTENANCE' | 'CLOSED'
@@ -44,8 +44,8 @@ const toFacility = (f: FacilityApiResponse): Facility => ({
   location: f.location,
 })
 
-export const getFacilities = () => api.get<FacilityApiResponse[]>('/facilities').then((rows) => rows.map(toFacility))
-export const getFacility = (id: string) => api.get<FacilityApiResponse>(`/facilities/${id}`).then(toFacility)
+export const getFacilities = () => cachedGet<FacilityApiResponse[]>('/facilities').then((rows) => rows.map(toFacility))
+export const getFacility = (id: string) => cachedGet<FacilityApiResponse>(`/facilities/${id}`).then(toFacility)
 
 export interface FacilityInput {
   name: string
@@ -62,16 +62,22 @@ export interface FacilityInput {
 }
 
 // Writes require STAFF/MANAGEMENT (enforced server-side). id is set by the server.
+const bust = () => invalidateCache('/facilities')
 export const createFacility = (data: FacilityInput) =>
   api
     .post<FacilityApiResponse>('/facilities', { ...data, status: STATUS_TO_API[data.status], statusReason: data.statusReason ?? null })
     .then(toFacility)
+    .finally(bust)
 export const updateFacility = (id: string, data: FacilityInput) =>
   api
     .put<FacilityApiResponse>(`/facilities/${id}`, { ...data, status: STATUS_TO_API[data.status], statusReason: data.statusReason ?? null })
     .then(toFacility)
-export const deleteFacility = (id: string) => api.del<void>(`/facilities/${id}`)
+    .finally(bust)
+export const deleteFacility = (id: string) => api.del<void>(`/facilities/${id}`).finally(bust)
 
 // Staff status control — open/maintenance/closed, with an optional reason.
 export const setFacilityStatus = (id: string, status: FacilityStatus, statusReason?: string) =>
-  api.put<FacilityApiResponse>(`/facilities/${id}`, { status: STATUS_TO_API[status], statusReason: statusReason ?? null }).then(toFacility)
+  api
+    .put<FacilityApiResponse>(`/facilities/${id}`, { status: STATUS_TO_API[status], statusReason: statusReason ?? null })
+    .then(toFacility)
+    .finally(bust)
