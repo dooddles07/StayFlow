@@ -3,7 +3,6 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { TooltipProvider } from '#/components/ui/tooltip'
 import { Toaster } from '#/components/ui/sonner'
-import { MockStoreProvider } from '#/lib/store/mock-store'
 import { GlobalSearch } from '#/components/stayflow/global-search'
 
 import appCss from '../styles.css?url'
@@ -69,13 +68,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <MockStoreProvider>
-          <TooltipProvider delayDuration={200}>
-            {children}
-            <GlobalSearch />
-            <Toaster position="top-right" richColors closeButton />
-          </TooltipProvider>
-        </MockStoreProvider>
+        <TooltipProvider delayDuration={200}>
+          {children}
+          <GlobalSearch />
+          <Toaster position="top-right" richColors closeButton />
+        </TooltipProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',

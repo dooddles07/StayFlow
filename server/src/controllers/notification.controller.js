@@ -25,6 +25,10 @@ export const notificationController = {
     await NotificationModel.markAllReadForStaff(req.params.staffId)
     res.status(204).send()
   }),
+  markAllReadGlobal: asyncHandler(async (req, res) => {
+    await NotificationModel.markAllRead()
+    res.status(204).send()
+  }),
   remove: asyncHandler(async (req, res) => {
     await NotificationModel.remove(req.params.id)
     res.status(204).send()

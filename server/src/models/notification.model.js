@@ -13,5 +13,6 @@ export const NotificationModel = {
     prisma.appNotification.updateMany({ where: { residentId, read: false }, data: { read: true } }),
   markAllReadForStaff: (staffId) =>
     prisma.appNotification.updateMany({ where: { staffId, read: false }, data: { read: true } }),
+  markAllRead: () => prisma.appNotification.updateMany({ where: { read: false }, data: { read: true } }),
   remove: (id) => prisma.appNotification.delete({ where: { id } }),
 }

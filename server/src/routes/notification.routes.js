@@ -14,6 +14,7 @@ router.post('/', staffOnly, notificationController.create)
 router.post('/:id/read', ownNotification, notificationController.markRead)
 router.post('/resident/:residentId/read-all', requireOwnResidentParam(), notificationController.markAllRead)
 router.post('/staff/:staffId/read-all', requireOwnStaffParam(), notificationController.markAllReadStaff)
+router.post('/read-all', requireRole('MANAGEMENT'), notificationController.markAllReadGlobal)
 router.delete('/:id', staffOnly, notificationController.remove)
 
 export default router

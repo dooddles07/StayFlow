@@ -4,13 +4,14 @@ import { Bell, CalendarDays, ClipboardCheck, Megaphone, ShieldCheck, UtensilsCro
 import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover'
 import { ScrollArea } from '#/components/ui/scroll-area'
 import { Button } from '#/components/ui/button'
-import { useMockStore } from '#/lib/store/mock-store'
 import { useAuthStore } from '#/lib/store/auth-store'
 import { useCurrentPortal } from '#/lib/hooks/use-current-portal'
 import {
+  getAllNotifications,
   getMyNotifications,
   getMyStaffNotifications,
   markAllNotificationsRead,
+  markAllNotificationsReadGlobal,
   markAllStaffNotificationsRead,
   markNotificationRead,
   type AppNotification,
@@ -118,9 +119,8 @@ function NotificationList({
   )
 }
 
-// Shared by member and staff — both have a real per-user notification feed, they
-// just differ in which fetch/mark-all-read calls own their id. Management still
-// reads the local mock store; no per-user backend scoping exists for that role.
+// Shared by member, staff, and management — they differ only in which fetch/mark-all-
+// read calls own their feed (per-resident, per-staff, or the full cross-property feed).
 function LiveNotificationBell({
   fetchItems,
   markAllRead,
@@ -190,15 +190,10 @@ function StaffNotificationBell({ staffId }: { staffId: string }) {
   return <LiveNotificationBell fetchItems={fetchItems} markAllRead={markAllRead} />
 }
 
-function MockNotificationBell() {
-  const { state, dispatch } = useMockStore()
-  return (
-    <NotificationList
-      items={state.notifications}
-      onMarkRead={(id) => dispatch({ type: 'MARK_NOTIFICATION_READ', payload: { id } })}
-      onMarkAllRead={() => dispatch({ type: 'MARK_ALL_NOTIFICATIONS_READ' })}
-    />
-  )
+function ManagementNotificationBell() {
+  const fetchItems = React.useCallback(() => getAllNotifications(), [])
+  const markAllRead = React.useCallback(() => markAllNotificationsReadGlobal(), [])
+  return <LiveNotificationBell fetchItems={fetchItems} markAllRead={markAllRead} />
 }
 
 export function NotificationBell() {
@@ -208,5 +203,5 @@ export function NotificationBell() {
 
   if (portal === 'member' && residentId) return <MemberNotificationBell residentId={residentId} />
   if (portal === 'staff' && staffId) return <StaffNotificationBell staffId={staffId} />
-  return <MockNotificationBell />
+  return <ManagementNotificationBell />
 }
