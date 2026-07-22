@@ -8,8 +8,23 @@ const includeRelations = {
   user: { select: { id: true, mustChangePassword: true } },
 }
 
+// The directory list (management/users.tsx, reports.tsx, staff/events.tsx,
+// live-analytics) only ever reads these fields — never dietary, emergency
+// contacts, family, vehicles, or notification prefs. findById (detail/self views)
+// keeps the full includeRelations shape; this is deliberately narrower.
+const listSelect = {
+  id: true,
+  name: true,
+  email: true,
+  unit: true,
+  tier: true,
+  phone: true,
+  moveInDate: true,
+  user: { select: { id: true, mustChangePassword: true } },
+}
+
 export const ResidentModel = {
-  findAll: () => prisma.resident.findMany({ include: includeRelations, orderBy: { name: 'asc' } }),
+  findAll: () => prisma.resident.findMany({ select: listSelect, orderBy: { name: 'asc' } }),
   findById: (id) => prisma.resident.findUnique({ where: { id }, include: includeRelations }),
   create: (data) => {
     const { family = [], vehicles = [], ...rest } = data

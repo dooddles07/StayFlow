@@ -84,6 +84,12 @@ export interface ResidentProfileUpdate {
   dietary: string[]
 }
 
+// Note: GET /residents (getAllResidents, below) returns a narrower server-side
+// projection than GET /residents/me or /residents/:id — family, vehicles, dietary,
+// notifications, newsletter, emergency contacts, avatarSeed/Style, and
+// noticesLastSeenAt come back undefined on list rows, not the empty/default values
+// this type implies. Fine today since no list consumer reads those fields; a future
+// one that does needs the real detail fetch, not this list.
 const toProfile = (r: ResidentApiResponse): ResidentProfile => ({
   id: r.id,
   name: r.name,
