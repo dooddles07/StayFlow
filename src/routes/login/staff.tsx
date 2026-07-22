@@ -22,7 +22,7 @@ function StaffLogin() {
         <img
           src="/images/hero/staff-login.png"
           alt=""
-          className="pointer-events-none absolute inset-0 size-full object-cover"
+          className="animate-ken-burns pointer-events-none absolute inset-0 size-full object-cover"
         />
         <div className="pointer-events-none absolute inset-0 bg-surface/70" />
         <Link

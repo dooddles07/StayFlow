@@ -169,7 +169,7 @@ function MemberDashboard() {
         <img
           src="/images/hero/member-banner.png"
           alt=""
-          className="pointer-events-none absolute inset-0 size-full object-cover"
+          className="animate-ken-burns pointer-events-none absolute inset-0 size-full object-cover"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-surface/90 to-surface-hover/80" />
         <div className="relative">

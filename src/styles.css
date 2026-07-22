@@ -166,11 +166,25 @@ body {
   }
 }
 
+.animate-ken-burns {
+  animation: ken-burns 22s ease-in-out infinite alternate;
+}
+
+@keyframes ken-burns {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.08) translate(-1.5%, -1.5%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-fade-in-delay-1,
   .animate-fade-in-delay-2,
-  .animate-fade-in-delay-3 {
+  .animate-fade-in-delay-3,
+  .animate-ken-burns {
     animation: none;
   }
 }

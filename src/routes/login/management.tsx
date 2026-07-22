@@ -21,7 +21,7 @@ function ManagementLogin() {
       <img
         src="/images/hero/management-login.png"
         alt=""
-        className="pointer-events-none absolute inset-0 size-full object-cover"
+        className="animate-ken-burns pointer-events-none absolute inset-0 size-full object-cover"
       />
       <div className="pointer-events-none absolute inset-0 bg-canvas/70" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-gold/70 to-transparent" />
