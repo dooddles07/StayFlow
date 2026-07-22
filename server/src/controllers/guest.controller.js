@@ -53,10 +53,24 @@ export const guestController = {
   byResident: asyncHandler(async (req, res) => {
     res.json(await GuestModel.findByResident(req.params.residentId))
   }),
+  // Both enforce the lifecycle (PENDING -> APPROVED -> CHECKED_IN -> CHECKED_OUT, see
+  // docs/Rules.md) rather than blindly stamping the target status — without this, a
+  // client bug or a direct API call could check in a still-pending (never-approved)
+  // guest, or flip an already-checked-out guest back to checked-in.
   checkIn: asyncHandler(async (req, res) => {
+    const guest = await GuestModel.findById(req.params.id)
+    if (!guest) throw ApiError.notFound('Guest not found')
+    if (guest.status !== 'APPROVED') {
+      throw ApiError.conflict(`Can't check in a guest with status ${guest.status.toLowerCase()} — they must be approved first.`)
+    }
     res.json(await GuestModel.update(req.params.id, { status: 'CHECKED_IN', checkedInAt: new Date() }))
   }),
   checkOut: asyncHandler(async (req, res) => {
+    const guest = await GuestModel.findById(req.params.id)
+    if (!guest) throw ApiError.notFound('Guest not found')
+    if (guest.status !== 'CHECKED_IN') {
+      throw ApiError.conflict(`Can't check out a guest with status ${guest.status.toLowerCase()} — they must be checked in first.`)
+    }
     res.json(await GuestModel.update(req.params.id, { status: 'CHECKED_OUT', checkedOutAt: new Date() }))
   }),
 }

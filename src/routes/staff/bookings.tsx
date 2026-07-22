@@ -66,6 +66,10 @@ function BookingsPage() {
   const [statusFilter, setStatusFilter] = React.useState<(typeof statusFilters)[number]>('all')
   const [view, setView] = React.useState<'table' | 'calendar'>('table')
   const [busyIds, setBusyIds] = React.useState<Set<string>>(new Set())
+  // Mirrors busyIds but checked/updated synchronously — two clicks on the same button
+  // before React re-renders (and disables it) would both read the same stale busyIds
+  // state and pass the guard; a ref is always current.
+  const busyRef = React.useRef<Set<string>>(new Set())
 
   const load = React.useCallback(() => {
     let active = true
@@ -91,8 +95,9 @@ function BookingsPage() {
     .sort((a, b) => a.date.localeCompare(b.date))
 
   async function updateStatus(id: string, next: BookingStatus) {
-    if (busyIds.has(id)) return
-    setBusyIds((prev) => new Set(prev).add(id))
+    if (busyRef.current.has(id)) return
+    busyRef.current.add(id)
+    setBusyIds(new Set(busyRef.current))
     try {
       const updated = await setBookingStatus(id, next)
       setBookings((prev) => prev.map((b) => (b.id === id ? updated : b)))
@@ -100,11 +105,8 @@ function BookingsPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
-      setBusyIds((prev) => {
-        const next = new Set(prev)
-        next.delete(id)
-        return next
-      })
+      busyRef.current.delete(id)
+      setBusyIds(new Set(busyRef.current))
     }
   }
 

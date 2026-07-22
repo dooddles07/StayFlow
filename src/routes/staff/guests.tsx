@@ -39,6 +39,10 @@ function StaffGuestsPage() {
   const [scannerOpen, setScannerOpen] = React.useState(false)
   const [passInput, setPassInput] = React.useState('')
   const [busyIds, setBusyIds] = React.useState<Set<string>>(new Set())
+  // Mirrors busyIds but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale busyIds state
+  // and pass the guard; a ref is always current.
+  const busyRef = React.useRef<Set<string>>(new Set())
   const [query, setQuery] = React.useState('')
 
   const load = React.useCallback(() => {
@@ -82,8 +86,9 @@ function StaffGuestsPage() {
     .sort((a, b) => b.arrivalDate.localeCompare(a.arrivalDate))
 
   async function withBusy(id: string, action: () => Promise<GuestView>, successMessage: string) {
-    if (busyIds.has(id)) return
-    setBusyIds((prev) => new Set(prev).add(id))
+    if (busyRef.current.has(id)) return
+    busyRef.current.add(id)
+    setBusyIds(new Set(busyRef.current))
     try {
       const updated = await action()
       setGuests((prev) => prev.map((g) => (g.id === id ? updated : g)))
@@ -91,11 +96,8 @@ function StaffGuestsPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
-      setBusyIds((prev) => {
-        const next = new Set(prev)
-        next.delete(id)
-        return next
-      })
+      busyRef.current.delete(id)
+      setBusyIds(new Set(busyRef.current))
     }
   }
 
@@ -107,6 +109,12 @@ function StaffGuestsPage() {
     const guest = guests.find((g) => g.passNumber.toLowerCase() === passInput.trim().toLowerCase())
     if (!guest) {
       toast.error('Pass number not found')
+      return
+    }
+    // Server now rejects this too, but checking client-side gives an immediate,
+    // specific error instead of a generic failure toast after a round trip.
+    if (guest.status !== 'approved') {
+      toast.error(`${guest.name}'s pass is ${guest.status} — only approved guests can be checked in.`)
       return
     }
     checkIn(guest.id)

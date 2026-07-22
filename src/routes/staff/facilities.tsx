@@ -23,6 +23,10 @@ function StaffFacilitiesPage() {
   const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
   const [reasonDrafts, setReasonDrafts] = React.useState<Record<string, string>>({})
   const [savingId, setSavingId] = React.useState<string | null>(null)
+  // Mirrors savingId but checked/updated synchronously — two clicks (on different
+  // facilities) before React re-renders would both read the same stale null savingId
+  // and pass the guard; a ref is always current.
+  const savingRef = React.useRef<string | null>(null)
 
   const load = React.useCallback(() => {
     let active = true
@@ -44,9 +48,10 @@ function StaffFacilitiesPage() {
   React.useEffect(() => load(), [load])
 
   async function updateStatus(id: string, next: FacilityStatus, currentReason?: string) {
-    if (savingId) return
-    const reason = next === 'open' ? undefined : (reasonDrafts[id] ?? currentReason)
+    if (savingRef.current) return
+    savingRef.current = id
     setSavingId(id)
+    const reason = next === 'open' ? undefined : (reasonDrafts[id] ?? currentReason)
     try {
       const updated = await setFacilityStatus(id, next, reason)
       setFacilities((prev) => prev.map((f) => (f.id === id ? updated : f)))
@@ -54,6 +59,7 @@ function StaffFacilitiesPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      savingRef.current = null
       setSavingId(null)
     }
   }

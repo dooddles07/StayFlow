@@ -40,6 +40,8 @@ A resident never creates their own login. The real-world flow this models: the r
 | Residents directory | ❌ | ✅ | ✅ |
 | Staff directory | ❌ | ❌ | ✅ |
 
+This matrix is server-enforced RBAC, not a map of what the staff portal's UI exposes. STAFF genuinely has API write access to restaurants/tables/events/notices/residents (confirmed at the route level), but `/staff/*` currently has no screens for restaurant/table management, event/notice authoring, or resident profile editing — those actions are only reachable through the management portal today. A STAFF login hitting those endpoints directly would succeed; there's just no button for it. Worth a deliberate call (build the missing staff UI vs. accept management-only as the intended scope) rather than treating it as a docs bug — the permissions themselves are correct as written above.
+
 ## Ownership rules
 
 - A member can only ever act on records where `residentId` matches their own JWT — enforced server-side (`requireOwnResidentBody`/`requireOwnerRecord`), not just hidden in the UI.

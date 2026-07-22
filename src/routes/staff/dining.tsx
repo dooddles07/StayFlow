@@ -74,6 +74,10 @@ function StaffDiningPage() {
   const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
   const [tab, setTab] = React.useState<'tables' | 'reservations'>('tables')
   const [busyIds, setBusyIds] = React.useState<Set<string>>(new Set())
+  // Mirrors busyIds but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale busyIds state
+  // and pass the guard; a ref is always current.
+  const busyRef = React.useRef<Set<string>>(new Set())
   const [query, setQuery] = React.useState('')
 
   const load = React.useCallback(() => {
@@ -98,8 +102,9 @@ function StaffDiningPage() {
   React.useEffect(() => load(), [load])
 
   async function updateStatus(id: string, next: ReservationView['status'], successMessage: string) {
-    if (busyIds.has(id)) return
-    setBusyIds((prev) => new Set(prev).add(id))
+    if (busyRef.current.has(id)) return
+    busyRef.current.add(id)
+    setBusyIds(new Set(busyRef.current))
     try {
       const updated = await setReservationStatus(id, next)
       setReservations((prev) => prev.map((r) => (r.id === id ? updated : r)))
@@ -111,11 +116,8 @@ function StaffDiningPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
-      setBusyIds((prev) => {
-        const next = new Set(prev)
-        next.delete(id)
-        return next
-      })
+      busyRef.current.delete(id)
+      setBusyIds(new Set(busyRef.current))
     }
   }
 
