@@ -32,6 +32,7 @@ Dark, premium "concierge" theme — navy/indigo canvas with gold accent, glassmo
 - **Motion:** `.animate-fade-in` + staggered `-delay-1/2/3` variants (480ms cubic-bezier ease-out, 14px translateY). Respects `prefers-reduced-motion`.
 - **Glass top bar:** `.glass-topbar` — `backdrop-filter: blur(16px) saturate(140%)` over semi-transparent surface.
 - **Stat tiles / `.reveal` / `.ambient-wash`:** newer primitives added in the 2026-07-15 UI pass for KPI/analytics surfaces.
+- **Hero imagery (`public/images/hero/`):** full-bleed photographic backgrounds on the landing page, all three login screens, and the member dashboard welcome banner. Pattern: absolutely-positioned `<img>` filling the container (`object-cover`), a semi-transparent `bg-canvas/NN` (or `bg-surface/NN`) scrim on top for text legibility, then the existing radial-gradient/accent-line decoration layered above that. Shared images are reused where the visual system matches (verify-email/reset-password/forgot-password all reuse the member-login image). Assets generated externally and dropped in — not generated at build time.
 
 ## Layout patterns
 
