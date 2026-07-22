@@ -3,8 +3,17 @@ import { GuestModel } from '../models/guest.model.js'
 import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
+import { pickAllowed } from '../utils/validate.js'
 
 const base = buildCrudController(GuestModel, 'Guest')
+
+// hostResidentId is forced to the caller's own id for MEMBER by requireOwnResidentBody
+// before this runs (STAFF/MANAGEMENT may set it freely — registering a guest on a
+// resident's behalf is a legitimate front-desk action). Everything else here is the
+// same MEMBER_EDITABLE-shaped set update() already allowlists — without it a raw
+// spread would let a caller seed checkedInAt/checkedOutAt on a brand-new PENDING
+// guest, fabricating check-in history that never happened.
+const CREATE_FIELDS = ['hostResidentId', 'name', 'purpose', 'vehiclePlate', 'arrivalDate', 'arrivalTime']
 
 // A bare "YYYY-MM-DD" (what an <input type="date"> sends) makes Prisma's DateTime
 // column throw an unhandled validation error. Accept it defensively here too, not just
@@ -28,7 +37,7 @@ export const guestController = {
   create: asyncHandler(async (req, res) => {
     const passNumber = await generateUniquePassNumber()
     const guest = await GuestModel.create({
-      ...req.body,
+      ...pickAllowed(req.body, CREATE_FIELDS),
       arrivalDate: toFullDate(req.body.arrivalDate),
       passNumber,
       status: 'PENDING',

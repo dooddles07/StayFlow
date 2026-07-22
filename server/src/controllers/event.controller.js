@@ -2,9 +2,31 @@ import { EventModel } from '../models/event.model.js'
 import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
+import { pickAllowed } from '../utils/validate.js'
+import { logAdminAction } from '../utils/adminLog.js'
+
+const base = buildCrudController(EventModel, 'Event')
+
+// Matches src/lib/api/event.ts's writable fields.
+const FIELDS = ['title', 'category', 'description', 'image', 'date', 'time', 'endTime', 'location', 'capacity']
 
 export const eventController = {
-  ...buildCrudController(EventModel, 'Event'),
+  ...base,
+  create: asyncHandler(async (req, res) => {
+    const item = await EventModel.create(pickAllowed(req.body, FIELDS))
+    logAdminAction(req, 'CREATE', 'Event', item.id)
+    res.status(201).json(item)
+  }),
+  update: asyncHandler(async (req, res) => {
+    const item = await EventModel.update(req.params.id, pickAllowed(req.body, FIELDS))
+    logAdminAction(req, 'UPDATE', 'Event', item.id)
+    res.json(item)
+  }),
+  remove: asyncHandler(async (req, res) => {
+    await EventModel.remove(req.params.id)
+    logAdminAction(req, 'DELETE', 'Event', req.params.id)
+    res.status(204).send()
+  }),
   rsvp: asyncHandler(async (req, res) => {
     const { residentId } = req.body
     if (!residentId) throw ApiError.badRequest('residentId is required')

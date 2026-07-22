@@ -55,6 +55,11 @@ function RestaurantsPage() {
   const [editing, setEditing] = React.useState<Restaurant | null>(null)
   const [deleteTarget, setDeleteTarget] = React.useState<Restaurant | null>(null)
   const [saving, setSaving] = React.useState(false)
+  // Mirror saving/delete-in-flight but checked/updated synchronously — two clicks
+  // before React re-renders (and disables the button) would both read the same
+  // stale state and both fire; a ref is always current.
+  const savingRef = React.useRef(false)
+  const deletingRef = React.useRef(false)
 
   const load = React.useCallback(() => {
     let active = true
@@ -77,11 +82,12 @@ function RestaurantsPage() {
   React.useEffect(() => load(), [load])
 
   async function save() {
-    if (!editing) return
+    if (!editing || savingRef.current) return
     if (editing.name.trim() === '' || editing.cuisine.trim() === '' || editing.location.trim() === '') {
       toast.error('Name, cuisine, and location are required.')
       return
     }
+    savingRef.current = true
     setSaving(true)
     try {
       const payload = {
@@ -106,12 +112,14 @@ function RestaurantsPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return
+    if (!deleteTarget || deletingRef.current) return
+    deletingRef.current = true
     const target = deleteTarget
     setDeleteTarget(null)
     try {
@@ -120,6 +128,8 @@ function RestaurantsPage() {
       toast.success(`${target.name} removed`)
     } catch (err) {
       toast.error(errText(err))
+    } finally {
+      deletingRef.current = false
     }
   }
 

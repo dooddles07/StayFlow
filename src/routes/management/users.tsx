@@ -102,6 +102,13 @@ function UsersPage() {
   const [saving, setSaving] = React.useState(false)
   const [deleting, setDeleting] = React.useState(false)
   const [creatingLogin, setCreatingLogin] = React.useState(false)
+  // Mirror each boolean but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale state and
+  // both fire; a ref is always current. saveResident/saveStaff share one ref since
+  // only one of their two dialogs can be open at a time, same as the state they mirror.
+  const savingRef = React.useRef(false)
+  const deletingRef = React.useRef(false)
+  const creatingLoginRef = React.useRef(false)
 
   const load = React.useCallback(() => {
     let active = true
@@ -124,11 +131,12 @@ function UsersPage() {
   React.useEffect(() => load(), [load])
 
   async function saveResident() {
-    if (!editingResident) return
+    if (!editingResident || savingRef.current) return
     if (!editingResident.name.trim() || !editingResident.email.trim() || !editingResident.unit.trim()) {
       toast.error('Name, email, and unit are required.')
       return
     }
+    savingRef.current = true
     setSaving(true)
     try {
       const payload = {
@@ -160,12 +168,14 @@ function UsersPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
 
   async function confirmCreateLogin() {
-    if (!confirmLoginTarget) return
+    if (!confirmLoginTarget || creatingLoginRef.current) return
+    creatingLoginRef.current = true
     setCreatingLogin(true)
     try {
       const { resident, tempPassword } = await createResidentLogin(confirmLoginTarget.id)
@@ -175,16 +185,18 @@ function UsersPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      creatingLoginRef.current = false
       setCreatingLogin(false)
     }
   }
 
   async function saveStaff() {
-    if (!editingStaff) return
+    if (!editingStaff || savingRef.current) return
     if (!editingStaff.name.trim() || !editingStaff.email.trim()) {
       toast.error('Name and email are required.')
       return
     }
+    savingRef.current = true
     setSaving(true)
     try {
       const payload = {
@@ -203,12 +215,14 @@ function UsersPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return
+    if (!deleteTarget || deletingRef.current) return
+    deletingRef.current = true
     setDeleting(true)
     try {
       if (deleteTarget.kind === 'resident') {
@@ -223,6 +237,7 @@ function UsersPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      deletingRef.current = false
       setDeleting(false)
     }
   }

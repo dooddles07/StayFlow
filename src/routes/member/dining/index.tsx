@@ -39,6 +39,10 @@ function DiningList() {
   const [reservations, setReservations] = React.useState<ReservationView[]>([])
   const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
   const [cancelingId, setCancelingId] = React.useState<string | null>(null)
+  // Mirrors cancelingId but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale null and
+  // both fire; a ref is always current.
+  const cancelingRef = React.useRef<string | null>(null)
   const [historySort, setHistorySort] = React.useState<HistorySort>('newest')
   const [showHistory, setShowHistory] = React.useState(false)
 
@@ -79,7 +83,8 @@ function DiningList() {
   const outcome = (r: ReservationView) => (r.status === 'cancelled' ? 'cancelled' : 'completed')
 
   async function handleCancel(id: string) {
-    if (cancelingId) return
+    if (cancelingRef.current) return
+    cancelingRef.current = id
     setCancelingId(id)
     try {
       await cancelReservation(id)
@@ -89,6 +94,7 @@ function DiningList() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      cancelingRef.current = null
       setCancelingId(null)
     }
   }

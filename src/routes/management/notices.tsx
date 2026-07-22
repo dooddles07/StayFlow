@@ -46,6 +46,11 @@ function ManagementNoticesPage() {
   const [editing, setEditing] = React.useState<NoticeDraft | null>(null)
   const [deleteTarget, setDeleteTarget] = React.useState<Notice | null>(null)
   const [saving, setSaving] = React.useState(false)
+  // Mirror saving/delete-in-flight but checked/updated synchronously — two clicks
+  // before React re-renders (and disables the button) would both read the same
+  // stale state and both fire; a ref is always current.
+  const savingRef = React.useRef(false)
+  const deletingRef = React.useRef(false)
 
   const load = React.useCallback(() => {
     let active = true
@@ -71,11 +76,12 @@ function ManagementNoticesPage() {
   }
 
   async function save() {
-    if (!editing) return
+    if (!editing || savingRef.current) return
     if (editing.title.trim() === '' || editing.body.trim() === '') {
       toast.error('Title and body are required.')
       return
     }
+    savingRef.current = true
     setSaving(true)
     try {
       const payload = {
@@ -95,12 +101,14 @@ function ManagementNoticesPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return
+    if (!deleteTarget || deletingRef.current) return
+    deletingRef.current = true
     const id = deleteTarget.id
     setDeleteTarget(null)
     try {
@@ -109,6 +117,8 @@ function ManagementNoticesPage() {
       toast.success('Notice removed')
     } catch (err) {
       toast.error(errText(err))
+    } finally {
+      deletingRef.current = false
     }
   }
 

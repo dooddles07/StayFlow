@@ -52,6 +52,12 @@ function GuestsPage() {
   const [canceling, setCanceling] = React.useState(false)
   const [editing, setEditing] = React.useState(false)
   const [savingEdit, setSavingEdit] = React.useState(false)
+  // Mirror each boolean but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale false state
+  // and both fire; a ref is always current.
+  const submittingRef = React.useRef(false)
+  const cancelingRef = React.useRef(false)
+  const savingEditRef = React.useRef(false)
   const [editPurpose, setEditPurpose] = React.useState('')
   const [editPlate, setEditPlate] = React.useState('')
   const [editDate, setEditDate] = React.useState(days[0]!)
@@ -115,7 +121,8 @@ function GuestsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !profile || submitting) return
+    if (!name.trim() || !profile || submittingRef.current) return
+    submittingRef.current = true
     setSubmitting(true)
     try {
       // Full ISO — the API's date column rejects a bare "YYYY-MM-DD".
@@ -136,12 +143,14 @@ function GuestsPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }
 
   async function handleCancel() {
-    if (!newGuest || canceling) return
+    if (!newGuest || cancelingRef.current) return
+    cancelingRef.current = true
     setCanceling(true)
     try {
       await cancelGuest(newGuest.id)
@@ -151,6 +160,7 @@ function GuestsPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      cancelingRef.current = false
       setCanceling(false)
     }
   }
@@ -173,7 +183,8 @@ function GuestsPage() {
   }
 
   async function handleSaveEdit() {
-    if (!newGuest || savingEdit) return
+    if (!newGuest || savingEditRef.current) return
+    savingEditRef.current = true
     setSavingEdit(true)
     try {
       const updated = await updateGuestDetails(newGuest.id, {
@@ -189,6 +200,7 @@ function GuestsPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      savingEditRef.current = false
       setSavingEdit(false)
     }
   }

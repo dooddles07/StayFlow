@@ -98,6 +98,11 @@ function ManagementEventsPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<CommunityEventView | null>(null)
   const [saving, setSaving] = React.useState(false)
   const photoInputRef = React.useRef<HTMLInputElement>(null)
+  // Mirror saving/delete-in-flight but checked/updated synchronously — two clicks
+  // before React re-renders (and disables the button) would both read the same
+  // stale state and both fire; a ref is always current.
+  const savingRef = React.useRef(false)
+  const deletingRef = React.useRef(false)
 
   const load = React.useCallback(() => {
     let active = true
@@ -119,7 +124,7 @@ function ManagementEventsPage() {
   React.useEffect(() => load(), [load])
 
   async function save() {
-    if (!editing) return
+    if (!editing || savingRef.current) return
     if (editing.title.trim() === '' || editing.description.trim() === '' || editing.location.trim() === '') {
       toast.error('Title, description, and location are required.')
       return
@@ -132,6 +137,7 @@ function ManagementEventsPage() {
       toast.error('Please pick a valid date.')
       return
     }
+    savingRef.current = true
     setSaving(true)
     try {
       const payload = {
@@ -158,12 +164,14 @@ function ManagementEventsPage() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return
+    if (!deleteTarget || deletingRef.current) return
+    deletingRef.current = true
     const target = deleteTarget
     setDeleteTarget(null)
     try {
@@ -172,6 +180,8 @@ function ManagementEventsPage() {
       toast.success(`${target.title} deleted`)
     } catch (err) {
       toast.error(errText(err))
+    } finally {
+      deletingRef.current = false
     }
   }
 

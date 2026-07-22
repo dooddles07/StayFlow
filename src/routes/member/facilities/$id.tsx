@@ -52,6 +52,10 @@ function FacilityDetail() {
   const [notes, setNotes] = React.useState('')
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [submitting, setSubmitting] = React.useState(false)
+  // Mirrors submitting but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale false and
+  // both fire; a ref is always current.
+  const submittingRef = React.useRef(false)
   const [slots, setSlots] = React.useState<FacilitySlot[]>([])
 
   React.useEffect(() => {
@@ -73,7 +77,8 @@ function FacilityDetail() {
   }
 
   async function handleConfirmBooking() {
-    if (!selectedSlot || submitting) return
+    if (!selectedSlot || submittingRef.current) return
+    submittingRef.current = true
     setSubmitting(true)
     try {
       const dateIso = new Date(dateKey).toISOString()
@@ -94,6 +99,7 @@ function FacilityDetail() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }
