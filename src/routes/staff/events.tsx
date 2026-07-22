@@ -7,7 +7,7 @@ import { EmptyState } from '#/components/stayflow/empty-state'
 import { AvatarInitials } from '#/components/stayflow/avatar-initials'
 import { Button } from '#/components/ui/button'
 import { getEvents, type CommunityEventView } from '#/lib/api/event'
-import { getAllResidents, type ResidentProfile } from '#/lib/api/resident'
+import { getAllResidents } from '#/lib/api/resident'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/staff/events')({
@@ -15,9 +15,18 @@ export const Route = createFileRoute('/staff/events')({
   component: StaffEventsPage,
 })
 
+// Attendee list only ever renders name + unit — narrowed down from the full resident
+// directory response (email, phone, emergency contacts, family, vehicles...) right
+// after fetch so that PII never lingers in this page's state for no reason.
+interface AttendeeResident {
+  id: string
+  name: string
+  unit: string
+}
+
 function StaffEventsPage() {
   const [events, setEvents] = React.useState<CommunityEventView[]>([])
-  const [residents, setResidents] = React.useState<ResidentProfile[]>([])
+  const [residents, setResidents] = React.useState<AttendeeResident[]>([])
   const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
   const [selectedId, setSelectedId] = React.useState<string | undefined>(undefined)
 
@@ -28,7 +37,7 @@ function StaffEventsPage() {
       .then(([e, r]) => {
         if (!active) return
         setEvents(e)
-        setResidents(r)
+        setResidents(r.map((p) => ({ id: p.id, name: p.name, unit: p.unit })))
         setStatus('ready')
       })
       .catch(() => {
@@ -44,7 +53,7 @@ function StaffEventsPage() {
   const sorted = [...events].sort((a, b) => a.date.localeCompare(b.date))
   const selected = sorted.find((e) => e.id === selectedId) ?? sorted[0]
   const residentById = new Map(residents.map((r) => [r.id, r]))
-  const attendees = selected ? selected.attendeeIds.map((id) => residentById.get(id)).filter((r): r is ResidentProfile => !!r) : []
+  const attendees = selected ? selected.attendeeIds.map((id) => residentById.get(id)).filter((r): r is AttendeeResident => !!r) : []
 
   return (
     <div className="mx-auto max-w-6xl">

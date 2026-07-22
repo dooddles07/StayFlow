@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
 import { toast } from 'sonner'
-import { Calendar, Check, ClipboardList, List, X } from 'lucide-react'
+import { Calendar, Check, ClipboardList, List, Loader2, X } from 'lucide-react'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { StatusPill } from '#/components/stayflow/status-pill'
 import { EmptyState } from '#/components/stayflow/empty-state'
@@ -39,7 +39,7 @@ function RejectButton({ booking, busy, onConfirm }: { booking: BookingView; busy
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button size="icon" variant="ghost" disabled={busy} className="size-7 text-rose-400 hover:bg-rose-500/10">
-          <X className="size-4" />
+          {busy ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="border-border bg-surface">
@@ -184,7 +184,7 @@ function BookingsPage() {
                   {b.status === 'pending' && (
                     <div className="mt-3 flex justify-end gap-1.5">
                       <Button size="icon" variant="ghost" disabled={busy} className="size-7 text-emerald-400 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, 'confirmed')}>
-                        <Check className="size-4" />
+                        {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                       </Button>
                       <RejectButton booking={b} busy={busy} onConfirm={() => updateStatus(b.id, 'cancelled')} />
                     </div>
@@ -223,7 +223,7 @@ function BookingsPage() {
                         {b.status === 'pending' ? (
                           <div className="flex justify-end gap-1.5">
                             <Button size="icon" variant="ghost" disabled={busy} className="size-7 text-emerald-400 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, 'confirmed')}>
-                              <Check className="size-4" />
+                              {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                             </Button>
                             <RejectButton booking={b} busy={busy} onConfirm={() => updateStatus(b.id, 'cancelled')} />
                           </div>
@@ -259,7 +259,7 @@ function BookingsPage() {
                         {b.status === 'pending' && (
                           <>
                             <Button size="icon" variant="ghost" disabled={busy} className="size-7 text-emerald-400 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, 'confirmed')}>
-                              <Check className="size-4" />
+                              {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                             </Button>
                             <RejectButton booking={b} busy={busy} onConfirm={() => updateStatus(b.id, 'cancelled')} />
                           </>
