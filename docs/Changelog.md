@@ -2,7 +2,22 @@
 
 > Full history: `git log`. This file curates notable changes; not every commit is listed.
 
+## 2026-07-22 — Security audit, management-issued logins, performance pass
+
+- **feat(auth):** replace resident self-registration with management-issued logins — `POST /auth/register` removed entirely; `POST /residents/:id/create-login` (MANAGEMENT only) generates a temp password and returns it once. Residents must set their own password on first login (`mustChangePassword`, enforced server-side on every non-auth endpoint) via the existing change-password or reset-password flow, either of which clears the flag.
+- **feat(management):** Users page — login-status column, per-row "Create Login" action, and an "also create a login now" option on Add Member; one-time password-reveal dialog with copy-to-clipboard.
+- **fix(auth):** closed an account-takeover hole where the (now-removed) public registration endpoint would link a login to any resident by guessing sequential resident ids — superseded by removing self-registration outright.
+- **fix(server):** allowlist fields on admin CRUD (residents/staff/facilities/restaurants/tables) — closes a mass-assignment gap where a STAFF/MANAGEMENT caller could set fields no client UI exposes.
+- **feat(server):** admin action audit trail (`admin_action_events`) — logs every admin CREATE/UPDATE/DELETE on residents/staff/facilities/restaurants/tables/notices.
+- **perf(server):** paginate/narrow high-growth list endpoints (notifications, bookings, dining reservations, guests), dedupe ownership-check double-fetches, add composite indexes on `bookings` and `dining_tables`.
+- **chore(config):** consolidate two divergent `.env` files (root + `server/.env`, different `JWT_SECRET` values) into a single root `.env` — `server/.env` deleted; Prisma CLI now invoked from root with an explicit schema path instead of relying on a second env file.
+
 ## Unreleased / Recent
+
+- **fix(dining):** make table assignment on confirm atomic — closes a double-booking race on dining tables under concurrent requests, same pattern as the facility-slot fix below.
+- **fix(management):** wire notification bell to a live cross-property feed, remove the dead mock store (and the ~10 seed-data files behind it) entirely.
+- **fix(management):** wire dashboard/analytics to live data; flag the two charts that can't be (no revenue-tracking schema yet) as demo data instead of presenting them as real.
+- **fix(management):** wire Users page to live API; add staff delete protection (`onDelete: Restrict`, closing a gap where a staff record could be deleted while its login silently orphaned).
 
 - **fix(ssr):** forward auth cookie and resolve absolute API URL during server-side rendering — fixes false 404 on facility/dining detail page refresh.
 - **fix(booking):** make slot-conflict check atomic with a serializable transaction — closes a double-booking race under concurrent requests.
@@ -41,3 +56,5 @@
 ## Security fixes
 
 - Broken-access-control gap closed 2026-07-15 (see [Security.md](Security.md)).
+- Account-takeover via public self-registration closed 2026-07-22, by removing self-registration entirely (see [Security.md](Security.md)).
+- Mass-assignment gap on admin CRUD closed 2026-07-22 (field allowlisting).

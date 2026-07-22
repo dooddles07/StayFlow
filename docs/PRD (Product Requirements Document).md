@@ -20,11 +20,12 @@ Single-tenant web platform, three role-gated portals on one app:
 | --- | --- | --- |
 | Member | Resident | Book amenities, reserve dining, register guests, RSVP events, read notices |
 | Staff | Front desk / facilities | Confirm bookings, manage guest check-in/out, maintain facility/restaurant/table/event/notice data |
-| Management | Building admin | Everything Staff does, plus staff/resident directory management and analytics |
+| Management | Building admin | Everything Staff does, plus staff/resident directory management, issuing resident logins at intake, and analytics |
 
 ## Core features
 
 - Role-based auth (JWT, httpOnly cookie), account lockout, audit trail, password reset.
+- Resident onboarding is management-issued, not self-service: a resident visits in person, management creates their profile and login together, hands over a temporary password, and the resident is forced to set their own on first sign-in.
 - Facility booking with capacity-aware slot conflict prevention (atomic, race-safe).
 - Restaurant / table dining reservations with per-restaurant max party size.
 - Guest passes: register → approve → QR check-in → check-out lifecycle.
@@ -48,9 +49,8 @@ Single-tenant web platform, three role-gated portals on one app:
 
 ## Roadmap / future improvements
 
-- Real email provider (mailer is currently stubbed).
+- Configure `RESEND_API_KEY` in the production environment — the mailer integration itself is built, just not turned on (falls back to console-logging reset/email-change links without it).
 - Payment/billing if monetizing bookings or dining.
-- Self-service password change + profile edit endpoints.
 - Anti-CSRF tokens for cookie-based mutations.
 - CI gate (lint + test + typecheck).
 - Integration/E2E test suite + coverage thresholds.

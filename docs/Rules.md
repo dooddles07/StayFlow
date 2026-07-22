@@ -4,21 +4,31 @@
 
 ## Authentication & Authorization
 
-- **Scheme:** hand-rolled JWT (no Passport/NextAuth). Payload: `{sub,email,role,residentId,tokenVersion}`, default expiry `7d`.
+- **Scheme:** hand-rolled JWT (no Passport/NextAuth). Payload: `{sub,email,role,residentId,staffId,tokenVersion,mustChangePassword}`, default expiry `7d`.
 - **Transport:** `Set-Cookie stayflow_token` — `httpOnly`, `sameSite=lax`, `secure` in prod, `maxAge 7d`. JWT never touches JS; frontend persists only the non-sensitive user profile. `Authorization: Bearer` also accepted.
-- **Verification (`requireAuth`):** verify signature → load auth state → reject if user missing, `!isActive`, or `tokenVersion` mismatch (password reset bumps `tokenVersion`, instantly revoking old sessions).
-- **Guards:** `requireRole(...roles)`, `requireOwnResidentParam`, `requireOwnResidentBody` (forces own `residentId`), `requireOwnerRecord(model, ownerField)` (loads record, checks ownership for MEMBER only).
+- **Verification (`requireAuth`):** verify signature → load auth state → reject if user missing, `!isActive`, or `tokenVersion` mismatch (password reset/change bumps `tokenVersion`, instantly revoking old sessions).
+- **Guards:** `requireRole(...roles)`, `requireOwnResidentParam`/`requireOwnResidentBody` (forces own `residentId`), `requireOwnStaffParam` (MANAGEMENT free pass, STAFF must match own id, MEMBER forbidden), `requireOwnerRecord(model, ownerField)` (loads record, checks ownership for MEMBER only, stashes it on `req.record` so downstream handlers don't re-fetch), `requireOwnNotification` (dual-owner: `residentId` for MEMBER, `staffId` for STAFF), `blockIfMustChangePassword` (403s every non-`/auth` route while a resident is still on a MANAGEMENT-issued temp password).
 - **Account protection:** lock 15 min after 5 consecutive failed logins (per-account, defeats IP rotation); disabled-account state only revealed to someone with the correct password.
-- **No staff/management self-registration** — those accounts are created manually (seed / Prisma Studio) by design.
+- **No self-registration, for anyone.** There is no public account-creation endpoint. STAFF/MANAGEMENT accounts are created manually (seed / Prisma Studio). Resident logins are issued by MANAGEMENT — see "Resident onboarding" below.
+
+## Resident onboarding (no self-registration)
+
+A resident never creates their own login. The real-world flow this models: the resident visits the front desk/management office in person, and MANAGEMENT creates their portal login on the spot.
+
+1. A `Resident` profile can be created by STAFF or MANAGEMENT (reserves the unit; no login yet) — or a MANAGEMENT user can create the profile and issue the login together in one step.
+2. `POST /residents/:id/create-login` (**MANAGEMENT only** — stricter than the STAFF+MANAGEMENT gate on the rest of the resident directory) generates a random temp password, hashes it, and creates the `User` row with `mustChangePassword: true`. The plaintext password is returned exactly once in the response — never persisted, never retrievable again — for management to relay to the resident in person.
+3. The resident signs in with that temp password. Until they set their own, `blockIfMustChangePassword` 403s every endpoint except `/auth/me`, `/auth/logout`, and `/auth/change-password` — the client redirects them straight to a forced "set your password" screen.
+4. Setting a real password — via the normal in-app change-password flow, **or** via the public forgot-password/reset-password flow — clears `mustChangePassword`. Both count equally as "the resident proved they own the account."
+5. A resident can only ever have one login: `create-login` 409s if the resident already has one, or if the email collides with an unrelated existing account.
 
 ## User Roles
 
 | Role | Portal | Can do |
 | --- | --- | --- |
-| **Guest (unauthenticated)** | login pages, landing | Log in, register (member), request/reset password |
+| **Guest (unauthenticated)** | login pages, landing | Log in, request/reset password |
 | **MEMBER** (resident) | `/member/*` | Manage own bookings, dining, guests, event RSVPs; read facilities/events/notices/notifications |
 | **STAFF** | `/staff/*` | All bookings/dining/guests (list, confirm, check-in/out), manage facilities/restaurants/tables/events/notices |
-| **MANAGEMENT** | `/management/*` | Everything Staff + manage staff directory & residents + analytics/reports |
+| **MANAGEMENT** | `/management/*` | Everything Staff + manage staff directory & residents + issue resident logins + analytics/reports |
 
 ### Access Matrix (write)
 
@@ -35,12 +45,17 @@
 - A member can only ever act on records where `residentId` matches their own JWT — enforced server-side (`requireOwnResidentBody`/`requireOwnerRecord`), not just hidden in the UI.
 - Bookings and dining reservations: `residentId` is **forced from the JWT** on create, never trusted from the request body.
 
+## Admin write allowlisting & audit trail
+
+- Admin CRUD (residents, staff, facilities, restaurants, tables, notices) only ever writes an explicit allowlist of fields per resource, never a raw spread of the request body — closes a mass-assignment gap where a STAFF/MANAGEMENT caller could otherwise set fields no client UI exposes (e.g. a resident's `moveInDate` or `avatarSeed` via a direct API call to the update endpoint).
+- Every `CREATE`/`UPDATE`/`DELETE` on those same resources is logged to the `admin_action_events` table (actor id/email/role, action, resource type/id, timestamp) — an immutable trail of who changed what, separate from `auth_events`. No FK to `users`, same reasoning as `auth_events`: history must survive account deletion.
+
 ## Booking / capacity rules
 
 - **Party size** must be a positive integer, validated both client and server side.
 - **Capacity enforcement:** party size is checked server-side against the facility's capacity or the restaurant's max party size — a client-side bypass cannot exceed it.
 - **Capacity/max-party-size values** are clamped to positive integers at the management layer (can't configure a facility with capacity 0 or negative).
-- **Slot-conflict check is atomic:** wrapped in a serializable DB transaction to close a double-booking race under concurrent requests for the same slot.
+- **Slot-conflict check is atomic:** wrapped in a serializable DB transaction to close a double-booking race under concurrent requests for the same slot. Dining table assignment on reservation confirm uses the same pattern (find smallest fitting table + reserve it in one serializable transaction, retried once on write conflict) so two reservations confirmed at once can't both land on the same table.
 - **Per-restaurant max party size** replaces an earlier hardcoded cap — each restaurant defines its own realistic limit.
 - **Table release on delete:** deleting a dining reservation releases its assigned table so it doesn't stay permanently stranded as occupied.
 
