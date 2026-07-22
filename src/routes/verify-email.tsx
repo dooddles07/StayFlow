@@ -46,7 +46,7 @@ function VerifyEmail() {
       <img
         src="/images/hero/member-login.png"
         alt=""
-        className="animate-ken-burns pointer-events-none absolute inset-0 size-full object-cover"
+        className="pointer-events-none absolute inset-0 size-full object-cover"
       />
       <div className="pointer-events-none absolute inset-0 bg-canvas/70" />
       <div
