@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
 import { UserModel } from '../models/user.model.js'
+import { ResidentModel } from '../models/resident.model.js'
 import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { AuthEventType, logAuthEvent } from '../utils/authLog.js'
@@ -74,6 +75,19 @@ export const register = asyncHandler(async (req, res) => {
 
   const existing = await UserModel.findByEmail(email)
   if (existing) throw ApiError.conflict('Email already registered')
+
+  // A residentId claims an existing profile — without proof of ownership, anyone
+  // could link their new login to any resident's record just by guessing/enumerating
+  // ids. Require the email to match the one already on file for that resident (set by
+  // management when the profile was created). One generic message for "no such
+  // resident" and "email doesn't match" alike, so this can't be used to enumerate
+  // which resident ids exist.
+  if (residentId) {
+    const resident = await ResidentModel.findById(residentId)
+    if (!resident || resident.email.toLowerCase() !== String(email).toLowerCase()) {
+      throw ApiError.badRequest('That resident ID and email do not match our records.')
+    }
+  }
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS)
   const user = await UserModel.create({ email, passwordHash, role: 'MEMBER', displayName, residentId })
