@@ -346,3 +346,23 @@ model AuthEvent {
   @@index([createdAt])
   @@map("auth_events")
 }
+
+// Audit trail for writes on STAFF/MANAGEMENT-only admin resources (resident directory,
+// staff directory, facilities, restaurants, tables, notices) — resources a MEMBER can
+// never write to, so every row here really is an admin action. Not related to User (no
+// FK), same reasoning as AuthEvent: deleting a user must not erase what they did.
+model AdminActionEvent {
+  id           String   @id @default(cuid())
+  actorUserId  String
+  actorEmail   String
+  actorRole    PortalRole
+  action       String
+  resourceType String
+  resourceId   String
+  createdAt    DateTime @default(now())
+
+  @@index([resourceType, resourceId])
+  @@index([actorUserId])
+  @@index([createdAt])
+  @@map("admin_action_events")
+}

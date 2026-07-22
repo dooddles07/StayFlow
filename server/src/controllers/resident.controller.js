@@ -3,6 +3,7 @@ import { buildCrudController } from '../utils/crudController.js'
 import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { pickAllowed } from '../utils/validate.js'
+import { logAdminAction } from '../utils/adminLog.js'
 
 const base = buildCrudController(ResidentModel, 'Resident')
 
@@ -32,11 +33,18 @@ export const residentController = {
   ...base,
   create: asyncHandler(async (req, res) => {
     const item = await ResidentModel.create(pickAllowed(req.body, ADMIN_CREATE_FIELDS))
+    logAdminAction(req, 'CREATE', 'Resident', item.id)
     res.status(201).json(item)
   }),
   update: asyncHandler(async (req, res) => {
     const item = await ResidentModel.update(req.params.id, pickAllowed(req.body, ADMIN_UPDATE_FIELDS))
+    logAdminAction(req, 'UPDATE', 'Resident', item.id)
     res.json(item)
+  }),
+  remove: asyncHandler(async (req, res) => {
+    await ResidentModel.remove(req.params.id)
+    logAdminAction(req, 'DELETE', 'Resident', req.params.id)
+    res.status(204).send()
   }),
 }
 
