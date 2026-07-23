@@ -56,6 +56,10 @@ function RestaurantDetail() {
   const [dietary, setDietary] = React.useState('')
   const [seating, setSeating] = React.useState<DiningReservation['seating']>('Indoor')
   const [submitting, setSubmitting] = React.useState(false)
+  // Mirrors submitting but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale false and
+  // both fire; a ref is always current.
+  const submittingRef = React.useRef(false)
   const [confirmOpen, setConfirmOpen] = React.useState(false)
 
   function openConfirm(e: React.FormEvent) {
@@ -65,7 +69,8 @@ function RestaurantDetail() {
   }
 
   async function handleConfirmSubmit() {
-    if (!profile || submitting) return
+    if (!profile || submittingRef.current) return
+    submittingRef.current = true
     setSubmitting(true)
     try {
       // Full ISO — the API's date column rejects a bare "YYYY-MM-DD".
@@ -88,6 +93,7 @@ function RestaurantDetail() {
     } catch (err) {
       toast.error(errText(err))
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }

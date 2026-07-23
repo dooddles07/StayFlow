@@ -290,6 +290,14 @@ function UsersPage() {
             Retry
           </Button>
         </div>
+      ) : tab === 'members' && residents.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted-text">
+          No members yet. Add your first resident.
+        </div>
+      ) : tab === 'staff' && staff.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted-text">
+          No staff yet. Add your first team member.
+        </div>
       ) : tab === 'members' ? (
         <>
           <div className="space-y-3 sm:hidden">
@@ -491,21 +499,21 @@ function UsersPage() {
           {editingResident && (
             <div className="space-y-4 px-4 pb-6">
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Name</Label>
-                <Input value={editingResident.name} onChange={(e) => setEditingResident({ ...editingResident, name: e.target.value })} className="border-border bg-canvas" />
+                <Label htmlFor="resident-name" className="mb-1.5 text-xs text-muted-text">Name</Label>
+                <Input id="resident-name" value={editingResident.name} onChange={(e) => setEditingResident({ ...editingResident, name: e.target.value })} className="border-border bg-canvas" />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Email</Label>
-                <Input value={editingResident.email} onChange={(e) => setEditingResident({ ...editingResident, email: e.target.value })} className="border-border bg-canvas" />
+                <Label htmlFor="resident-email" className="mb-1.5 text-xs text-muted-text">Email</Label>
+                <Input id="resident-email" value={editingResident.email} onChange={(e) => setEditingResident({ ...editingResident, email: e.target.value })} className="border-border bg-canvas" />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Unit</Label>
-                <Input value={editingResident.unit} onChange={(e) => setEditingResident({ ...editingResident, unit: e.target.value })} className="border-border bg-canvas" />
+                <Label htmlFor="resident-unit" className="mb-1.5 text-xs text-muted-text">Unit</Label>
+                <Input id="resident-unit" value={editingResident.unit} onChange={(e) => setEditingResident({ ...editingResident, unit: e.target.value })} className="border-border bg-canvas" />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Tier</Label>
+                <Label htmlFor="resident-tier" className="mb-1.5 text-xs text-muted-text">Tier</Label>
                 <Select value={editingResident.tier} onValueChange={(v) => setEditingResident({ ...editingResident, tier: v as ResidentTier })}>
-                  <SelectTrigger className="border-border bg-canvas">
+                  <SelectTrigger id="resident-tier" className="border-border bg-canvas">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="border-border bg-surface text-foreground">
@@ -547,17 +555,17 @@ function UsersPage() {
           {editingStaff && (
             <div className="space-y-4 px-4 pb-6">
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Name</Label>
-                <Input value={editingStaff.name} onChange={(e) => setEditingStaff({ ...editingStaff, name: e.target.value })} className="border-border bg-canvas" />
+                <Label htmlFor="staff-name" className="mb-1.5 text-xs text-muted-text">Name</Label>
+                <Input id="staff-name" value={editingStaff.name} onChange={(e) => setEditingStaff({ ...editingStaff, name: e.target.value })} className="border-border bg-canvas" />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Email</Label>
-                <Input value={editingStaff.email} onChange={(e) => setEditingStaff({ ...editingStaff, email: e.target.value })} className="border-border bg-canvas" />
+                <Label htmlFor="staff-email" className="mb-1.5 text-xs text-muted-text">Email</Label>
+                <Input id="staff-email" value={editingStaff.email} onChange={(e) => setEditingStaff({ ...editingStaff, email: e.target.value })} className="border-border bg-canvas" />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Role</Label>
+                <Label htmlFor="staff-role" className="mb-1.5 text-xs text-muted-text">Role</Label>
                 <Select value={editingStaff.role} onValueChange={(v) => setEditingStaff({ ...editingStaff, role: v })}>
-                  <SelectTrigger className="border-border bg-canvas">
+                  <SelectTrigger id="staff-role" className="border-border bg-canvas">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="border-border bg-surface text-foreground">
@@ -570,9 +578,9 @@ function UsersPage() {
                 </Select>
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Shift</Label>
+                <Label htmlFor="staff-shift" className="mb-1.5 text-xs text-muted-text">Shift</Label>
                 <Select value={editingStaff.shift} onValueChange={(v) => setEditingStaff({ ...editingStaff, shift: v as StaffShift })}>
-                  <SelectTrigger className="border-border bg-canvas">
+                  <SelectTrigger id="staff-shift" className="border-border bg-canvas">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="border-border bg-surface text-foreground">
@@ -640,9 +648,9 @@ function UsersPage() {
                   <p className="text-sm font-medium text-foreground">{revealedLogin.email}</p>
                 </div>
                 <div>
-                  <Label className="mb-1 block text-[11px] text-muted-text">Temporary password</Label>
+                  <Label htmlFor="revealed-temp-password" className="mb-1 block text-[11px] text-muted-text">Temporary password</Label>
                   <div className="flex items-center gap-2">
-                    <Input readOnly value={revealedLogin.tempPassword} className="border-border bg-surface font-mono" />
+                    <Input id="revealed-temp-password" readOnly value={revealedLogin.tempPassword} className="border-border bg-surface font-mono" />
                     <Button
                       type="button"
                       variant="outline"

@@ -4,6 +4,7 @@ import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
 import { pickAllowed } from '../utils/validate.js'
+import { logAdminAction } from '../utils/adminLog.js'
 
 const base = buildCrudController(GuestModel, 'Guest')
 
@@ -72,7 +73,9 @@ export const guestController = {
     }
 
     if ('arrivalDate' in data) data.arrivalDate = toFullDate(data.arrivalDate)
-    res.json(await GuestModel.update(req.params.id, data))
+    const updated = await GuestModel.update(req.params.id, data)
+    if (req.user.role !== 'MEMBER' && 'status' in data) logAdminAction(req, 'UPDATE', 'Guest', req.params.id)
+    res.json(updated)
   }),
   byResident: asyncHandler(async (req, res) => {
     res.json(await GuestModel.findByResident(req.params.residentId))
@@ -87,7 +90,9 @@ export const guestController = {
     if (guest.status !== 'APPROVED') {
       throw ApiError.conflict(`Can't check in a guest with status ${guest.status.toLowerCase()} — they must be approved first.`)
     }
-    res.json(await GuestModel.update(req.params.id, { status: 'CHECKED_IN', checkedInAt: new Date() }))
+    const updated = await GuestModel.update(req.params.id, { status: 'CHECKED_IN', checkedInAt: new Date() })
+    logAdminAction(req, 'UPDATE', 'Guest', req.params.id)
+    res.json(updated)
   }),
   checkOut: asyncHandler(async (req, res) => {
     const guest = await GuestModel.findById(req.params.id)
@@ -95,6 +100,8 @@ export const guestController = {
     if (guest.status !== 'CHECKED_IN') {
       throw ApiError.conflict(`Can't check out a guest with status ${guest.status.toLowerCase()} — they must be checked in first.`)
     }
-    res.json(await GuestModel.update(req.params.id, { status: 'CHECKED_OUT', checkedOutAt: new Date() }))
+    const updated = await GuestModel.update(req.params.id, { status: 'CHECKED_OUT', checkedOutAt: new Date() })
+    logAdminAction(req, 'UPDATE', 'Guest', req.params.id)
+    res.json(updated)
   }),
 }

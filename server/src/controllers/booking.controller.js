@@ -4,8 +4,15 @@ import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
 import { pickAllowed, requirePositiveInt } from '../utils/validate.js'
+import { logAdminAction } from '../utils/adminLog.js'
 
 const base = buildCrudController(BookingModel, 'Booking')
+
+// Mirrors BookingInput in src/lib/api/booking.ts plus residentId, which the client never
+// sends directly — requireOwnResidentBody() (booking.routes.js) injects it into req.body
+// before this runs. Allowlisting (rather than spreading req.body and overriding status/
+// partySize after) also blocks a caller from supplying id/createdAt directly.
+const CREATE_FIELDS = ['residentId', 'facilityId', 'date', 'timeSlot', 'partySize', 'notes']
 
 // The staff UI only ever PUTs { status } (see setBookingStatus in src/lib/api/booking.ts) —
 // date/facilityId/partySize are set once at create and never revised after. Allowlisting to
@@ -41,12 +48,14 @@ async function assertWithinCapacity(facilityId, partySize) {
 export const bookingController = {
   ...base,
   create: asyncHandler(async (req, res) => {
-    const date = toFullDate(req.body.date)
-    const partySize = requirePositiveInt(req.body.partySize, 'partySize')
-    await assertWithinCapacity(req.body.facilityId, partySize)
-    // Force PENDING regardless of client input — a raw spread would otherwise let a
-    // MEMBER set status: 'CONFIRMED' directly on create and skip staff approval entirely.
-    const booking = await BookingModel.createIfNoConflict({ ...req.body, date, partySize, status: 'PENDING' })
+    const data = pickAllowed(req.body, CREATE_FIELDS)
+    data.date = toFullDate(data.date)
+    data.partySize = requirePositiveInt(data.partySize, 'partySize')
+    await assertWithinCapacity(data.facilityId, data.partySize)
+    // Force PENDING regardless of client input — status isn't in CREATE_FIELDS at all, but
+    // set it explicitly too so intent stays obvious here rather than purely by omission.
+    data.status = 'PENDING'
+    const booking = await BookingModel.createIfNoConflict(data)
     if (!booking) throw ApiError.conflict('That slot was just taken. Pick another time.')
     res.status(201).json(booking)
   }),
@@ -61,7 +70,9 @@ export const bookingController = {
         throw ApiError.conflict(`Can't move a booking from ${current.status.toLowerCase()} to ${data.status.toLowerCase()}.`)
       }
     }
-    res.json(await BookingModel.update(req.params.id, data))
+    const updated = await BookingModel.update(req.params.id, data)
+    if ('status' in data) logAdminAction(req, 'UPDATE', 'Booking', req.params.id)
+    res.json(updated)
   }),
   byResident: asyncHandler(async (req, res) => {
     res.json(await BookingModel.findByResident(req.params.residentId))

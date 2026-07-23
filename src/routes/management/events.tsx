@@ -307,15 +307,15 @@ function ManagementEventsPage() {
           {editing && (
             <div className="space-y-4 px-4 pb-6">
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Title</Label>
-                <Input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} className="border-border bg-canvas" />
+                <Label htmlFor="event-title" className="mb-1.5 text-xs text-muted-text">Title</Label>
+                <Input id="event-title" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} className="border-border bg-canvas" />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Description</Label>
-                <Textarea value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className="border-border bg-canvas" rows={3} />
+                <Label htmlFor="event-description" className="mb-1.5 text-xs text-muted-text">Description</Label>
+                <Textarea id="event-description" value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className="border-border bg-canvas" rows={3} />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">
+                <Label htmlFor="event-image-url" className="mb-1.5 text-xs text-muted-text">
                   Event photo <span className="font-normal text-muted-text/70">· optional</span>
                 </Label>
                 <div className="flex items-center gap-3">
@@ -330,6 +330,7 @@ function ManagementEventsPage() {
                     />
                   </div>
                   <Input
+                    id="event-image-url"
                     value={editing.image}
                     onChange={(e) => setEditing({ ...editing, image: e.target.value })}
                     placeholder="Paste a photo link, or upload one"
@@ -375,9 +376,9 @@ function ManagementEventsPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">Category</Label>
+                  <Label htmlFor="event-category" className="mb-1.5 text-xs text-muted-text">Category</Label>
                   <Select value={editing.category} onValueChange={(v) => setEditing({ ...editing, category: v as EventCategory })}>
-                    <SelectTrigger className="border-border bg-canvas">
+                    <SelectTrigger id="event-category" className="border-border bg-canvas">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-border bg-surface text-foreground">
@@ -390,33 +391,33 @@ function ManagementEventsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">Capacity</Label>
-                  <Input type="number" min={1} value={editing.capacity} onChange={(e) => setEditing({ ...editing, capacity: Number(e.target.value) || 0 })} className="border-border bg-canvas" />
+                  <Label htmlFor="event-capacity" className="mb-1.5 text-xs text-muted-text">Capacity</Label>
+                  <Input id="event-capacity" type="number" min={1} value={editing.capacity} onChange={(e) => setEditing({ ...editing, capacity: Number(e.target.value) || 0 })} className="border-border bg-canvas" />
                 </div>
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Date</Label>
-                <Input type="date" value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className="border-border bg-canvas" />
+                <Label htmlFor="event-date" className="mb-1.5 text-xs text-muted-text">Date</Label>
+                <Input id="event-date" type="date" value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className="border-border bg-canvas" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">Start time</Label>
-                  <Input value={editing.time} onChange={(e) => setEditing({ ...editing, time: e.target.value })} className="border-border bg-canvas" />
+                  <Label htmlFor="event-start-time" className="mb-1.5 text-xs text-muted-text">Start time</Label>
+                  <Input id="event-start-time" value={editing.time} onChange={(e) => setEditing({ ...editing, time: e.target.value })} className="border-border bg-canvas" />
                 </div>
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">
+                  <Label htmlFor="event-end-time" className="mb-1.5 text-xs text-muted-text">
                     End time <span className="font-normal text-muted-text/70">· optional</span>
                   </Label>
-                  <Input value={editing.endTime} onChange={(e) => setEditing({ ...editing, endTime: e.target.value })} className="border-border bg-canvas" />
+                  <Input id="event-end-time" value={editing.endTime} onChange={(e) => setEditing({ ...editing, endTime: e.target.value })} className="border-border bg-canvas" />
                 </div>
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Location</Label>
+                <Label htmlFor="event-location" className="mb-1.5 text-xs text-muted-text">Location</Label>
                 <Select
                   value={LOCATION_OPTIONS.includes(editing.location) ? editing.location : OTHER_LOCATION}
                   onValueChange={(v) => setEditing({ ...editing, location: v === OTHER_LOCATION ? '' : v })}
                 >
-                  <SelectTrigger className="border-border bg-canvas">
+                  <SelectTrigger id="event-location" className="border-border bg-canvas">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="border-border bg-surface text-foreground">
@@ -430,6 +431,7 @@ function ManagementEventsPage() {
                 </Select>
                 {!LOCATION_OPTIONS.includes(editing.location) && (
                   <Input
+                    aria-label="Custom location"
                     value={editing.location}
                     onChange={(e) => setEditing({ ...editing, location: e.target.value })}
                     placeholder="Enter the location"

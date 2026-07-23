@@ -4,8 +4,15 @@ import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
 import { pickAllowed, requirePositiveInt } from '../utils/validate.js'
+import { logAdminAction } from '../utils/adminLog.js'
 
 const base = buildCrudController(DiningReservationModel, 'Dining reservation')
+
+// Mirrors ReservationInput in src/lib/api/diningReservation.ts plus residentId, which the
+// client never sends directly — requireOwnResidentBody() (diningReservation.routes.js)
+// injects it into req.body before this runs. Allowlisting (rather than spreading req.body
+// and overriding status/tableId after) also blocks a caller from supplying id/createdAt.
+const CREATE_FIELDS = ['residentId', 'restaurantId', 'date', 'time', 'partySize', 'occasion', 'dietary', 'seating']
 
 // The staff UI only ever PUTs { status } (see setReservationStatus in
 // src/lib/api/diningReservation.ts) — date/partySize/restaurantId are set once at create and
@@ -41,19 +48,16 @@ async function assertWithinCapacity(restaurantId, partySize) {
 export const diningReservationController = {
   ...base,
   create: asyncHandler(async (req, res) => {
-    const partySize = requirePositiveInt(req.body.partySize, 'partySize')
-    await assertWithinCapacity(req.body.restaurantId, partySize)
-    // Force PENDING and strip any client-supplied tableId — a raw spread would otherwise
-    // let a MEMBER set status: 'CONFIRMED' + tableId directly on create, self-assigning
-    // any table (occupied or not) without going through assignTableIfAvailable's
-    // serializable-transaction capacity check.
-    const reservation = await DiningReservationModel.create({
-      ...req.body,
-      date: toFullDate(req.body.date),
-      partySize,
-      status: 'PENDING',
-      tableId: null,
-    })
+    const data = pickAllowed(req.body, CREATE_FIELDS)
+    data.date = toFullDate(data.date)
+    data.partySize = requirePositiveInt(data.partySize, 'partySize')
+    await assertWithinCapacity(data.restaurantId, data.partySize)
+    // Force PENDING and tableId: null regardless of client input — neither is in
+    // CREATE_FIELDS, but set explicitly too so a MEMBER can't self-confirm or self-assign
+    // any table (occupied or not), skipping assignTableIfAvailable's capacity check.
+    data.status = 'PENDING'
+    data.tableId = null
+    const reservation = await DiningReservationModel.create(data)
     res.status(201).json(reservation)
   }),
   // Status transitions carry real-world side effects on the table map — a plain field
@@ -86,7 +90,9 @@ export const diningReservationController = {
       }
     }
 
-    res.json(await DiningReservationModel.update(req.params.id, data))
+    const updated = await DiningReservationModel.update(req.params.id, data)
+    if ('status' in data) logAdminAction(req, 'UPDATE', 'DiningReservation', req.params.id)
+    res.json(updated)
   }),
   byResident: asyncHandler(async (req, res) => {
     res.json(await DiningReservationModel.findByResident(req.params.residentId))

@@ -235,18 +235,18 @@ function ManagementFacilitiesPage() {
           {editing && (
             <div className="space-y-4 px-4 pb-6">
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Name</Label>
-                <Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="border-border bg-canvas" />
+                <Label htmlFor="facility-name" className="mb-1.5 text-xs text-muted-text">Name</Label>
+                <Input id="facility-name" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="border-border bg-canvas" />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Description</Label>
-                <Textarea value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className="border-border bg-canvas" rows={3} />
+                <Label htmlFor="facility-description" className="mb-1.5 text-xs text-muted-text">Description</Label>
+                <Textarea id="facility-description" value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className="border-border bg-canvas" rows={3} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">Category</Label>
+                  <Label htmlFor="facility-category" className="mb-1.5 text-xs text-muted-text">Category</Label>
                   <Select value={editing.category} onValueChange={(v) => setEditing({ ...editing, category: v as FacilityCategory })}>
-                    <SelectTrigger className="border-border bg-canvas">
+                    <SelectTrigger id="facility-category" className="border-border bg-canvas">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-border bg-surface text-foreground">
@@ -259,9 +259,9 @@ function ManagementFacilitiesPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">Status</Label>
+                  <Label htmlFor="facility-status" className="mb-1.5 text-xs text-muted-text">Status</Label>
                   <Select value={editing.status} onValueChange={(v) => setEditing({ ...editing, status: v as FacilityStatus })}>
-                    <SelectTrigger className="border-border bg-canvas">
+                    <SelectTrigger id="facility-status" className="border-border bg-canvas">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-border bg-surface text-foreground">
@@ -276,17 +276,17 @@ function ManagementFacilitiesPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">Capacity</Label>
-                  <Input type="number" min={1} value={editing.capacity} onChange={(e) => setEditing({ ...editing, capacity: clampPositiveInt(e.target.value, editing.capacity) })} className="border-border bg-canvas" />
+                  <Label htmlFor="facility-capacity" className="mb-1.5 text-xs text-muted-text">Capacity</Label>
+                  <Input id="facility-capacity" type="number" min={1} value={editing.capacity} onChange={(e) => setEditing({ ...editing, capacity: clampPositiveInt(e.target.value, editing.capacity) })} className="border-border bg-canvas" />
                 </div>
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">Open hours</Label>
-                  <Input value={editing.openHours} onChange={(e) => setEditing({ ...editing, openHours: e.target.value })} className="border-border bg-canvas" />
+                  <Label htmlFor="facility-open-hours" className="mb-1.5 text-xs text-muted-text">Open hours</Label>
+                  <Input id="facility-open-hours" value={editing.openHours} onChange={(e) => setEditing({ ...editing, openHours: e.target.value })} className="border-border bg-canvas" />
                 </div>
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Location</Label>
-                <Input value={editing.location} onChange={(e) => setEditing({ ...editing, location: e.target.value })} className="border-border bg-canvas" />
+                <Label htmlFor="facility-location" className="mb-1.5 text-xs text-muted-text">Location</Label>
+                <Input id="facility-location" value={editing.location} onChange={(e) => setEditing({ ...editing, location: e.target.value })} className="border-border bg-canvas" />
               </div>
               <Button className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft" disabled={saving} onClick={save}>
                 {saving ? 'Saving…' : 'Save Facility'}
