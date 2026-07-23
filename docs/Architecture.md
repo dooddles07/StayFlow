@@ -95,7 +95,7 @@ sequenceDiagram
   else success
     API->>DB: reset counters, log LOGIN_SUCCESS
     API-->>FE: 200 {user} + Set-Cookie stayflow_token (httpOnly)
-    FE->>FE: store user; verify role matches portal
+    FE->>FE: store user, verify role matches portal
     alt user.mustChangePassword
       FE-->>U: Force "set your password" screen — every other endpoint 403s until cleared
     else
