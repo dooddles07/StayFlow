@@ -47,15 +47,15 @@ export const Route = createRootRoute({
       {
         rel: 'icon',
         type: 'image/svg+xml',
-        href: '/favicon.svg',
+        href: '/favicon.svg?v=2',
       },
       {
         rel: 'icon',
-        href: '/favicon.ico',
+        href: '/favicon.ico?v=2',
       },
       {
         rel: 'apple-touch-icon',
-        href: '/apple-touch-icon.png',
+        href: '/apple-touch-icon.png?v=2',
       },
       {
         rel: 'manifest',
