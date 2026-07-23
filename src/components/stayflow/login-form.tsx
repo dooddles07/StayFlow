@@ -24,9 +24,14 @@ export function LoginForm({ portal, portalLabel, className, submitClassName }: L
   const [password, setPassword] = React.useState('')
   const [error, setError] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(false)
+  // Mirrors loading but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale false and
+  // both fire; a ref is always current.
+  const loadingRef = React.useRef(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (loadingRef.current) return
     setError(null)
 
     if (!email || !password) {
@@ -34,6 +39,7 @@ export function LoginForm({ portal, portalLabel, className, submitClassName }: L
       return
     }
 
+    loadingRef.current = true
     setLoading(true)
     try {
       const user = await login(email, password)
@@ -48,6 +54,7 @@ export function LoginForm({ portal, portalLabel, className, submitClassName }: L
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to reach the server. Try again.')
     } finally {
+      loadingRef.current = false
       setLoading(false)
     }
   }

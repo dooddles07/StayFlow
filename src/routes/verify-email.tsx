@@ -26,9 +26,15 @@ function VerifyEmail() {
   const navigate = useNavigate()
   const [error, setError] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(false)
+  // Mirrors loading but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale false and
+  // both fire; a ref is always current.
+  const loadingRef = React.useRef(false)
 
   async function confirm() {
+    if (loadingRef.current) return
     setError(null)
+    loadingRef.current = true
     setLoading(true)
     try {
       await api.post('/auth/confirm-email', { token })
@@ -37,6 +43,7 @@ function VerifyEmail() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to reach the server. Try again.')
     } finally {
+      loadingRef.current = false
       setLoading(false)
     }
   }

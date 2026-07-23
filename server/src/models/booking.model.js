@@ -25,7 +25,9 @@ export const BookingModel = {
   findAll: ({ limit = 500 } = {}) =>
     prisma.booking.findMany({ select: bookingSelect, orderBy: { createdAt: 'desc' }, take: Math.min(limit, 1000) }),
   findById: (id) => prisma.booking.findUnique({ where: { id }, select: bookingSelect }),
-  findByResident: (residentId) => prisma.booking.findMany({ where: { residentId }, select: bookingSelect }),
+  // Bounded same as findAll above — one resident's own history can't grow unbounded in
+  // practice, but capping keeps this consistent with every other list query in the app.
+  findByResident: (residentId) => prisma.booking.findMany({ where: { residentId }, select: bookingSelect, take: 500 }),
   // No resident PII — just enough for the slot picker to know what's taken.
   // Bounded to today-forward: the picker only offers the next 14 days, so past
   // bookings are dead weight and the result set can't grow without bound.

@@ -63,7 +63,7 @@
 
 ## 2026-07-15 — UI redesign pass
 
-- New stat-tile, `.reveal`, and `.ambient-wash` primitives.
+- `KpiCard` component (`src/components/stayflow/kpi-card.tsx`) established as the shared stat-tile primitive.
 - Profile page fix.
 - Table overflow-x-auto pattern adopted for wide data tables.
 

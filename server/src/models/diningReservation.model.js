@@ -29,7 +29,10 @@ export const DiningReservationModel = {
   findAll: ({ limit = 500 } = {}) =>
     prisma.diningReservation.findMany({ select: reservationSelect, orderBy: { createdAt: 'desc' }, take: Math.min(limit, 1000) }),
   findById: (id) => prisma.diningReservation.findUnique({ where: { id }, select: reservationSelect }),
-  findByResident: (residentId) => prisma.diningReservation.findMany({ where: { residentId }, select: reservationSelect }),
+  // Bounded same as findAll above — one resident's own history can't grow unbounded in
+  // practice, but capping keeps this consistent with every other list query in the app.
+  findByResident: (residentId) =>
+    prisma.diningReservation.findMany({ where: { residentId }, select: reservationSelect, take: 500 }),
   create: (data) => prisma.diningReservation.create({ data, select: reservationSelect }),
   update: (id, data) => prisma.diningReservation.update({ where: { id }, data, select: reservationSelect }),
   remove: (id) => prisma.diningReservation.delete({ where: { id } }),

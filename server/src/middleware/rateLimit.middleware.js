@@ -18,3 +18,15 @@ export const passwordResetLimiter = rateLimit({
   legacyHeaders: false,
   handler,
 })
+
+// MANAGEMENT-only, already authenticated — the threat here isn't anonymous brute-force
+// (that's what the two limiters above defend against) but a compromised/malicious admin
+// session mass-minting credentials. Ceiling set well above realistic front-desk bulk
+// onboarding (a batch of new residents in one sitting) while still bounding runaway abuse.
+export const createLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler,
+})

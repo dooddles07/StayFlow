@@ -133,8 +133,8 @@ function StaffDashboard() {
               {scheduleRows.length === 0 ? (
                 <EmptyState icon={CalendarClock} title="Nothing scheduled today" />
               ) : (
-                <div className="overflow-hidden rounded-2xl border border-border">
-                  <table className="w-full text-left text-sm">
+                <div className="overflow-x-auto rounded-2xl border border-border">
+                  <table className="w-full min-w-[480px] text-left text-sm">
                     <thead className="bg-surface-hover text-xs uppercase tracking-wide text-muted-text">
                       <tr>
                         <th className="px-4 py-3 font-medium">Time</th>

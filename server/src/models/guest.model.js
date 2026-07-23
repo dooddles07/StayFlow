@@ -25,7 +25,10 @@ export const GuestModel = {
   findAll: ({ limit = 500 } = {}) =>
     prisma.guest.findMany({ select: guestSelect, orderBy: { arrivalDate: 'desc' }, take: Math.min(limit, 1000) }),
   findById: (id) => prisma.guest.findUnique({ where: { id }, select: guestSelect }),
-  findByResident: (hostResidentId) => prisma.guest.findMany({ where: { hostResidentId }, orderBy: { arrivalDate: 'desc' } }),
+  // Bounded same as findAll above — one resident's own history can't grow unbounded in
+  // practice, but capping keeps this consistent with every other list query in the app.
+  findByResident: (hostResidentId) =>
+    prisma.guest.findMany({ where: { hostResidentId }, orderBy: { arrivalDate: 'desc' }, take: 500 }),
   findByPassNumber: (passNumber) => prisma.guest.findUnique({ where: { passNumber } }),
   create: (data) => prisma.guest.create({ data, select: guestSelect }),
   update: (id, data) => prisma.guest.update({ where: { id }, data, select: guestSelect }),

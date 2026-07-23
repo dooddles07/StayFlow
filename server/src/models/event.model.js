@@ -7,7 +7,10 @@ import { prisma } from '../config/db.js'
 const includeRsvps = { rsvps: { select: { residentId: true } } }
 
 export const EventModel = {
-  findAll: () => prisma.communityEvent.findMany({ include: includeRsvps, orderBy: { date: 'asc' } }),
+  // No retention policy on events — bounded `take` so this can't become an unbounded
+  // full-table dump as the community's history accumulates (same reasoning as
+  // NotificationModel.findAll; this list is reachable by every authenticated role).
+  findAll: () => prisma.communityEvent.findMany({ include: includeRsvps, orderBy: { date: 'asc' }, take: 500 }),
   findById: (id) => prisma.communityEvent.findUnique({ where: { id }, include: includeRsvps }),
   create: (data) => prisma.communityEvent.create({ data, include: includeRsvps }),
   update: (id, data) => prisma.communityEvent.update({ where: { id }, data, include: includeRsvps }),

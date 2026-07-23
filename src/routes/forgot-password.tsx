@@ -24,9 +24,14 @@ function ForgotPassword() {
   const [error, setError] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [sent, setSent] = React.useState(false)
+  // Mirrors loading but checked/updated synchronously — two clicks before React
+  // re-renders (and disables the button) would both read the same stale false and
+  // both fire; a ref is always current.
+  const loadingRef = React.useRef(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (loadingRef.current) return
     setError(null)
 
     if (!email) {
@@ -34,6 +39,7 @@ function ForgotPassword() {
       return
     }
 
+    loadingRef.current = true
     setLoading(true)
     try {
       await api.post('/auth/forgot-password', { email })
@@ -42,6 +48,7 @@ function ForgotPassword() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to reach the server. Try again.')
     } finally {
+      loadingRef.current = false
       setLoading(false)
     }
   }
