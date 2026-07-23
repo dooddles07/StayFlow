@@ -16,7 +16,7 @@ Residents book the pool and reserve dinner. The front desk knows who's arriving.
 
 <br />
 
-<img src="docs/screenshots/landing.png" alt="StayFlow portal picker — Member, Staff, and Management" width="100%" />
+<img src="docs/screenshots/landing.png?v=2" alt="StayFlow portal picker — Member, Staff, and Management" width="100%" />
 
 <br />
 
@@ -56,7 +56,7 @@ Pick a portal and sign in with any of these. They're demo accounts seeded with s
 <br />
 <sub>Weather, upcoming reservations, community notices, and one-tap shortcuts — all on the resident's home screen.</sub>
 <br /><br />
-<img src="docs/screenshots/member-dashboard.png" width="100%" alt="Resident dashboard showing upcoming reservations, weather, and quick actions" />
+<img src="docs/screenshots/member-dashboard.png?v=2" width="100%" alt="Resident dashboard showing upcoming reservations, weather, and quick actions" />
 
 </td>
 <td width="50%">
@@ -65,7 +65,7 @@ Pick a portal and sign in with any of these. They're demo accounts seeded with s
 <br />
 <sub>Browse the pool, gym, screening room, and more — see what's open, what's booked, and reserve a spot in a few taps.</sub>
 <br /><br />
-<img src="docs/screenshots/member-facilities.png" width="100%" alt="Facilities page with photos, ratings, and booking history" />
+<img src="docs/screenshots/member-facilities.png?v=2" width="100%" alt="Facilities page with photos, ratings, and booking history" />
 
 </td>
 </tr>
@@ -76,7 +76,7 @@ Pick a portal and sign in with any of these. They're demo accounts seeded with s
 <br />
 <sub>Most residents will open this on their phone in the elevator, not at a desk — so it had to feel just as good there.</sub>
 <br /><br />
-<img src="docs/screenshots/member-mobile.png" width="45%" alt="Mobile view of the resident dashboard" />
+<img src="docs/screenshots/member-mobile.png?v=2" width="45%" alt="Mobile view of the resident dashboard" />
 
 </td>
 <td width="50%">
@@ -85,7 +85,7 @@ Pick a portal and sign in with any of these. They're demo accounts seeded with s
 <br />
 <sub>Total residents, today's bookings, dining revenue, facility usage, and guest traffic — the whole community's pulse on one screen.</sub>
 <br /><br />
-<img src="docs/screenshots/management-dashboard.png" width="100%" alt="Management analytics dashboard with charts for revenue, utilization, and engagement" />
+<img src="docs/screenshots/management-dashboard.png?v=2" width="100%" alt="Management analytics dashboard with charts for revenue, utilization, and engagement" />
 
 </td>
 </tr>
