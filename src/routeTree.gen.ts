@@ -9,63 +9,43 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as StaffRouteImport } from './routes/staff'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as MemberRouteImport } from './routes/member'
-import { Route as ManagementRouteImport } from './routes/management'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as StaffIndexRouteImport } from './routes/staff/index'
-import { Route as MemberIndexRouteImport } from './routes/member/index'
-import { Route as ManagementIndexRouteImport } from './routes/management/index'
-import { Route as StaffGuestsRouteImport } from './routes/staff/guests'
-import { Route as StaffFacilitiesRouteImport } from './routes/staff/facilities'
-import { Route as StaffEventsRouteImport } from './routes/staff/events'
-import { Route as StaffDiningRouteImport } from './routes/staff/dining'
-import { Route as StaffBookingsRouteImport } from './routes/staff/bookings'
-import { Route as MemberProfileRouteImport } from './routes/member/profile'
-import { Route as MemberNoticesRouteImport } from './routes/member/notices'
-import { Route as MemberGuestsRouteImport } from './routes/member/guests'
-import { Route as MemberEventsRouteImport } from './routes/member/events'
-import { Route as ManagementUsersRouteImport } from './routes/management/users'
-import { Route as ManagementRestaurantsRouteImport } from './routes/management/restaurants'
-import { Route as ManagementReportsRouteImport } from './routes/management/reports'
-import { Route as ManagementNoticesRouteImport } from './routes/management/notices'
-import { Route as ManagementFacilitiesRouteImport } from './routes/management/facilities'
-import { Route as ManagementEventsRouteImport } from './routes/management/events'
-import { Route as ManagementAnalyticsRouteImport } from './routes/management/analytics'
-import { Route as LoginStaffRouteImport } from './routes/login/staff'
-import { Route as LoginMemberRouteImport } from './routes/login/member'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ManagementRouteImport } from './routes/management'
+import { Route as MemberRouteImport } from './routes/member'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as StaffRouteImport } from './routes/staff'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as LoginManagementRouteImport } from './routes/login/management'
-import { Route as MemberFacilitiesIndexRouteImport } from './routes/member/facilities/index'
+import { Route as LoginMemberRouteImport } from './routes/login/member'
+import { Route as LoginStaffRouteImport } from './routes/login/staff'
+import { Route as ManagementIndexRouteImport } from './routes/management/index'
+import { Route as ManagementAnalyticsRouteImport } from './routes/management/analytics'
+import { Route as ManagementEventsRouteImport } from './routes/management/events'
+import { Route as ManagementFacilitiesRouteImport } from './routes/management/facilities'
+import { Route as ManagementNoticesRouteImport } from './routes/management/notices'
+import { Route as ManagementReportsRouteImport } from './routes/management/reports'
+import { Route as ManagementRestaurantsRouteImport } from './routes/management/restaurants'
+import { Route as ManagementUsersRouteImport } from './routes/management/users'
+import { Route as MemberIndexRouteImport } from './routes/member/index'
+import { Route as MemberEventsRouteImport } from './routes/member/events'
+import { Route as MemberGuestsRouteImport } from './routes/member/guests'
+import { Route as MemberNoticesRouteImport } from './routes/member/notices'
+import { Route as MemberProfileRouteImport } from './routes/member/profile'
+import { Route as StaffIndexRouteImport } from './routes/staff/index'
+import { Route as StaffBookingsRouteImport } from './routes/staff/bookings'
+import { Route as StaffDiningRouteImport } from './routes/staff/dining'
+import { Route as StaffEventsRouteImport } from './routes/staff/events'
+import { Route as StaffFacilitiesRouteImport } from './routes/staff/facilities'
+import { Route as StaffGuestsRouteImport } from './routes/staff/guests'
 import { Route as MemberDiningIndexRouteImport } from './routes/member/dining/index'
-import { Route as MemberFacilitiesIdRouteImport } from './routes/member/facilities/$id'
 import { Route as MemberDiningIdRouteImport } from './routes/member/dining/$id'
+import { Route as MemberFacilitiesIndexRouteImport } from './routes/member/facilities/index'
+import { Route as MemberFacilitiesIdRouteImport } from './routes/member/facilities/$id'
 
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffRoute = StaffRouteImport.update({
-  id: '/staff',
-  path: '/staff',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MemberRoute = MemberRouteImport.update({
-  id: '/member',
-  path: '/member',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ManagementRoute = ManagementRouteImport.update({
-  id: '/management',
-  path: '/management',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -73,114 +53,29 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ManagementRoute = ManagementRouteImport.update({
+  id: '/management',
+  path: '/management',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StaffIndexRoute = StaffIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => StaffRoute,
-} as any)
-const MemberIndexRoute = MemberIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => MemberRoute,
-} as any)
-const ManagementIndexRoute = ManagementIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ManagementRoute,
-} as any)
-const StaffGuestsRoute = StaffGuestsRouteImport.update({
-  id: '/guests',
-  path: '/guests',
-  getParentRoute: () => StaffRoute,
-} as any)
-const StaffFacilitiesRoute = StaffFacilitiesRouteImport.update({
-  id: '/facilities',
-  path: '/facilities',
-  getParentRoute: () => StaffRoute,
-} as any)
-const StaffEventsRoute = StaffEventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => StaffRoute,
-} as any)
-const StaffDiningRoute = StaffDiningRouteImport.update({
-  id: '/dining',
-  path: '/dining',
-  getParentRoute: () => StaffRoute,
-} as any)
-const StaffBookingsRoute = StaffBookingsRouteImport.update({
-  id: '/bookings',
-  path: '/bookings',
-  getParentRoute: () => StaffRoute,
-} as any)
-const MemberProfileRoute = MemberProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => MemberRoute,
-} as any)
-const MemberNoticesRoute = MemberNoticesRouteImport.update({
-  id: '/notices',
-  path: '/notices',
-  getParentRoute: () => MemberRoute,
-} as any)
-const MemberGuestsRoute = MemberGuestsRouteImport.update({
-  id: '/guests',
-  path: '/guests',
-  getParentRoute: () => MemberRoute,
-} as any)
-const MemberEventsRoute = MemberEventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => MemberRoute,
-} as any)
-const ManagementUsersRoute = ManagementUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => ManagementRoute,
-} as any)
-const ManagementRestaurantsRoute = ManagementRestaurantsRouteImport.update({
-  id: '/restaurants',
-  path: '/restaurants',
-  getParentRoute: () => ManagementRoute,
-} as any)
-const ManagementReportsRoute = ManagementReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => ManagementRoute,
-} as any)
-const ManagementNoticesRoute = ManagementNoticesRouteImport.update({
-  id: '/notices',
-  path: '/notices',
-  getParentRoute: () => ManagementRoute,
-} as any)
-const ManagementFacilitiesRoute = ManagementFacilitiesRouteImport.update({
-  id: '/facilities',
-  path: '/facilities',
-  getParentRoute: () => ManagementRoute,
-} as any)
-const ManagementEventsRoute = ManagementEventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => ManagementRoute,
-} as any)
-const ManagementAnalyticsRoute = ManagementAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => ManagementRoute,
-} as any)
-const LoginStaffRoute = LoginStaffRouteImport.update({
-  id: '/login/staff',
-  path: '/login/staff',
+const MemberRoute = MemberRouteImport.update({
+  id: '/member',
+  path: '/member',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginMemberRoute = LoginMemberRouteImport.update({
-  id: '/login/member',
-  path: '/login/member',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffRoute = StaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginManagementRoute = LoginManagementRouteImport.update({
@@ -188,24 +83,129 @@ const LoginManagementRoute = LoginManagementRouteImport.update({
   path: '/login/management',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MemberFacilitiesIndexRoute = MemberFacilitiesIndexRouteImport.update({
-  id: '/facilities/',
-  path: '/facilities/',
+const LoginMemberRoute = LoginMemberRouteImport.update({
+  id: '/login/member',
+  path: '/login/member',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginStaffRoute = LoginStaffRouteImport.update({
+  id: '/login/staff',
+  path: '/login/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagementIndexRoute = ManagementIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementAnalyticsRoute = ManagementAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementEventsRoute = ManagementEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementFacilitiesRoute = ManagementFacilitiesRouteImport.update({
+  id: '/facilities',
+  path: '/facilities',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementNoticesRoute = ManagementNoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementReportsRoute = ManagementReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementRestaurantsRoute = ManagementRestaurantsRouteImport.update({
+  id: '/restaurants',
+  path: '/restaurants',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const ManagementUsersRoute = ManagementUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => ManagementRoute,
+} as any)
+const MemberIndexRoute = MemberIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => MemberRoute,
+} as any)
+const MemberEventsRoute = MemberEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberGuestsRoute = MemberGuestsRouteImport.update({
+  id: '/guests',
+  path: '/guests',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberNoticesRoute = MemberNoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberProfileRoute = MemberProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => MemberRoute,
+} as any)
+const StaffIndexRoute = StaffIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffBookingsRoute = StaffBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffDiningRoute = StaffDiningRouteImport.update({
+  id: '/dining',
+  path: '/dining',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffEventsRoute = StaffEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffFacilitiesRoute = StaffFacilitiesRouteImport.update({
+  id: '/facilities',
+  path: '/facilities',
+  getParentRoute: () => StaffRoute,
+} as any)
+const StaffGuestsRoute = StaffGuestsRouteImport.update({
+  id: '/guests',
+  path: '/guests',
+  getParentRoute: () => StaffRoute,
 } as any)
 const MemberDiningIndexRoute = MemberDiningIndexRouteImport.update({
   id: '/dining/',
   path: '/dining/',
   getParentRoute: () => MemberRoute,
 } as any)
-const MemberFacilitiesIdRoute = MemberFacilitiesIdRouteImport.update({
-  id: '/facilities/$id',
-  path: '/facilities/$id',
-  getParentRoute: () => MemberRoute,
-} as any)
 const MemberDiningIdRoute = MemberDiningIdRouteImport.update({
   id: '/dining/$id',
   path: '/dining/$id',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberFacilitiesIndexRoute = MemberFacilitiesIndexRouteImport.update({
+  id: '/facilities/',
+  path: '/facilities/',
+  getParentRoute: () => MemberRoute,
+} as any)
+const MemberFacilitiesIdRoute = MemberFacilitiesIdRouteImport.update({
+  id: '/facilities/$id',
+  path: '/facilities/$id',
   getParentRoute: () => MemberRoute,
 } as any)
 
@@ -432,39 +432,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staff': {
-      id: '/staff'
-      path: '/staff'
-      fullPath: '/staff'
-      preLoaderRoute: typeof StaffRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/member': {
-      id: '/member'
-      path: '/member'
-      fullPath: '/member'
-      preLoaderRoute: typeof MemberRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/management': {
-      id: '/management'
-      path: '/management'
-      fullPath: '/management'
-      preLoaderRoute: typeof ManagementRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -474,158 +446,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/management': {
+      id: '/management'
+      path: '/management'
+      fullPath: '/management'
+      preLoaderRoute: typeof ManagementRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/staff/': {
-      id: '/staff/'
-      path: '/'
-      fullPath: '/staff/'
-      preLoaderRoute: typeof StaffIndexRouteImport
-      parentRoute: typeof StaffRoute
-    }
-    '/member/': {
-      id: '/member/'
-      path: '/'
-      fullPath: '/member/'
-      preLoaderRoute: typeof MemberIndexRouteImport
-      parentRoute: typeof MemberRoute
-    }
-    '/management/': {
-      id: '/management/'
-      path: '/'
-      fullPath: '/management/'
-      preLoaderRoute: typeof ManagementIndexRouteImport
-      parentRoute: typeof ManagementRoute
-    }
-    '/staff/guests': {
-      id: '/staff/guests'
-      path: '/guests'
-      fullPath: '/staff/guests'
-      preLoaderRoute: typeof StaffGuestsRouteImport
-      parentRoute: typeof StaffRoute
-    }
-    '/staff/facilities': {
-      id: '/staff/facilities'
-      path: '/facilities'
-      fullPath: '/staff/facilities'
-      preLoaderRoute: typeof StaffFacilitiesRouteImport
-      parentRoute: typeof StaffRoute
-    }
-    '/staff/events': {
-      id: '/staff/events'
-      path: '/events'
-      fullPath: '/staff/events'
-      preLoaderRoute: typeof StaffEventsRouteImport
-      parentRoute: typeof StaffRoute
-    }
-    '/staff/dining': {
-      id: '/staff/dining'
-      path: '/dining'
-      fullPath: '/staff/dining'
-      preLoaderRoute: typeof StaffDiningRouteImport
-      parentRoute: typeof StaffRoute
-    }
-    '/staff/bookings': {
-      id: '/staff/bookings'
-      path: '/bookings'
-      fullPath: '/staff/bookings'
-      preLoaderRoute: typeof StaffBookingsRouteImport
-      parentRoute: typeof StaffRoute
-    }
-    '/member/profile': {
-      id: '/member/profile'
-      path: '/profile'
-      fullPath: '/member/profile'
-      preLoaderRoute: typeof MemberProfileRouteImport
-      parentRoute: typeof MemberRoute
-    }
-    '/member/notices': {
-      id: '/member/notices'
-      path: '/notices'
-      fullPath: '/member/notices'
-      preLoaderRoute: typeof MemberNoticesRouteImport
-      parentRoute: typeof MemberRoute
-    }
-    '/member/guests': {
-      id: '/member/guests'
-      path: '/guests'
-      fullPath: '/member/guests'
-      preLoaderRoute: typeof MemberGuestsRouteImport
-      parentRoute: typeof MemberRoute
-    }
-    '/member/events': {
-      id: '/member/events'
-      path: '/events'
-      fullPath: '/member/events'
-      preLoaderRoute: typeof MemberEventsRouteImport
-      parentRoute: typeof MemberRoute
-    }
-    '/management/users': {
-      id: '/management/users'
-      path: '/users'
-      fullPath: '/management/users'
-      preLoaderRoute: typeof ManagementUsersRouteImport
-      parentRoute: typeof ManagementRoute
-    }
-    '/management/restaurants': {
-      id: '/management/restaurants'
-      path: '/restaurants'
-      fullPath: '/management/restaurants'
-      preLoaderRoute: typeof ManagementRestaurantsRouteImport
-      parentRoute: typeof ManagementRoute
-    }
-    '/management/reports': {
-      id: '/management/reports'
-      path: '/reports'
-      fullPath: '/management/reports'
-      preLoaderRoute: typeof ManagementReportsRouteImport
-      parentRoute: typeof ManagementRoute
-    }
-    '/management/notices': {
-      id: '/management/notices'
-      path: '/notices'
-      fullPath: '/management/notices'
-      preLoaderRoute: typeof ManagementNoticesRouteImport
-      parentRoute: typeof ManagementRoute
-    }
-    '/management/facilities': {
-      id: '/management/facilities'
-      path: '/facilities'
-      fullPath: '/management/facilities'
-      preLoaderRoute: typeof ManagementFacilitiesRouteImport
-      parentRoute: typeof ManagementRoute
-    }
-    '/management/events': {
-      id: '/management/events'
-      path: '/events'
-      fullPath: '/management/events'
-      preLoaderRoute: typeof ManagementEventsRouteImport
-      parentRoute: typeof ManagementRoute
-    }
-    '/management/analytics': {
-      id: '/management/analytics'
-      path: '/analytics'
-      fullPath: '/management/analytics'
-      preLoaderRoute: typeof ManagementAnalyticsRouteImport
-      parentRoute: typeof ManagementRoute
-    }
-    '/login/staff': {
-      id: '/login/staff'
-      path: '/login/staff'
-      fullPath: '/login/staff'
-      preLoaderRoute: typeof LoginStaffRouteImport
+    '/member': {
+      id: '/member'
+      path: '/member'
+      fullPath: '/member'
+      preLoaderRoute: typeof MemberRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login/member': {
-      id: '/login/member'
-      path: '/login/member'
-      fullPath: '/login/member'
-      preLoaderRoute: typeof LoginMemberRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff': {
+      id: '/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof StaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/management': {
@@ -635,12 +488,152 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginManagementRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/member/facilities/': {
-      id: '/member/facilities/'
+    '/login/member': {
+      id: '/login/member'
+      path: '/login/member'
+      fullPath: '/login/member'
+      preLoaderRoute: typeof LoginMemberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login/staff': {
+      id: '/login/staff'
+      path: '/login/staff'
+      fullPath: '/login/staff'
+      preLoaderRoute: typeof LoginStaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/': {
+      id: '/management/'
+      path: '/'
+      fullPath: '/management/'
+      preLoaderRoute: typeof ManagementIndexRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/analytics': {
+      id: '/management/analytics'
+      path: '/analytics'
+      fullPath: '/management/analytics'
+      preLoaderRoute: typeof ManagementAnalyticsRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/events': {
+      id: '/management/events'
+      path: '/events'
+      fullPath: '/management/events'
+      preLoaderRoute: typeof ManagementEventsRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/facilities': {
+      id: '/management/facilities'
       path: '/facilities'
-      fullPath: '/member/facilities/'
-      preLoaderRoute: typeof MemberFacilitiesIndexRouteImport
+      fullPath: '/management/facilities'
+      preLoaderRoute: typeof ManagementFacilitiesRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/notices': {
+      id: '/management/notices'
+      path: '/notices'
+      fullPath: '/management/notices'
+      preLoaderRoute: typeof ManagementNoticesRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/reports': {
+      id: '/management/reports'
+      path: '/reports'
+      fullPath: '/management/reports'
+      preLoaderRoute: typeof ManagementReportsRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/restaurants': {
+      id: '/management/restaurants'
+      path: '/restaurants'
+      fullPath: '/management/restaurants'
+      preLoaderRoute: typeof ManagementRestaurantsRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/management/users': {
+      id: '/management/users'
+      path: '/users'
+      fullPath: '/management/users'
+      preLoaderRoute: typeof ManagementUsersRouteImport
+      parentRoute: typeof ManagementRoute
+    }
+    '/member/': {
+      id: '/member/'
+      path: '/'
+      fullPath: '/member/'
+      preLoaderRoute: typeof MemberIndexRouteImport
       parentRoute: typeof MemberRoute
+    }
+    '/member/events': {
+      id: '/member/events'
+      path: '/events'
+      fullPath: '/member/events'
+      preLoaderRoute: typeof MemberEventsRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/guests': {
+      id: '/member/guests'
+      path: '/guests'
+      fullPath: '/member/guests'
+      preLoaderRoute: typeof MemberGuestsRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/notices': {
+      id: '/member/notices'
+      path: '/notices'
+      fullPath: '/member/notices'
+      preLoaderRoute: typeof MemberNoticesRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/profile': {
+      id: '/member/profile'
+      path: '/profile'
+      fullPath: '/member/profile'
+      preLoaderRoute: typeof MemberProfileRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/staff/': {
+      id: '/staff/'
+      path: '/'
+      fullPath: '/staff/'
+      preLoaderRoute: typeof StaffIndexRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/bookings': {
+      id: '/staff/bookings'
+      path: '/bookings'
+      fullPath: '/staff/bookings'
+      preLoaderRoute: typeof StaffBookingsRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/dining': {
+      id: '/staff/dining'
+      path: '/dining'
+      fullPath: '/staff/dining'
+      preLoaderRoute: typeof StaffDiningRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/events': {
+      id: '/staff/events'
+      path: '/events'
+      fullPath: '/staff/events'
+      preLoaderRoute: typeof StaffEventsRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/facilities': {
+      id: '/staff/facilities'
+      path: '/facilities'
+      fullPath: '/staff/facilities'
+      preLoaderRoute: typeof StaffFacilitiesRouteImport
+      parentRoute: typeof StaffRoute
+    }
+    '/staff/guests': {
+      id: '/staff/guests'
+      path: '/guests'
+      fullPath: '/staff/guests'
+      preLoaderRoute: typeof StaffGuestsRouteImport
+      parentRoute: typeof StaffRoute
     }
     '/member/dining/': {
       id: '/member/dining/'
@@ -649,18 +642,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MemberDiningIndexRouteImport
       parentRoute: typeof MemberRoute
     }
-    '/member/facilities/$id': {
-      id: '/member/facilities/$id'
-      path: '/facilities/$id'
-      fullPath: '/member/facilities/$id'
-      preLoaderRoute: typeof MemberFacilitiesIdRouteImport
-      parentRoute: typeof MemberRoute
-    }
     '/member/dining/$id': {
       id: '/member/dining/$id'
       path: '/dining/$id'
       fullPath: '/member/dining/$id'
       preLoaderRoute: typeof MemberDiningIdRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/facilities/': {
+      id: '/member/facilities/'
+      path: '/facilities'
+      fullPath: '/member/facilities/'
+      preLoaderRoute: typeof MemberFacilitiesIndexRouteImport
+      parentRoute: typeof MemberRoute
+    }
+    '/member/facilities/$id': {
+      id: '/member/facilities/$id'
+      path: '/facilities/$id'
+      fullPath: '/member/facilities/$id'
+      preLoaderRoute: typeof MemberFacilitiesIdRouteImport
       parentRoute: typeof MemberRoute
     }
   }
