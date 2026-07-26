@@ -25,6 +25,11 @@ services:
       npx prisma migrate deploy &&
       cd ..
     startCommand: node scripts/start.mjs
+    # Without this, Render's default health probe hits `/`, which does a full
+    # SSR render per check — on free tier that caused intermittent
+    # x-render-routing: no-server 404s right after deploy. /api/health is
+    # a plain Express route (server/src/routes/index.js), no render, no DB.
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
