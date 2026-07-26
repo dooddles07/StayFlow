@@ -11,12 +11,16 @@ services:
     name: stayflow
     runtime: node
     plan: free
+    # --include=dev on both installs: NODE_ENV=production (set below, needed at
+    # runtime) makes plain `npm install` skip devDependencies — but vite and
+    # @tanstack/router-cli (the `tsr` binary) are both devDependencies here,
+    # so a plain install leaves the build tools missing.
     buildCommand: >-
-      npm install &&
-      npm run generate-routes &&
+      npm install --include=dev &&
+      npx tsr generate &&
       npx vite build &&
       cd server &&
-      npm install &&
+      npm install --include=dev &&
       npx prisma generate &&
       npx prisma migrate deploy &&
       cd ..
