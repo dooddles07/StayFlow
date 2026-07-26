@@ -1,0 +1,37 @@
+# Free single-service deployment. One Node process serves both the
+# TanStack Start SSR frontend and the Express API on one port (see
+# scripts/start.mjs) — routed by path, not two separate hosts.
+#
+# buildCommand overrides the repo's own `npm run build`, which shells out to
+# `bun install` for the server package. Render's default Node image has no
+# bun, so this substitutes npm for that one step; everything else is
+# unchanged from the original script.
+services:
+  - type: web
+    name: stayflow
+    runtime: node
+    plan: free
+    buildCommand: >-
+      npm install &&
+      npm run generate-routes &&
+      npx vite build &&
+      cd server &&
+      npm install &&
+      npx prisma generate &&
+      npx prisma migrate deploy &&
+      cd ..
+    startCommand: node scripts/start.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_SECRET
+        generateValue: true
+      # Same-origin app (frontend and API share one host), so this stays
+      # empty on purpose — env.js fails closed to [] rather than a wildcard.
+      - key: CORS_ORIGIN
+        value: ""
+      # Set in the Render dashboard, not here.
+      - key: DATABASE_URL
+        sync: false
