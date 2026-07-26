@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm install --include=dev && npx tsr generate && npx vite build",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://stayflow-g8l0.onrender.com/api/:path*"
+    }
+  ]
+}

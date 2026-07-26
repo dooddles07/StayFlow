@@ -1,34 +1,23 @@
-# Free single-service deployment. One Node process serves both the
-# TanStack Start SSR frontend and the Express API on one port (see
-# scripts/start.mjs) — routed by path, not two separate hosts.
+# API-only service. The frontend is deployed separately to Vercel, which
+# proxies /api/* here via a rewrite (see vercel.json) so the browser still
+# sees a single origin — the auth cookie is SameSite=Lax and would not be
+# sent on a genuinely cross-site request.
 #
-# buildCommand overrides the repo's own `npm run build`, which shells out to
-# `bun install` for the server package. Render's default Node image has no
-# bun, so this substitutes npm for that one step; everything else is
-# unchanged from the original script.
+# --include=dev on the install: NODE_ENV=production (set below, needed at
+# runtime) makes plain `npm install` skip devDependencies, but the prisma
+# CLI used by generate/migrate is a devDependency.
 services:
   - type: web
     name: stayflow
     runtime: node
     plan: free
-    # --include=dev on both installs: NODE_ENV=production (set below, needed at
-    # runtime) makes plain `npm install` skip devDependencies — but vite and
-    # @tanstack/router-cli (the `tsr` binary) are both devDependencies here,
-    # so a plain install leaves the build tools missing.
     buildCommand: >-
-      npm install --include=dev &&
-      npx tsr generate &&
-      npx vite build &&
       cd server &&
       npm install --include=dev &&
       npx prisma generate &&
-      npx prisma migrate deploy &&
-      cd ..
-    startCommand: node scripts/start.mjs
-    # Without this, Render's default health probe hits `/`, which does a full
-    # SSR render per check — on free tier that caused intermittent
-    # x-render-routing: no-server 404s right after deploy. /api/health is
-    # a plain Express route (server/src/routes/index.js), no render, no DB.
+      npx prisma migrate deploy
+    startCommand: cd server && node server.js
+    # Plain Express route (server/src/routes/index.js) — no render, no DB call.
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -37,8 +26,9 @@ services:
         value: 7d
       - key: JWT_SECRET
         generateValue: true
-      # Same-origin app (frontend and API share one host), so this stays
-      # empty on purpose — env.js fails closed to [] rather than a wildcard.
+      # Requests arrive via Vercel's server-side rewrite, not a browser
+      # cross-origin fetch, so no CORS allowlist is needed. env.js fails
+      # closed to [] rather than a wildcard.
       - key: CORS_ORIGIN
         value: ""
       # Set in the Render dashboard, not here.
