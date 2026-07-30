@@ -81,7 +81,7 @@ export const guestController = {
     res.json(await GuestModel.findByResident(req.params.residentId))
   }),
   // Both enforce the lifecycle (PENDING -> APPROVED -> CHECKED_IN -> CHECKED_OUT, see
-  // docs/Rules.md) rather than blindly stamping the target status — without this, a
+  // docs/RULES.md) rather than blindly stamping the target status — without this, a
   // client bug or a direct API call could check in a still-pending (never-approved)
   // guest, or flip an already-checked-out guest back to checked-in.
   checkIn: asyncHandler(async (req, res) => {

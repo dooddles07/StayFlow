@@ -6,7 +6,7 @@ import { PrismaClient } from '@prisma/client'
 
 // Load the repo's single .env by file-relative path, not CWD — this script needs to
 // work whether it's run from root or from server/, and there's no server/.env to fall
-// back on (see docs/Security.md#environment-variables).
+// back on (see docs/SECURITY.md#environment-variables).
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 

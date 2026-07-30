@@ -15,7 +15,7 @@
 
 A resident never creates their own login. The real-world flow this models: the resident visits the front desk/management office in person, and MANAGEMENT creates their portal login on the spot.
 
-1. A `Resident` profile can be created by STAFF or MANAGEMENT (reserves the unit; no login yet) — or a MANAGEMENT user can create the profile and issue the login together in one step.
+1. A `Resident` profile can be created by MANAGEMENT (reserves the unit; no login yet) — or MANAGEMENT can create the profile and issue the login together in one step.
 2. `POST /residents/:id/create-login` (**MANAGEMENT only** — stricter than the STAFF+MANAGEMENT gate on the rest of the resident directory) generates a random temp password, hashes it, and creates the `User` row with `mustChangePassword: true`. The plaintext password is returned exactly once in the response — never persisted, never retrievable again — for management to relay to the resident in person.
 3. The resident signs in with that temp password. Until they set their own, `blockIfMustChangePassword` 403s every endpoint except `/auth/me`, `/auth/logout`, and `/auth/change-password` — the client redirects them straight to a forced "set your password" screen.
 4. Setting a real password — via the normal in-app change-password flow, **or** via the public forgot-password/reset-password flow — clears `mustChangePassword`. Both count equally as "the resident proved they own the account."
