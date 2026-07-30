@@ -25,7 +25,6 @@
 - Commit after significant changes, clear messages.
 - Keep commits focused, atomic.
 - No auto-push any branch.
-- Access only these two: connections-client-micro-site and connections-service-micro-site.
 
 ## AI Restrictions
 - No customer personal data - names, contacts, account numbers, transactions (unless approved exemption).

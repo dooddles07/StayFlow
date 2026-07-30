@@ -32,7 +32,7 @@ graph TD
 | Node service | `createServer` router: `/api` → Express, static file hit → serve `dist/client`, else → SSR `handler.fetch` |
 | Express API | REST endpoints, auth, RBAC, rate limiting, security headers |
 | Prisma | Typed DB access + migrations |
-| PostgreSQL | System of record (Railway-managed in prod) |
+| PostgreSQL | System of record (managed externally, connected via `DATABASE_URL` on Render) |
 | Mailer | Reset/email-change link delivery via Resend; logs the link to console instead when `RESEND_API_KEY` is unset |
 
 ## Complete System Architecture
@@ -247,16 +247,16 @@ Each resource follows **route → middleware → controller → model → Prisma
 | Module | Purpose | Read roles | Write roles | Notable endpoints |
 | --- | --- | --- | --- | --- |
 | **Auth** | Login, logout, password reset/change, session — no self-registration | public / self | — | `/auth/*` |
-| **Residents** | Resident directory + profile + login issuance | STAFF, MGMT | STAFF, MGMT (login issuance: MGMT only) | CRUD, `/:id/create-login` |
+| **Residents** | Resident directory + profile + login issuance | STAFF, MGMT | MGMT only | CRUD, `/:id/create-login` |
 | **Staff** | Staff directory | STAFF, MGMT | MGMT | CRUD |
 | **Facilities** | Amenities catalog | any auth | STAFF, MGMT | CRUD |
 | **Bookings** | Facility reservations | STAFF list; owner get | member create; STAFF update | `/resident/:id`, ownership-gated |
-| **Restaurants** | Dining venues | any auth | STAFF, MGMT | CRUD |
-| **Tables** | Restaurant tables | any auth | STAFF, MGMT | `/restaurant/:id` |
+| **Restaurants** | Dining venues | any auth | MGMT only | CRUD |
+| **Tables** | Restaurant tables | any auth | MGMT only | `/restaurant/:id` |
 | **Dining Reservations** | Table bookings | STAFF list; owner get | member create; STAFF update | `/resident/:id`, ownership-gated |
 | **Guests** | Guest passes + check-in/out | STAFF list; owner get | member create/edit own | `/:id/check-in`, `/:id/check-out` |
-| **Events** | Community events + RSVP | any auth | STAFF, MGMT | `/:id/rsvp`, `/:id/rsvp/cancel` |
-| **Notices** | Announcements | any auth | STAFF, MGMT | CRUD |
+| **Events** | Community events + RSVP | any auth | MGMT only | `/:id/rsvp`, `/:id/rsvp/cancel` |
+| **Notices** | Announcements | any auth | MGMT only | CRUD |
 | **Notifications** | In-app notifications | any auth | STAFF, MGMT create/delete | `/:id/read` |
 
 *Inputs:* JSON bodies + JWT (cookie/Bearer). *Outputs:* JSON. *Connected services:* PostgreSQL via Prisma only.
@@ -282,7 +282,7 @@ No public account-creation endpoint exists — see [Rules.md](Rules.md#resident-
 
 ### Resource routers (all under `requireAuth`)
 
-Generic CRUD (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) applies to **residents, staff, facilities, restaurants, tables, events, notices** with the role gates in System Modules above. Extra endpoints:
+Generic CRUD (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) applies to **residents, staff, facilities, restaurants, tables, events, notices** with the role gates in System Modules above — reads stay open to STAFF/MGMT (or wider); writes on restaurants/tables/events/notices/residents are MGMT-only since STAFF has no screens that use them. Extra endpoints:
 
 | Method | URL | Purpose | Role |
 | --- | --- | --- | --- |
@@ -306,23 +306,24 @@ Generic CRUD (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) applies 
 
 ## Deployment
 
-**Model:** one Railway service runs `node scripts/start.mjs`, serving API + static + SSR from one port.
+**Model:** split hosting, two services. Vercel builds and serves the frontend, and proxies `/api/*` server-side to a standalone Render service running the Express API — the browser only ever sees one origin, so the httpOnly auth cookie (`SameSite=Lax`) works normally.
+
+`scripts/start.mjs` (the merged API+SSR+static Node server) and the root `package.json` `build`/`start` scripts predate this split and are no longer what's deployed — they still work for a local prod-style smoke test, but neither Vercel nor Render invokes them.
 
 ```mermaid
 graph TD
-  Dev["git push → GitHub"] --> Railway["Railway build & deploy"]
-  Railway -->|build| B["vite build && (cd server && bun install && bunx prisma generate)"]
-  Railway -->|start| S["node scripts/start.mjs"]
-  S --> API["/api → Express"]
-  S --> Web["/* → SSR + static"]
-  API --> PG[("Railway PostgreSQL")]
+  Dev["git push → GitHub"] --> VercelBuild["Vercel build (frontend)"]
+  Dev --> RenderBuild["Render build (API)"]
+  VercelBuild -->|"vite build"| VercelServe["Vercel — serves dist/client + SSR"]
+  RenderBuild -->|"npm install --include=dev && prisma generate && prisma migrate deploy"| RenderStart["Render — node server.js"]
+  VercelServe -->|"rewrite /api/*"| RenderStart
+  RenderStart --> PG[("PostgreSQL")]
 ```
 
-- **Local dev (frontend + API together):** `bun install && bun --bun run dev` (Vite on :3000). Backend env in root `.env` powers the merged path.
+- **Local dev (frontend + API together):** `bun install && bun --bun run dev` (Vite on :3000). Backend env in root `.env` powers this path.
 - **Local dev (API standalone):** `cd server && npm install && npm run dev` (`node --watch`, :4000) — needs the vars from root `.env` supplied another way, since there's deliberately no `server/.env` (see [Security.md](Security.md#environment-variables)).
-- **Build:** `bun --bun run build` → `vite build` then server install + `prisma generate`.
-- **Push schema changes:** `./server/node_modules/.bin/prisma db push --schema=server/prisma/schema.prisma` (run from root) — actual practice, not `prisma:migrate`/`prisma:deploy`; see [Schema.md](Schema.md#schema-change-workflow).
-- **Docker / Compose / Kubernetes / GitHub Actions CI:** none present. Deploy is Railway-native.
+- **Push schema changes:** `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, commit the migration, then push — Render's build runs `prisma migrate deploy`; see [Schema.md](Schema.md#schema-change-workflow).
+- **Docker / Compose / Kubernetes / GitHub Actions CI:** none present.
 
 ## Configuration Guide
 
@@ -366,10 +367,10 @@ graph TD
 
 ## Backup & Recovery
 
-- **Database:** managed by Railway PostgreSQL — use Railway backups/snapshots + `pg_dump` for logical backups.
+- **Database:** managed by whichever Postgres provider is set in `DATABASE_URL` — use that provider's own backups/snapshots + `pg_dump` for logical backups.
 - **File storage:** no user-uploaded files (images are static/remote references) — nothing app-side to back up.
-- **Recovery:** restore Postgres snapshot → re-run `prisma migrate deploy` → redeploy service.
-- **Disaster recovery:** no documented DR/runbook; relies on Railway platform durability.
+- **Recovery:** restore Postgres snapshot → re-run `prisma migrate deploy` → redeploy the Render service.
+- **Disaster recovery:** no documented DR/runbook; relies on the DB provider's and Render/Vercel's platform durability.
 
 ## Diagrams
 
@@ -394,9 +395,9 @@ graph LR
 
 ```mermaid
 graph TD
-  Client["Browser"] -->|HTTPS| Railway["Railway service — Node"]
-  Railway --> Proc["scripts/start.mjs (API+SSR+static)"]
-  Proc --> PG[("Railway PostgreSQL")]
+  Client["Browser"] -->|HTTPS| Vercel["Vercel — frontend + SSR"]
+  Vercel -->|"rewrite /api/*"| Render["Render — Express API"]
+  Render --> PG[("PostgreSQL")]
 ```
 
 ### Network Flow Diagram
@@ -469,13 +470,13 @@ classDiagram
 ## Maintenance Guide
 
 - **Update deps:** bump `package.json` / `server/package.json`, reinstall, run tests + lint.
-- **Schema change:** edit `schema.prisma` → `db push` from root (see [Schema.md](Schema.md#schema-change-workflow)) — not `prisma:migrate`/`prisma:deploy`, despite those scripts existing in `server/package.json`.
-- **Deploy:** push to GitHub → Railway auto-builds/starts.
-- **Rollback:** redeploy previous Railway deployment; revert schema with a compensating `db push`, never by hand-editing data or reverting via a stale migration file.
+- **Schema change:** edit `schema.prisma` → `prisma migrate dev` from root, commit the migration folder (see [Schema.md](Schema.md#schema-change-workflow)) — Render applies it on deploy via `prisma migrate deploy`.
+- **Deploy:** push to GitHub → Vercel auto-builds the frontend, Render auto-builds/starts the API.
+- **Rollback:** redeploy the previous build on Vercel and/or Render; revert schema with a new down migration, never by hand-editing data or deleting an applied migration file.
 - **Rotate demo creds:** `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js`.
 - **Create STAFF/MGMT users:** manually via seed / Prisma Studio (no API endpoint by design).
 - **Create a resident login:** MANAGEMENT-only, via the app UI (Users page → Create Login / Add Member) or `POST /residents/:id/create-login` directly — no seed/Studio step needed.
-- **Schema change via CLI:** run from repo root using server's pinned binary + explicit schema path (there's no `server/.env` for a `cd server`-relative Prisma invocation to find): `./server/node_modules/.bin/prisma db push --schema=server/prisma/schema.prisma`. This project uses `db push` day-to-day rather than `migrate dev`/`deploy`.
+- **Schema change via CLI:** run from repo root using server's pinned binary + explicit schema path (there's no `server/.env` for a `cd server`-relative Prisma invocation to find): `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, then commit the generated migration.
 
 ## Credits
 

@@ -34,7 +34,7 @@ Backend requires `DATABASE_URL` + `JWT_SECRET` (process exits at boot if missing
 
 | Variable | Scope | Purpose | Required | Example / placeholder |
 | --- | --- | --- | --- | --- |
-| `DATABASE_URL` | server | Postgres connection (Prisma) — already the public proxy host in this project, not Railway's internal-only address | ✅ | `postgresql://user:password@host:5432/db` |
+| `DATABASE_URL` | server | Postgres connection (Prisma) — the public proxy host, not an internal-only address | ✅ | `postgresql://user:password@host:5432/db` |
 | `JWT_SECRET` | server | JWT signing secret | ✅ | `<random-32+-byte-secret>` |
 | `JWT_EXPIRES_IN` | server | Token lifetime | optional (`7d`) | `7d` |
 | `PORT` | server | API port | optional (`4000`/`3000`) | `4000` |
@@ -54,7 +54,7 @@ Backend requires `DATABASE_URL` + `JWT_SECRET` (process exits at boot if missing
 | Email provider (Resend) | `RESEND_API_KEY` — unset means console-log fallback, not an error |
 | Redis / AWS / Firebase / Twilio / Stripe / Google / GitHub / OpenAI | `<not used>` |
 
-**Never expose real secrets.** All live values belong in Railway service env vars, never in tracked files.
+**Never expose real secrets.** All live values belong in the Render dashboard's env vars, never in tracked files.
 
 ## Demo logins (development / preview only)
 
@@ -70,8 +70,8 @@ The live demo password is shown in the root README's "Try It Live" section — s
 
 | Category | Status |
 | --- | --- |
-| Hosting | Railway (single service, prod) |
-| Database | PostgreSQL (Railway-managed) |
+| Hosting | Render (API, free plan) + Vercel (frontend, free plan) — Vercel proxies `/api/*` to Render |
+| Database | PostgreSQL, managed externally (connection set via `DATABASE_URL` on Render) |
 | Payment / SMS / Maps / Analytics SaaS / AI / Cloud storage / OAuth / Webhooks | None wired |
 | Email | Resend, via `utils/mailer.js` — sends when `RESEND_API_KEY` is set, otherwise logs the link to console (dev and prod alike) |
 

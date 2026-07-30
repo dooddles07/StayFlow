@@ -8,7 +8,7 @@
 
 Residents book the pool and reserve dinner. The front desk knows who's arriving. Management sees the whole community at a glance.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20App-6d5efc?style=for-the-badge)](https://stayflow-production-bc16.up.railway.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20App-6d5efc?style=for-the-badge)](https://stay-flow-alpha.vercel.app/)
 ![Status](https://img.shields.io/badge/Status-Live-4ade80?style=for-the-badge)
 ![Portfolio Project](https://img.shields.io/badge/Type-Portfolio%20Project-fbbf24?style=for-the-badge)
 
@@ -34,7 +34,7 @@ It's a real, working product — not a mockup. Every booking, guest pass, and me
 
 No install, no signup — just click in and look around.
 
-**➜ [stayflow-production-bc16.up.railway.app](https://stayflow-production-bc16.up.railway.app)**
+**➜ [stay-flow-alpha.vercel.app](https://stay-flow-alpha.vercel.app/)**
 
 Pick a portal and sign in with any of these. They're demo accounts seeded with sample data — nothing here is a real person's information.
 
@@ -157,11 +157,12 @@ I built StayFlow to show what I can do end to end — not just write code, but d
 ![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white)
-![Railway](https://img.shields.io/badge/Railway-Deployed-0B0D0E?style=flat-square&logo=railway&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?style=flat-square&logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Render-API-46E3B7?style=flat-square&logo=render&logoColor=white)
 
 </div>
 
-In plain terms: a fast, modern website (React) talking to a proper backend server (Node + Express) that stores everything in a real database (PostgreSQL), all running live on a cloud host (Railway) — the same kind of stack used by production apps at real companies.
+In plain terms: a fast, modern website (React) talking to a proper backend server (Node + Express) that stores everything in a real database (PostgreSQL), all running live on free cloud hosting (Vercel for the frontend, Render for the API) — the same kind of stack used by production apps at real companies.
 
 <br />
 

@@ -21,9 +21,8 @@ cp .env.example .env   # set DATABASE_URL, JWT_SECRET, VITE_API_URL (+ PORT/CORS
 # 4. Backend deps + DB
 cd server && npm install
 cd ..
-# From root — the migration history is incomplete (see Schema.md), so `prisma migrate
-# deploy` will NOT produce a schema matching schema.prisma. Use db push instead:
-./server/node_modules/.bin/prisma db push --schema=server/prisma/schema.prisma
+# From root, with server's pinned binary (see Schema.md#schema-change-workflow):
+./server/node_modules/.bin/prisma migrate deploy --schema=server/prisma/schema.prisma
 cd server && npm run seed && cd ..   # optional: SEED_PASSWORD=... node prisma/seed.js
 
 # 5. Run (dev)
@@ -31,7 +30,7 @@ bun --bun run dev                    # http://localhost:3000
 
 # 6. Test / build
 bun --bun run test
-bun --bun run build && bun --bun run start   # prod-style merged server
+bun --bun run build && bun --bun run start   # local prod-style run only — actual prod is Render (API) + Vercel (frontend), see Architecture.md#deployment
 ```
 
 Full env var reference: [Security.md](Security.md#environment-variables). Schema workflow detail: [Schema.md](Schema.md#schema-change-workflow).
@@ -40,7 +39,7 @@ Full env var reference: [Security.md](Security.md#environment-variables). Schema
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Server exits: `Missing required env var` | `DATABASE_URL`/`JWT_SECRET` unset | Set them in the root `.env` or Railway — there is no `server/.env` |
+| Server exits: `Missing required env var` | `DATABASE_URL`/`JWT_SECRET` unset | Set them in the root `.env` or in Render's dashboard — there is no `server/.env` |
 | `Environment variable not found: DATABASE_URL` from Prisma CLI | Ran `cd server && prisma ...` — Prisma looks for `.env` in the CWD, and there's none in `server/` | Run from root instead: `./server/node_modules/.bin/prisma <cmd> --schema=server/prisma/schema.prisma` |
 | `401 Invalid or expired token` after reset | `tokenVersion` bumped → old session revoked | Sign in again |
 | Stuck on "Set your password" screen after login | `mustChangePassword` still `true` — expected for a freshly management-issued login | Complete the form (or use forgot-password) — both clear the flag |

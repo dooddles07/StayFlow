@@ -29,7 +29,9 @@ router.post('/:id/create-login', requireRole('MANAGEMENT'), createLoginLimiter, 
 router.use(
   buildCrudRouter(residentController, {
     readRoles: ['STAFF', 'MANAGEMENT'],
-    writeRoles: ['STAFF', 'MANAGEMENT'],
+    // MANAGEMENT-only writes: no /staff/* screen exists for resident profile editing,
+    // so STAFF write access was an unused permission, not an intended capability.
+    writeRoles: ['MANAGEMENT'],
   }),
 )
 

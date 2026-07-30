@@ -79,10 +79,11 @@ erDiagram
 
 ## Schema-change workflow
 
-**Actual practice: `prisma db push`, not `migrate dev`/`deploy`.** `server/prisma/migrations/` still only contains the original `0_init` — every schema change since (including `AdminActionEvent`, `mustChangePassword`, the composite indexes) went live via `db push` directly against the Railway DB, run from repo root with server's pinned binary (there's no `server/.env` for a `cd server`-relative invocation to find):
+**Real migration files now, not `db push`.** Render's build step runs `prisma migrate deploy`, so a schema change only reaches production if it's a committed migration file — `db push` alone would change nothing live:
 
 1. Edit `server/prisma/schema.prisma`.
-2. `./server/node_modules/.bin/prisma db push --schema=server/prisma/schema.prisma` — syncs the live DB and regenerates the client in one step, no migration file produced.
-3. No separate dev/prod step — the same command targets whatever `DATABASE_URL` resolves to (this project has one environment: the Railway DB, both for local dev and prod).
+2. From repo root, with server's pinned binary (there's no `server/.env` for a `cd server`-relative invocation to find): `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <change-description>`.
+3. Commit the generated migration folder under `server/prisma/migrations/`.
+4. Push — Render's build (`npx prisma migrate deploy`) applies it before the new server version starts.
 
-The `migrate dev`/`migrate deploy` scripts in `server/package.json` exist but aren't the path actually used — reconciling the migration history with a `migrate dev --create-only` baseline is a known gap, not yet done.
+`server/prisma/migrations/` holds `0_init` (original schema) and `20260726072515_sync_missing_fields` (a baseline migration written after the fact to catch up fields that had been pushed straight to the database before this workflow existed — `AdminActionEvent`, `mustChangePassword`, the composite indexes, etc.). Everything from that point on goes through the normal `migrate dev` → commit → `migrate deploy` path above.

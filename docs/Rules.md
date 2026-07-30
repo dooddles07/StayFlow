@@ -36,8 +36,8 @@ Both endpoints live under `/auth`, so they're reachable even for a resident stil
 | --- | --- | --- |
 | **Guest (unauthenticated)** | login pages, landing | Log in, request/reset password |
 | **MEMBER** (resident) | `/member/*` | Manage own bookings, dining, guests, event RSVPs; read facilities/events/notices/notifications |
-| **STAFF** | `/staff/*` | All bookings/dining/guests (list, confirm, check-in/out), manage facilities/restaurants/tables/events/notices |
-| **MANAGEMENT** | `/management/*` | Everything Staff + manage staff directory & residents + issue resident logins + analytics/reports |
+| **STAFF** | `/staff/*` | All bookings/dining/guests (list, confirm, check-in/out), set facility status; read-only on restaurants/tables/events/notices/residents |
+| **MANAGEMENT** | `/management/*` | Everything Staff + manage restaurants/tables/events/notices/residents + staff directory + issue resident logins + analytics/reports |
 
 ### Access Matrix (write)
 
@@ -45,11 +45,12 @@ Both endpoints live under `/auth`, so they're reachable even for a resident stil
 | --- | --- | --- | --- |
 | Own bookings/dining/guests | ✅ | ✅ | ✅ |
 | All bookings/dining/guests | ❌ | ✅ | ✅ |
-| Facilities / Restaurants / Tables / Events / Notices | ❌ | ✅ | ✅ |
-| Residents directory | ❌ | ✅ | ✅ |
+| Facilities (status only) | ❌ | ✅ | ✅ |
+| Restaurants / Tables / Events / Notices | ❌ | ❌ (read only) | ✅ |
+| Residents directory | ❌ | ❌ (read only) | ✅ |
 | Staff directory | ❌ | ❌ | ✅ |
 
-This matrix is server-enforced RBAC, not a map of what the staff portal's UI exposes. STAFF genuinely has API write access to restaurants/tables/events/notices/residents (confirmed at the route level), but `/staff/*` currently has no screens for restaurant/table management, event/notice authoring, or resident profile editing — those actions are only reachable through the management portal today. A STAFF login hitting those endpoints directly would succeed; there's just no button for it. Worth a deliberate call (build the missing staff UI vs. accept management-only as the intended scope) rather than treating it as a docs bug — the permissions themselves are correct as written above.
+This matrix is server-enforced RBAC, kept aligned with what the staff portal's UI actually exposes. STAFF write access to restaurants/tables/events/notices/residents was closed off at the route level — `/staff/*` has no screens for restaurant/table management, event/notice authoring, or resident profile editing, so that access was an unused permission rather than an intended capability. Facilities stayed STAFF-writable because `/staff/facilities` genuinely uses it (setting a facility's open/maintenance/closed status).
 
 ## Ownership rules
 
