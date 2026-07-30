@@ -71,7 +71,7 @@ The live demo password is shown in the root README's "Try It Live" section — s
 | Category | Status |
 | --- | --- |
 | Hosting | Render (API, free plan) + Vercel (frontend, free plan) — Vercel proxies `/api/*` to Render |
-| Database | PostgreSQL, managed externally (connection set via `DATABASE_URL` on Render) |
+| Database | PostgreSQL on Neon (free tier), connection set via `DATABASE_URL` on Render |
 | Payment / SMS / Maps / Analytics SaaS / AI / Cloud storage / OAuth / Webhooks | None wired |
 | Email | Resend, via `utils/mailer.js` — sends when `RESEND_API_KEY` is set, otherwise logs the link to console (dev and prod alike) |
 

@@ -32,7 +32,7 @@ graph TD
 | Node service | `createServer` router: `/api` → Express, static file hit → serve `dist/client`, else → SSR `handler.fetch` |
 | Express API | REST endpoints, auth, RBAC, rate limiting, security headers |
 | Prisma | Typed DB access + migrations |
-| PostgreSQL | System of record (managed externally, connected via `DATABASE_URL` on Render) |
+| PostgreSQL | System of record, hosted on Neon (free tier), connected via `DATABASE_URL` on Render |
 | Mailer | Reset/email-change link delivery via Resend; logs the link to console instead when `RESEND_API_KEY` is unset |
 
 ## Complete System Architecture
@@ -367,10 +367,10 @@ graph TD
 
 ## Backup & Recovery
 
-- **Database:** managed by whichever Postgres provider is set in `DATABASE_URL` — use that provider's own backups/snapshots + `pg_dump` for logical backups.
+- **Database:** managed by Neon — use Neon's point-in-time restore/branching + `pg_dump` for logical backups.
 - **File storage:** no user-uploaded files (images are static/remote references) — nothing app-side to back up.
-- **Recovery:** restore Postgres snapshot → re-run `prisma migrate deploy` → redeploy the Render service.
-- **Disaster recovery:** no documented DR/runbook; relies on the DB provider's and Render/Vercel's platform durability.
+- **Recovery:** restore a Neon branch/snapshot → re-run `prisma migrate deploy` → redeploy the Render service.
+- **Disaster recovery:** no documented DR/runbook; relies on Neon's and Render/Vercel's platform durability.
 
 ## Diagrams
 
