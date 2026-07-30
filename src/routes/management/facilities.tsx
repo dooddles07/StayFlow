@@ -178,10 +178,10 @@ function ManagementFacilitiesPage() {
                   <StatusPill status={f.status} />
                 </div>
                 <div className="mt-3 flex justify-end gap-1.5">
-                  <Button size="icon" variant="ghost" className="size-7 text-muted-text hover:text-foreground" onClick={() => setEditing(f)}>
+                  <Button size="icon" variant="ghost" aria-label={`Edit ${f.name}`} className="size-7 text-muted-text hover:text-foreground" onClick={() => setEditing(f)}>
                     <Pencil className="size-3.5" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="size-7 text-rose-400 hover:bg-rose-500/10" onClick={() => setDeleteTarget(f)}>
+                  <Button size="icon" variant="ghost" aria-label={`Delete ${f.name}`} className="size-7 text-rose-400 hover:bg-rose-500/10" onClick={() => setDeleteTarget(f)}>
                     <Trash2 className="size-3.5" />
                   </Button>
                 </div>

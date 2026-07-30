@@ -38,7 +38,7 @@ function RejectButton({ booking, busy, onConfirm }: { booking: BookingView; busy
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="icon" variant="ghost" disabled={busy} className="size-7 text-rose-400 hover:bg-rose-500/10">
+        <Button size="icon" variant="ghost" disabled={busy} aria-label="Reject booking" className="size-7 text-rose-400 hover:bg-rose-500/10">
           {busy ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
         </Button>
       </AlertDialogTrigger>
@@ -183,7 +183,7 @@ function BookingsPage() {
                   <p className="mt-2 text-xs text-muted-text">{b.date.slice(0, 10)} · {b.timeSlot} · Party of {b.partySize}</p>
                   {b.status === 'pending' && (
                     <div className="mt-3 flex justify-end gap-1.5">
-                      <Button size="icon" variant="ghost" disabled={busy} className="size-7 text-emerald-400 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, 'confirmed')}>
+                      <Button size="icon" variant="ghost" disabled={busy} aria-label="Approve booking" className="size-7 text-emerald-400 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, 'confirmed')}>
                         {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                       </Button>
                       <RejectButton booking={b} busy={busy} onConfirm={() => updateStatus(b.id, 'cancelled')} />
@@ -222,7 +222,7 @@ function BookingsPage() {
                       <td className="px-4 py-3">
                         {b.status === 'pending' ? (
                           <div className="flex justify-end gap-1.5">
-                            <Button size="icon" variant="ghost" disabled={busy} className="size-7 text-emerald-400 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, 'confirmed')}>
+                            <Button size="icon" variant="ghost" disabled={busy} aria-label="Approve booking" className="size-7 text-emerald-400 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, 'confirmed')}>
                               {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                             </Button>
                             <RejectButton booking={b} busy={busy} onConfirm={() => updateStatus(b.id, 'cancelled')} />
@@ -258,7 +258,7 @@ function BookingsPage() {
                         <StatusPill status={b.status} />
                         {b.status === 'pending' && (
                           <>
-                            <Button size="icon" variant="ghost" disabled={busy} className="size-7 text-emerald-400 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, 'confirmed')}>
+                            <Button size="icon" variant="ghost" disabled={busy} aria-label="Approve booking" className="size-7 text-emerald-400 hover:bg-emerald-500/10" onClick={() => updateStatus(b.id, 'confirmed')}>
                               {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                             </Button>
                             <RejectButton booking={b} busy={busy} onConfirm={() => updateStatus(b.id, 'cancelled')} />

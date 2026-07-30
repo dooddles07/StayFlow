@@ -76,7 +76,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     // Only the browser holds a session to invalidate — SSR loaders never persist one.
-    if (res.status === 401 && typeof window !== 'undefined') onUnauthorized?.()
+    // Never for /auth/login itself: a failed login attempt is not an expired session,
+    // even when a stale user is still persisted from a previous session, and must be
+    // left for the login form's own catch block to show as a normal credentials error.
+    if (res.status === 401 && typeof window !== 'undefined' && path !== '/auth/login') onUnauthorized?.()
     throw new ApiError(res.status, body.error ?? `Request failed with status ${res.status}`)
   }
 
