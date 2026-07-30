@@ -1,6 +1,6 @@
 # StayFlow — Design
 
-> Implementation stack: [Architecture.md](Architecture.md). Copy/tone rules: see "Friendly copy" below.
+> Implementation stack: [ARCHITECTURE.md](ARCHITECTURE.md). Copy/tone rules: see "Friendly copy" below.
 
 ## Visual direction
 

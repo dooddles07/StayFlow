@@ -1,6 +1,6 @@
 # StayFlow — Architecture
 
-> Product context: [PRD.md](PRD%20%28Product%20Requirements%20Document%29.md). Data model: [Schema.md](Schema.md). Business rules: [Rules.md](Rules.md).
+> Product context: [PRD.md](PRD.md). Data model: [SCHEMA.md](SCHEMA.md). Business rules: [RULES.md](RULES.md).
 
 ## High Level Architecture
 
@@ -104,7 +104,7 @@ sequenceDiagram
   end
 ```
 
-> **No self-registration.** There is no public account-creation endpoint. Resident logins are issued by MANAGEMENT (`POST /residents/:id/create-login`, temp password + `mustChangePassword: true`); STAFF/MANAGEMENT accounts are seed/Prisma-Studio only. See [Rules.md](Rules.md#resident-onboarding-no-self-registration).
+> **No self-registration.** There is no public account-creation endpoint. Resident logins are issued by MANAGEMENT (`POST /residents/:id/create-login`, temp password + `mustChangePassword: true`); STAFF/MANAGEMENT accounts are seed/Prisma-Studio only. See [RULES.md](RULES.md#resident-onboarding-no-self-registration).
 
 ### Booking
 
@@ -167,7 +167,7 @@ StayFlow/
 ├── vite.config.ts             # Vite 8 + TanStack Start + Tailwind + React plugins
 ├── package.json               # Frontend deps + scripts (dev/build/start/test/lint)
 ├── components.json            # shadcn/ui config
-├── .env / .env.example        # Single env file for frontend + backend (see Security.md) — no server/.env
+├── .env / .env.example        # Single env file for frontend + backend (see SECURITY.md) — no server/.env
 ├── public/                    # Static public assets
 ├── dist/                      # Build output (client + server) — generated
 ├── src/
@@ -195,7 +195,7 @@ StayFlow/
     ├── server.js              # Standalone API entry (dev): prisma.$connect + app.listen
     ├── package.json           # Backend deps + prisma scripts
     ├── prisma/
-    │   ├── schema.prisma       # Data model (see Schema.md)
+    │   ├── schema.prisma       # Data model (see SCHEMA.md)
     │   ├── migrations/0_init/  # SQL migration
     │   └── seed.js             # Seed residents/staff/facilities/users
     ├── scripts/reset-test-passwords.js
@@ -227,7 +227,6 @@ StayFlow/
 | QR | qrcode | ^1.5 | Guest-pass QR codes |
 | Toasts | sonner | ^2.0 | Notifications UI |
 | Runtime | Node.js | — | Prod server + dev |
-| Package/runtime | Bun | — | Install + server build step (`bun`, `bunx`) |
 | API framework | Express | ^4.21 | REST API |
 | ORM | Prisma | ^6.3 | DB access + migrations |
 | Database | PostgreSQL | — | System of record |
@@ -267,7 +266,7 @@ Base path: `/api`. Auth via `stayflow_token` httpOnly cookie **or** `Authorizati
 
 ### Auth — `/api/auth`
 
-No public account-creation endpoint exists — see [Rules.md](Rules.md#resident-onboarding-no-self-registration).
+No public account-creation endpoint exists — see [RULES.md](RULES.md#resident-onboarding-no-self-registration).
 
 | Method | URL | Purpose | Auth | Request | Success | Errors |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -320,9 +319,9 @@ graph TD
   RenderStart --> PG[("PostgreSQL")]
 ```
 
-- **Local dev (frontend + API together):** `bun install && bun --bun run dev` (Vite on :3000). Backend env in root `.env` powers this path.
-- **Local dev (API standalone):** `cd server && npm install && npm run dev` (`node --watch`, :4000) — needs the vars from root `.env` supplied another way, since there's deliberately no `server/.env` (see [Security.md](Security.md#environment-variables)).
-- **Push schema changes:** `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, commit the migration, then push — Render's build runs `prisma migrate deploy`; see [Schema.md](Schema.md#schema-change-workflow).
+- **Local dev (frontend + API together):** `npm install && npm run dev` (Vite on :3000). Backend env in root `.env` powers this path.
+- **Local dev (API standalone):** `cd server && npm install && npm run dev` (`node --watch`, :4000) — needs the vars from root `.env` supplied another way, since there's deliberately no `server/.env` (see [SECURITY.md](SECURITY.md#environment-variables)).
+- **Push schema changes:** `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, commit the migration, then push — Render's build runs `prisma migrate deploy`; see [SCHEMA.md](SCHEMA.md#schema-change-workflow).
 - **Docker / Compose / Kubernetes / GitHub Actions CI:** none present.
 
 ## Configuration Guide
@@ -333,7 +332,7 @@ graph TD
 | `tsconfig.json` / `tsr.config.json` | TS config + TanStack Router codegen |
 | `eslint.config.js` / `prettier.config.js` | Lint + format (`@tanstack/eslint-config`) |
 | `components.json` | shadcn/ui generator config |
-| `server/prisma/schema.prisma` | Data model, enums, datasource — see [Schema.md](Schema.md) |
+| `server/prisma/schema.prisma` | Data model, enums, datasource — see [SCHEMA.md](SCHEMA.md) |
 | `server/src/config/env.js` | Env validation + defaults (required: `DATABASE_URL`, `JWT_SECRET`) |
 | `server/src/config/db.js` | Prisma client singleton |
 | `scripts/start.mjs` | Prod server: MIME map, static caching, API/SSR routing |
@@ -352,7 +351,7 @@ graph TD
 
 - **Static caching:** hashed `assets/*` served `immutable, max-age=1y`; other static `max-age=1h` (`start.mjs`).
 - **SSR:** TanStack Start server rendering for fast first paint.
-- **DB indexes:** unique constraints + composite/lookup indexes on the highest-growth tables (`auth_events`, `notifications`, `bookings`, `dining_tables`, `admin_action_events`) — see [Schema.md](Schema.md#keys--constraints--indexes).
+- **DB indexes:** unique constraints + composite/lookup indexes on the highest-growth tables (`auth_events`, `notifications`, `bookings`, `dining_tables`, `admin_action_events`) — see [SCHEMA.md](SCHEMA.md#keys--constraints--indexes).
 - **Pagination:** `notifications`/`bookings`/`dining-reservations`/`guests` list endpoints are bounded (`take`, capped) instead of unbounded `findMany`, with `select` narrowed to only the fields each client view actually reads instead of full related rows.
 - **Query dedupe:** ownership-check middleware stashes the record it fetches (`req.record`) so the handler that runs next doesn't re-fetch the same row.
 - **Client state:** zustand avoids over-fetching; profile persisted locally.
@@ -361,7 +360,7 @@ graph TD
 ## Testing
 
 - **Runner:** Vitest + `@testing-library/react` + `jsdom`.
-- **Command:** `bun --bun run test` → `vitest run`.
+- **Command:** `npm run test` → `vitest run`.
 - **Scope present:** unit/component harness configured.
 - **Integration / E2E / coverage config:** none committed.
 
@@ -470,7 +469,7 @@ classDiagram
 ## Maintenance Guide
 
 - **Update deps:** bump `package.json` / `server/package.json`, reinstall, run tests + lint.
-- **Schema change:** edit `schema.prisma` → `prisma migrate dev` from root, commit the migration folder (see [Schema.md](Schema.md#schema-change-workflow)) — Render applies it on deploy via `prisma migrate deploy`.
+- **Schema change:** edit `schema.prisma` → `prisma migrate dev` from root, commit the migration folder (see [SCHEMA.md](SCHEMA.md#schema-change-workflow)) — Render applies it on deploy via `prisma migrate deploy`.
 - **Deploy:** push to GitHub → Vercel auto-builds the frontend, Render auto-builds/starts the API.
 - **Rollback:** redeploy the previous build on Vercel and/or Render; revert schema with a new down migration, never by hand-editing data or deleting an applied migration file.
 - **Rotate demo creds:** `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js`.
@@ -483,4 +482,4 @@ classDiagram
 - **Author:** QUAN7UM
 - **Contributors:** none documented.
 - **Company:** not specified.
-- **License:** see [License.md](License.md).
+- **License:** see [LICENSE.md](../LICENSE.md).

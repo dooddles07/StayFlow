@@ -10,7 +10,7 @@
 - Write activity-log.md in /docs to refer back if confused.
 - Make to-do list, run major changes by user first.
 - Review existing files before refactor or change.
-- Markdown files use kebab naming (ex. some-description-changes.md).
+- Markdown files use ALL-CAPS naming (ex. SOME-DESCRIPTION.md).
 - Don't auto-commit activity logs and docs.
 - Comments: one-liner, one sentence.
 

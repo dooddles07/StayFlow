@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
-    "build": "vite build && cd server && bun install && bunx prisma generate",
+    "build": "vite build && cd server && npm install && npx prisma generate",
     "start": "node scripts/start.mjs",
     "preview": "vite preview",
     "test": "vitest run",
@@ -61,11 +61,5 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.5"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "lightningcss"
-    ]
   }
 }

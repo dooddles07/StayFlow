@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "stayflow-dev",
-      "runtimeExecutable": "bun",
-      "runtimeArgs": ["--bun", "run", "dev"],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
       "port": 3000
     }
   ]

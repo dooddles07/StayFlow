@@ -1,6 +1,6 @@
 # StayFlow — Business Rules
 
-> Data model backing these rules: [Schema.md](Schema.md). Endpoint-level enforcement: [Architecture.md](Architecture.md#api-documentation). Threat model: [Security.md](Security.md).
+> Data model backing these rules: [SCHEMA.md](SCHEMA.md). Endpoint-level enforcement: [ARCHITECTURE.md](ARCHITECTURE.md#api-documentation). Threat model: [SECURITY.md](SECURITY.md).
 
 ## Authentication & Authorization
 
@@ -94,4 +94,4 @@ PENDING --(staff approves)--> APPROVED --(staff check-in)--> CHECKED_IN --(staff
 
 ## Payments
 
-> No payment or billing rules exist — out of scope for current implementation. See [PRD.md](PRD%20%28Product%20Requirements%20Document%29.md) roadmap.
+> No payment or billing rules exist — out of scope for current implementation. See [PRD.md](PRD.md) roadmap.

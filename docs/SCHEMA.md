@@ -1,6 +1,6 @@
 # StayFlow — Schema
 
-> Source of truth is `server/prisma/schema.prisma` — this doc summarizes it. Business rules built on top of this schema: [Rules.md](Rules.md).
+> Source of truth is `server/prisma/schema.prisma` — this doc summarizes it. Business rules built on top of this schema: [RULES.md](RULES.md).
 
 **Datasource:** PostgreSQL. **PKs:** `cuid()` text ids on all models. **Migration:** `server/prisma/migrations/0_init`.
 

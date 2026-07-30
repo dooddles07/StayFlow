@@ -16,7 +16,7 @@
 - **fix(staff):** full audit and hardening pass across the staff portal — guest check-in/check-out now enforces the `PENDING → APPROVED → CHECKED_IN → CHECKED_OUT` state machine server-side (closing a bypass where a guest could be checked out without ever checking in); bookings/dining/facilities/guests time-of-day sorting fixed (was comparing raw non-zero-padded time strings, e.g. `"9:00 AM"` sorting after `"10:00 AM"`); the dining table map now refreshes after a status change instead of going stale; booking rejection requires confirmation (matching the existing dining decline pattern); double-submit races on status-changing actions closed across bookings/dining/facilities/guests with a ref-backed busy guard (state alone can't catch two clicks before React re-renders).
 - **fix(staff):** narrowed the resident data fetched by the events attendee list to `{id, name, unit}` — the full resident directory response (email, phone, emergency contacts, family, vehicles) was being held in page state for fields never rendered.
 - **fix(staff):** added busy-state spinner feedback to the booking approve/reject icon buttons — previously only `disabled`, with no visible in-flight indicator.
-- **docs:** documented that the staff-portal Access Matrix is server-enforced RBAC only, not staff-UI coverage — STAFF has real API write access to restaurants/tables/events/notices/residents with no corresponding `/staff/*` screens yet (see [Rules.md](Rules.md)).
+- **docs:** documented that the staff-portal Access Matrix is server-enforced RBAC only, not staff-UI coverage — STAFF has real API write access to restaurants/tables/events/notices/residents with no corresponding `/staff/*` screens yet (see [RULES.md](RULES.md)).
 - **feat(ui):** photographic hero backgrounds — landing page, all three login screens, and the member dashboard welcome banner now use full-bleed photography (`public/images/hero/`) behind the existing color-wash overlays, replacing flat CSS-only gradients/patterns. Shared across verify-email/reset-password/forgot-password (same visual system as the member login).
 - **feat(brand):** wired in the finished Flow-S vector logomark, favicon (SVG + multi-res ICO), and app icons, replacing the placeholder mark that had shipped in `public/` since scaffolding.
 - **fix(booking,dining):** force `status: 'PENDING'` on create regardless of client input, and strip any client-supplied `tableId` on dining create — closed a bypass where a member could self-confirm a booking or self-assign any dining table (including an already-occupied one) via a direct API call, skipping the atomic slot-conflict/table-assignment checks entirely.
@@ -24,7 +24,7 @@
 - **fix(server):** narrow `GET /residents` to a list-appropriate projection (`id/name/email/unit/tier/phone/moveInDate/user`) — was returning the full resident row, including dietary/emergency-contacts/family/vehicles, to every management list/analytics/report view that only ever reads a handful of fields. Detail fetches (`GET /residents/:id`, `/residents/me`) are unaffected.
 - **fix(server):** allowlist guest create fields — `checkedInAt`/`checkedOutAt` were not stripped from a member-supplied request body, letting a caller fabricate check-in/check-out history on a brand-new guest pass.
 - **fix(ui):** closed double-submit races on create/save/delete actions across the member portal (guests, dining, facility booking) and the full management portal (users, facilities, restaurants, notices, events) with the same ref-backed guard pattern used for staff — several of these (management create/save flows) had no guard at all beyond a disabled button, which doesn't block a second click before React re-renders.
-- **docs:** documented the email-change flow (`/auth/change-email` → `/auth/confirm-email`) in Rules.md — implemented but previously undocumented; added the booking/dining "status forced to PENDING on create" rule; added events to the admin-allowlisting resource list.
+- **docs:** documented the email-change flow (`/auth/change-email` → `/auth/confirm-email`) in RULES.md — implemented but previously undocumented; added the booking/dining "status forced to PENDING on create" rule; added events to the admin-allowlisting resource list.
 
 ## Unreleased / Recent
 
@@ -69,6 +69,6 @@
 
 ## Security fixes
 
-- Broken-access-control gap closed 2026-07-15 (see [Security.md](Security.md)).
-- Account-takeover via public self-registration closed 2026-07-22, by removing self-registration entirely (see [Security.md](Security.md)).
+- Broken-access-control gap closed 2026-07-15 (see [SECURITY.md](SECURITY.md)).
+- Account-takeover via public self-registration closed 2026-07-22, by removing self-registration entirely (see [SECURITY.md](SECURITY.md)).
 - Mass-assignment gap on admin CRUD closed 2026-07-22 (field allowlisting).

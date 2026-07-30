@@ -1,6 +1,6 @@
 # StayFlow — Security
 
-> Auth/authorization rules: [Rules.md](Rules.md). Report a vulnerability: see [Support.md](Support.md).
+> Auth/authorization rules: [RULES.md](RULES.md).
 
 ## Controls
 
@@ -8,7 +8,7 @@
 | --- | --- |
 | Authentication | JWT in httpOnly cookie, `tokenVersion` revocation |
 | Authorization | `requireRole` + ownership guards; broken-access-control gap closed 2026-07-15 |
-| Self-registration | **None.** No public account-creation endpoint exists. STAFF/MANAGEMENT accounts are seed/Prisma-Studio only; resident logins are issued by MANAGEMENT via `POST /residents/:id/create-login` (temp password, shown once) — see [Rules.md](Rules.md#resident-onboarding-no-self-registration) |
+| Self-registration | **None.** No public account-creation endpoint exists. STAFF/MANAGEMENT accounts are seed/Prisma-Studio only; resident logins are issued by MANAGEMENT via `POST /residents/:id/create-login` (temp password, shown once) — see [RULES.md](RULES.md#resident-onboarding-no-self-registration) |
 | Forced password change | MANAGEMENT-issued resident logins carry `mustChangePassword: true`; a dedicated middleware 403s every non-auth endpoint until it's cleared by the resident setting their own password |
 | Admin write allowlisting | Admin CRUD (residents/staff/facilities/restaurants/tables/notices) writes an explicit field allowlist per resource — closes a mass-assignment gap fixed 2026-07-22 |
 | Admin audit trail | `admin_action_events` logs every admin CREATE/UPDATE/DELETE (actor, action, resource) — added 2026-07-22 |
@@ -30,7 +30,7 @@
 
 Backend requires `DATABASE_URL` + `JWT_SECRET` (process exits at boot if missing). Frontend reads `VITE_*` at build.
 
-**Single `.env` at repo root — there is deliberately no `server/.env`.** Prisma CLI commands must be run from root with an explicit schema path using server's own pinned binary, not a bare `bunx prisma` (which resolves a fresh, possibly incompatible major version): `./server/node_modules/.bin/prisma <command> --schema=server/prisma/schema.prisma`. The standalone backend dev server (`cd server && npm run dev`) needs these vars supplied another way (or run from root) since it won't find a `.env` in `server/`.
+**Single `.env` at repo root — there is deliberately no `server/.env`.** Prisma CLI commands must be run from root with an explicit schema path using server's own pinned binary, not a bare `npx prisma` (which resolves a fresh, possibly incompatible major version): `./server/node_modules/.bin/prisma <command> --schema=server/prisma/schema.prisma`. The standalone backend dev server (`cd server && npm run dev`) needs these vars supplied another way (or run from root) since it won't find a `.env` in `server/`.
 
 | Variable | Scope | Purpose | Required | Example / placeholder |
 | --- | --- | --- | --- | --- |
@@ -87,6 +87,3 @@ The live demo password is shown in the root README's "Try It Live" section — s
 - No customer personal data (names, contacts, account numbers, transactions) may be pasted into AI tooling without approved exemption.
 - No credentials (passwords, API keys, tokens, connection strings) may be pasted into AI tooling.
 
-## Reporting a vulnerability
-
-See [Support.md](Support.md) for contact path. Do not open a public issue for undisclosed vulnerabilities.

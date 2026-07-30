@@ -1,6 +1,6 @@
 # StayFlow — Product Requirements Document
 
-> For engineering detail see [Architecture.md](Architecture.md), [Schema.md](Schema.md), [Rules.md](Rules.md).
+> For engineering detail see [ARCHITECTURE.md](ARCHITECTURE.md), [SCHEMA.md](SCHEMA.md), [RULES.md](RULES.md).
 
 ## Problem
 
