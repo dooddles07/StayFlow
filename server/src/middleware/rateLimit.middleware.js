@@ -1,7 +1,19 @@
 import rateLimit from 'express-rate-limit'
 import { ApiError } from '../utils/ApiError.js'
 
-const handler = (req, res, next) => next(ApiError.tooManyRequests('Too many attempts. Try again later.'))
+const handler = (req, res, next) =>
+  next(ApiError.tooManyRequests('Too many attempts. Try again later.'))
+
+// Coarse ceiling on every /api request, on top of the route-specific limiters below.
+// Those defend individual sensitive endpoints; this one bounds a single IP hammering
+// the API in general (scripted scraping, a runaway client retry loop).
+export const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler,
+})
 
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
