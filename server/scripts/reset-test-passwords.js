@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
+import { BCRYPT_ROUNDS } from '../src/utils/password.js'
 
 // Load the repo's single .env by file-relative path, not CWD — this script needs to
 // work whether it's run from root or from server/, and there's no server/.env to fall
@@ -13,18 +14,27 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 const prisma = new PrismaClient()
 
 const TEST_PASSWORD = process.env.TEST_PASSWORD
-const ACCOUNTS = ['member@stayflow.io', 'staff@stayflow.io', 'admin@stayflow.io']
+const ACCOUNTS = [
+  'member@stayflow.io',
+  'staff@stayflow.io',
+  'admin@stayflow.io',
+]
 
 async function main() {
   if (!TEST_PASSWORD) {
-    console.error('Set TEST_PASSWORD env var before running this script (no hardcoded default).')
+    console.error(
+      'Set TEST_PASSWORD env var before running this script (no hardcoded default).',
+    )
     process.exit(1)
   }
 
-  const passwordHash = await bcrypt.hash(TEST_PASSWORD, 10)
+  const passwordHash = await bcrypt.hash(TEST_PASSWORD, BCRYPT_ROUNDS)
 
   for (const email of ACCOUNTS) {
-    const user = await prisma.user.update({ where: { email }, data: { passwordHash } })
+    const user = await prisma.user.update({
+      where: { email },
+      data: { passwordHash },
+    })
     console.log(`Reset password for ${user.email} (role: ${user.role})`)
   }
 

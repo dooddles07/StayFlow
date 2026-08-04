@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
+import { BCRYPT_ROUNDS } from '../src/utils/password.js'
 
 const prisma = new PrismaClient()
 
@@ -11,8 +12,9 @@ function daysFromNow(days) {
 }
 
 async function main() {
-  const password = process.env.SEED_PASSWORD || crypto.randomBytes(9).toString('base64url')
-  const passwordHash = await bcrypt.hash(password, 10)
+  const password =
+    process.env.SEED_PASSWORD || crypto.randomBytes(9).toString('base64url')
+  const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS)
 
   const resident = await prisma.resident.upsert({
     where: { email: 'isabelle.rhodes@stayflow.io' },
@@ -30,8 +32,19 @@ async function main() {
       emergencyName: 'Marcus Rhodes',
       emergencyRelation: 'Spouse',
       emergencyPhone: '+1 (415) 555-0198',
-      family: { create: [{ name: 'Marcus Rhodes', relation: 'Spouse', age: 41 }] },
-      vehicles: { create: [{ make: 'Porsche', model: 'Taycan', plate: 'SFW-2481', color: 'Midnight Blue' }] },
+      family: {
+        create: [{ name: 'Marcus Rhodes', relation: 'Spouse', age: 41 }],
+      },
+      vehicles: {
+        create: [
+          {
+            make: 'Porsche',
+            model: 'Taycan',
+            plate: 'SFW-2481',
+            color: 'Midnight Blue',
+          },
+        ],
+      },
     },
   })
 
@@ -51,12 +64,24 @@ async function main() {
   await prisma.user.upsert({
     where: { email: resident.email },
     update: {},
-    create: { email: resident.email, passwordHash, role: 'MEMBER', displayName: resident.name, residentId: resident.id },
+    create: {
+      email: resident.email,
+      passwordHash,
+      role: 'MEMBER',
+      displayName: resident.name,
+      residentId: resident.id,
+    },
   })
   await prisma.user.upsert({
     where: { email: staffMember.email },
     update: {},
-    create: { email: staffMember.email, passwordHash, role: 'STAFF', displayName: staffMember.name, staffId: staffMember.id },
+    create: {
+      email: staffMember.email,
+      passwordHash,
+      role: 'STAFF',
+      displayName: staffMember.name,
+      staffId: staffMember.id,
+    },
   })
 
   const pool = await prisma.facility.upsert({
@@ -66,7 +91,8 @@ async function main() {
       id: 'fac-001',
       name: 'Infinity Sky Pool',
       category: 'Wellness',
-      description: 'Heated infinity-edge pool on the 40th floor with panoramic skyline views.',
+      description:
+        'Heated infinity-edge pool on the 40th floor with panoramic skyline views.',
       rules: ['Children under 12 must be supervised', 'Swim attire required'],
       image: '/images/facilities/pool.webp',
       capacity: 24,
@@ -82,8 +108,13 @@ async function main() {
       id: 'fac-002',
       name: 'Apex Fitness Studio',
       category: 'Sports',
-      description: 'Full-service fitness studio with Technogym equipment, free weights, and dedicated stretch zone.',
-      rules: ['Wipe down equipment after use', 'Athletic footwear required', 'Personal trainers by appointment only'],
+      description:
+        'Full-service fitness studio with Technogym equipment, free weights, and dedicated stretch zone.',
+      rules: [
+        'Wipe down equipment after use',
+        'Athletic footwear required',
+        'Personal trainers by appointment only',
+      ],
       image: '/images/facilities/gym.webp',
       capacity: 30,
       openHours: '24 hours',
@@ -95,8 +126,13 @@ async function main() {
       id: 'fac-003',
       name: 'Aurora Screening Room',
       category: 'Entertainment',
-      description: 'Private 20-seat cinema with 4K laser projection, Dolby Atmos sound, and reclining leather seats.',
-      rules: ['Book minimum 24 hours in advance', 'No outside food without approval', 'Maximum party size 20'],
+      description:
+        'Private 20-seat cinema with 4K laser projection, Dolby Atmos sound, and reclining leather seats.',
+      rules: [
+        'Book minimum 24 hours in advance',
+        'No outside food without approval',
+        'Maximum party size 20',
+      ],
       image: '/images/facilities/cinema.webp',
       capacity: 20,
       openHours: '10:00 AM – 12:00 AM',
@@ -108,8 +144,12 @@ async function main() {
       id: 'fac-004',
       name: 'Championship Tennis Court',
       category: 'Sports',
-      description: 'Regulation hard court with night lighting, ball machine rental, and pro coaching available.',
-      rules: ['Proper tennis shoes required', 'Court time limited to 60 minutes when others are waiting'],
+      description:
+        'Regulation hard court with night lighting, ball machine rental, and pro coaching available.',
+      rules: [
+        'Proper tennis shoes required',
+        'Court time limited to 60 minutes when others are waiting',
+      ],
       image: '/images/facilities/tennis.webp',
       capacity: 4,
       openHours: '6:00 AM – 10:00 PM',
@@ -122,8 +162,12 @@ async function main() {
       id: 'fac-005',
       name: 'Serenity Yoga Deck',
       category: 'Wellness',
-      description: 'Open-air rooftop deck for yoga, meditation, and sound bath sessions with skyline backdrop.',
-      rules: ['Mats provided, please sanitize after use', 'Quiet hours strictly enforced'],
+      description:
+        'Open-air rooftop deck for yoga, meditation, and sound bath sessions with skyline backdrop.',
+      rules: [
+        'Mats provided, please sanitize after use',
+        'Quiet hours strictly enforced',
+      ],
       image: '/images/facilities/yoga.webp',
       capacity: 16,
       openHours: '6:00 AM – 8:00 PM',
@@ -135,8 +179,13 @@ async function main() {
       id: 'fac-006',
       name: 'The Grand Function Room',
       category: 'Function',
-      description: 'Elegant event space for private celebrations, corporate gatherings, and community events.',
-      rules: ['Catering must be pre-approved', 'Deposit required for bookings over 50 guests', 'No confetti or open flame'],
+      description:
+        'Elegant event space for private celebrations, corporate gatherings, and community events.',
+      rules: [
+        'Catering must be pre-approved',
+        'Deposit required for bookings over 50 guests',
+        'No confetti or open flame',
+      ],
       image: '/images/facilities/function-room.webp',
       capacity: 120,
       openHours: '9:00 AM – 11:00 PM',
@@ -148,8 +197,13 @@ async function main() {
       id: 'fac-007',
       name: 'Serenity Spa & Sauna',
       category: 'Wellness',
-      description: 'Full spa suite with sauna, steam room, cold plunge, and treatment rooms for massage therapy.',
-      rules: ['Minimum age 16', 'Towels provided', 'Treatments by appointment only'],
+      description:
+        'Full spa suite with sauna, steam room, cold plunge, and treatment rooms for massage therapy.',
+      rules: [
+        'Minimum age 16',
+        'Towels provided',
+        'Treatments by appointment only',
+      ],
       image: '/images/facilities/spa.webp',
       capacity: 12,
       openHours: '7:00 AM – 9:00 PM',
@@ -161,8 +215,13 @@ async function main() {
       id: 'fac-008',
       name: 'Junior Play Lounge',
       category: 'Recreation',
-      description: 'Supervised indoor play area with climbing structures, arts corner, and reading nook for kids.',
-      rules: ['Ages 3–12 only', 'Parent sign-in required', 'Socks required on play structures'],
+      description:
+        'Supervised indoor play area with climbing structures, arts corner, and reading nook for kids.',
+      rules: [
+        'Ages 3–12 only',
+        'Parent sign-in required',
+        'Socks required on play structures',
+      ],
       image: '/images/facilities/kids-lounge.webp',
       capacity: 18,
       openHours: '9:00 AM – 7:00 PM',
@@ -174,7 +233,11 @@ async function main() {
   ]
 
   for (const facility of facilitySeed) {
-    await prisma.facility.upsert({ where: { id: facility.id }, update: {}, create: facility })
+    await prisma.facility.upsert({
+      where: { id: facility.id },
+      update: {},
+      create: facility,
+    })
   }
 
   await prisma.booking.upsert({
@@ -256,7 +319,8 @@ async function main() {
       id: 'evt-001',
       title: 'Sunset Rooftop Wine Tasting',
       category: 'Social',
-      description: 'Sommelier-led tasting of six boutique vineyards as the sun sets over the skyline.',
+      description:
+        'Sommelier-led tasting of six boutique vineyards as the sun sets over the skyline.',
       image: '/images/events/wine-tasting.svg',
       date: daysFromNow(14),
       time: '6:30 PM',
@@ -266,7 +330,9 @@ async function main() {
   })
 
   await prisma.eventRsvp.upsert({
-    where: { eventId_residentId: { eventId: event.id, residentId: resident.id } },
+    where: {
+      eventId_residentId: { eventId: event.id, residentId: resident.id },
+    },
     update: {},
     create: { eventId: event.id, residentId: resident.id },
   })
@@ -346,7 +412,11 @@ async function main() {
     },
   ]
   for (const notice of noticeSeed) {
-    await prisma.notice.upsert({ where: { id: notice.id }, update: {}, create: notice })
+    await prisma.notice.upsert({
+      where: { id: notice.id },
+      update: {},
+      create: notice,
+    })
   }
 
   await prisma.appNotification.upsert({
@@ -361,7 +431,9 @@ async function main() {
     },
   })
 
-  console.log(`Seed complete. Login with isabelle.rhodes@stayflow.io / ${password} (MEMBER) or renata.silva@stayflow.io / ${password} (STAFF).`)
+  console.log(
+    `Seed complete. Login with isabelle.rhodes@stayflow.io / ${password} (MEMBER) or renata.silva@stayflow.io / ${password} (STAFF).`,
+  )
 }
 
 main()
