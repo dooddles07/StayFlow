@@ -13,7 +13,7 @@ Enums: `MembershipTier`, `BookingStatus`, `FacilityStatus`, `TableStatus`, `Dini
 ## Keys / constraints / indexes
 
 - **Unique:** `residents.email`, `staff_members.email`, `guests.passNumber`, `users.email`, `users.residentId`, `users.staffId`, `users.resetTokenHash`, `event_rsvps (eventId,residentId)`.
-- **FKs:** `family_members`/`vehicles`/`bookings`/`dining_reservations`/`guests`/`event_rsvps` → `Resident`; `bookings` → `Facility`; `dining_tables`/`dining_reservations` → `Restaurant`; `notifications` → `Resident?`/`StaffMember?` (nullable, `onDelete: Cascade`); `users` → `Resident?`/`StaffMember?` (nullable, explicit `onDelete: Restrict` — a resident/staff record with a linked login can never be deleted out from under it, added 2026-07-22 after an incident where the implicit default for an optional FK, `SetNull`, let a staff record be deleted while silently orphaning its login).
+- **FKs:** `family_members`/`vehicles`/`bookings`/`dining_reservations`/`guests`/`event_rsvps` → `Resident`; `bookings` → `Facility`; `dining_tables`/`dining_reservations` → `Restaurant`; `notifications` → `Resident?`/`StaffMember?` (nullable, `onDelete: Cascade`); `users` → `Resident?`/`StaffMember?` (nullable, explicit `onDelete: Restrict` — a login can never be silently orphaned at the DB level, added 2026-07-22 after an incident where the implicit default for an optional FK, `SetNull`, let a staff record be deleted while silently orphaning its login). `ResidentModel.remove`/`StaffModel.remove` delete the linked `User` row in the same transaction before deleting the resident/staff row (fixed 2026-08-04) — the Restrict constraint stops a _silent_ orphan, not the delete action itself; without the explicit cascade, deleting anyone with a login 409'd permanently.
 - **Cascade delete:** `family_members`, `vehicles`, `event_rsvps`, `notifications` (on resident/staff delete).
 - **Restrict delete:** `users.residentId`/`users.staffId` (see above).
 - **Indexes:** `auth_events` on `userId`/`type`/`createdAt`; `notifications` on `residentId`/`staffId`; `bookings` on `[facilityId,date,status]`; `dining_tables` on `[restaurantId,status]`; `admin_action_events` on `[resourceType,resourceId]`/`actorUserId`/`createdAt` (all added 2026-07-22 as part of a performance pass on the highest-growth tables).
@@ -68,14 +68,14 @@ erDiagram
 
 ## State-bearing enums
 
-| Enum | Values (see schema for exact set) | Governs |
-| --- | --- | --- |
-| `BookingStatus` | PENDING → CONFIRMED / CANCELLED | Facility bookings |
-| `DiningReservationStatus` | mirrors booking lifecycle | Dining reservations |
-| `GuestStatus` | PENDING → APPROVED → CHECKED_IN → CHECKED_OUT | Guest pass lifecycle |
-| `FacilityStatus` / `TableStatus` | availability state | Facility / dining-table listing |
-| `PortalRole` | MEMBER / STAFF / MANAGEMENT | `users.role`, drives RBAC |
-| `MembershipTier` | resident tier | `residents.membershipTier` |
+| Enum                             | Values (see schema for exact set)             | Governs                         |
+| -------------------------------- | --------------------------------------------- | ------------------------------- |
+| `BookingStatus`                  | PENDING → CONFIRMED / CANCELLED               | Facility bookings               |
+| `DiningReservationStatus`        | mirrors booking lifecycle                     | Dining reservations             |
+| `GuestStatus`                    | PENDING → APPROVED → CHECKED_IN → CHECKED_OUT | Guest pass lifecycle            |
+| `FacilityStatus` / `TableStatus` | availability state                            | Facility / dining-table listing |
+| `PortalRole`                     | MEMBER / STAFF / MANAGEMENT                   | `users.role`, drives RBAC       |
+| `MembershipTier`                 | resident tier                                 | `residents.membershipTier`      |
 
 ## Schema-change workflow
 

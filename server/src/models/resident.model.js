@@ -24,8 +24,10 @@ const listSelect = {
 }
 
 export const ResidentModel = {
-  findAll: () => prisma.resident.findMany({ select: listSelect, orderBy: { name: 'asc' } }),
-  findById: (id) => prisma.resident.findUnique({ where: { id }, include: includeRelations }),
+  findAll: () =>
+    prisma.resident.findMany({ select: listSelect, orderBy: { name: 'asc' } }),
+  findById: (id) =>
+    prisma.resident.findUnique({ where: { id }, include: includeRelations }),
   create: (data) => {
     const { family = [], vehicles = [], ...rest } = data
     return prisma.resident.create({
@@ -39,19 +41,34 @@ export const ResidentModel = {
   },
   update: (id, data) => {
     const { family, vehicles, ...rest } = data
-    return prisma.resident.update({ where: { id }, data: rest, include: includeRelations })
+    return prisma.resident.update({
+      where: { id },
+      data: rest,
+      include: includeRelations,
+    })
   },
-  remove: (id) => prisma.resident.delete({ where: { id } }),
+  // A resident with a linked login can't be deleted directly — users.residentId is
+  // onDelete:Restrict (deliberately, so a login can never be silently orphaned, see
+  // SCHEMA.md). Removing a resident is meant to remove their login too, not be
+  // permanently blocked by it, so drop the login first in the same transaction.
+  remove: (id) =>
+    prisma.$transaction(async (tx) => {
+      await tx.user.deleteMany({ where: { residentId: id } })
+      await tx.resident.delete({ where: { id } })
+    }),
 
   // --- Family members (child rows owned by a resident) ---
   findFamilyMember: (id) => prisma.familyMember.findUnique({ where: { id } }),
-  createFamilyMember: (residentId, data) => prisma.familyMember.create({ data: { ...data, residentId } }),
-  updateFamilyMember: (id, data) => prisma.familyMember.update({ where: { id }, data }),
+  createFamilyMember: (residentId, data) =>
+    prisma.familyMember.create({ data: { ...data, residentId } }),
+  updateFamilyMember: (id, data) =>
+    prisma.familyMember.update({ where: { id }, data }),
   removeFamilyMember: (id) => prisma.familyMember.delete({ where: { id } }),
 
   // --- Vehicles (child rows owned by a resident) ---
   findVehicle: (id) => prisma.vehicle.findUnique({ where: { id } }),
-  createVehicle: (residentId, data) => prisma.vehicle.create({ data: { ...data, residentId } }),
+  createVehicle: (residentId, data) =>
+    prisma.vehicle.create({ data: { ...data, residentId } }),
   updateVehicle: (id, data) => prisma.vehicle.update({ where: { id }, data }),
   removeVehicle: (id) => prisma.vehicle.delete({ where: { id } }),
 }
