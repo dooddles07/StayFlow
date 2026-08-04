@@ -11,12 +11,6 @@ export const Route = createFileRoute('/verify-email')({
   }),
   head: () => ({
     meta: [{ title: 'Confirm your new email — StayFlow' }],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap',
-      },
-    ],
   }),
   component: VerifyEmail,
 })
@@ -84,10 +78,7 @@ function VerifyEmail() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
             Confirm email change
           </p>
-          <h1
-            className="mt-2 text-3xl font-medium tracking-tight text-foreground sm:text-4xl"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
+          <h1 className="mt-2 font-display text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
             Verify your new email
           </h1>
           <p className="mt-3 max-w-xs text-sm text-muted-text">

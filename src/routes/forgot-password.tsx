@@ -9,12 +9,6 @@ import { api, ApiError } from '#/lib/api/client'
 export const Route = createFileRoute('/forgot-password')({
   head: () => ({
     meta: [{ title: 'Reset your password — StayFlow' }],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap',
-      },
-    ],
   }),
   component: ForgotPassword,
 })
@@ -46,7 +40,11 @@ function ForgotPassword() {
       // Always show the same confirmation — never reveal whether the email is registered.
       setSent(true)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Unable to reach the server. Try again.')
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : 'Unable to reach the server. Try again.',
+      )
     } finally {
       loadingRef.current = false
       setLoading(false)
@@ -80,13 +78,16 @@ function ForgotPassword() {
       <div className="relative w-full max-w-sm animate-fade-in">
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-accent-gold/15 text-accent-gold">
-            {sent ? <MailCheck className="size-7" /> : <KeyRound className="size-7" />}
+            {sent ? (
+              <MailCheck className="size-7" />
+            ) : (
+              <KeyRound className="size-7" />
+            )}
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">Account recovery</p>
-          <h1
-            className="mt-2 text-3xl font-medium tracking-tight text-foreground sm:text-4xl"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
+            Account recovery
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
             {sent ? 'Check your inbox' : 'Forgot password'}
           </h1>
           <p className="mt-3 max-w-xs text-sm text-muted-text">
@@ -110,7 +111,10 @@ function ForgotPassword() {
                 </button>
                 .
               </p>
-              <Button asChild className="mt-1 bg-accent-gold text-canvas hover:bg-accent-gold-soft">
+              <Button
+                asChild
+                className="mt-1 bg-accent-gold text-canvas hover:bg-accent-gold-soft"
+              >
                 <Link to="/login/member">Return to sign in</Link>
               </Button>
             </div>
@@ -132,12 +136,20 @@ function ForgotPassword() {
               </div>
 
               {error && (
-                <p role="alert" aria-live="polite" className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                <p
+                  role="alert"
+                  aria-live="polite"
+                  className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                >
                   {error}
                 </p>
               )}
 
-              <Button type="submit" disabled={loading} className="mt-1 gap-2 bg-accent-gold text-canvas hover:bg-accent-gold-soft">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="mt-1 gap-2 bg-accent-gold text-canvas hover:bg-accent-gold-soft"
+              >
                 {loading && <Loader2 className="size-4 animate-spin" />}
                 {loading ? 'Sending link…' : 'Send reset link'}
               </Button>
@@ -147,7 +159,10 @@ function ForgotPassword() {
 
         <p className="mt-6 text-center text-[11px] text-muted-text/60">
           Remembered it?{' '}
-          <Link to="/login/member" className="text-muted-text underline-offset-4 hover:text-foreground hover:underline">
+          <Link
+            to="/login/member"
+            className="text-muted-text underline-offset-4 hover:text-foreground hover:underline"
+          >
             Sign in
           </Link>
         </p>

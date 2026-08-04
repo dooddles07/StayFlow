@@ -15,12 +15,6 @@ export const Route = createFileRoute('/reset-password')({
   }),
   head: () => ({
     meta: [{ title: 'Set a new password — StayFlow' }],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap',
-      },
-    ],
   }),
   component: ResetPassword,
 })
@@ -102,10 +96,7 @@ function ResetPassword() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
             Account recovery
           </p>
-          <h1
-            className="mt-2 text-3xl font-medium tracking-tight text-foreground sm:text-4xl"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
+          <h1 className="mt-2 font-display text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
             Set a new password
           </h1>
           <p className="mt-3 max-w-xs text-sm text-muted-text">
