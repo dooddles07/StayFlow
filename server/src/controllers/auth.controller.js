@@ -36,7 +36,8 @@ const cookieOptions = {
   path: '/',
 }
 
-const setAuthCookie = (res, token) => res.cookie(AUTH_COOKIE, token, cookieOptions)
+const setAuthCookie = (res, token) =>
+  res.cookie(AUTH_COOKIE, token, cookieOptions)
 
 // Lock an account for LOCK_DURATION after LOCK_THRESHOLD consecutive failed logins.
 // Per-account (survives IP rotation) — defends credential stuffing the per-IP limiter can't.
@@ -46,27 +47,50 @@ const LOCK_DURATION_MS = 15 * 60 * 1000
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000
 const EMAIL_TOKEN_TTL_MS = 60 * 60 * 1000
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const hashResetToken = (raw) => crypto.createHash('sha256').update(raw).digest('hex')
+const hashResetToken = (raw) =>
+  crypto.createHash('sha256').update(raw).digest('hex')
+
+// Fixed bcrypt hash with no matching plaintext — compared against on unknown-email
+// logins so the response takes the same time as a real wrong-password attempt,
+// closing the timing gap that would otherwise leak account existence.
+const DUMMY_PASSWORD_HASH =
+  '$2a$12$CwTycUXWue0Thq9StjUM0uJ8qOhwmoUAg9bMkTv/QzHiO1Rlk6.gO'
 
 // Strip password hash and all internal auth bookkeeping from API responses.
 const sanitize = (user) => {
-  const { passwordHash, tokenVersion, failedLoginCount, lockedUntil, resetTokenHash, resetTokenExpiresAt, ...rest } = user
+  const {
+    passwordHash,
+    tokenVersion,
+    failedLoginCount,
+    lockedUntil,
+    resetTokenHash,
+    resetTokenExpiresAt,
+    ...rest
+  } = user
   return rest
 }
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body
-  if (!email || !password) throw ApiError.badRequest('email and password are required')
+  if (!email || !password)
+    throw ApiError.badRequest('email and password are required')
 
   const user = await UserModel.findByEmail(email)
   if (!user) {
+    await bcrypt.compare(password, DUMMY_PASSWORD_HASH)
     logAuthEvent(req, AuthEventType.LOGIN_FAILED, { email, success: false })
     throw ApiError.unauthorized('Invalid credentials')
   }
 
   if (user.lockedUntil && user.lockedUntil > new Date()) {
-    logAuthEvent(req, AuthEventType.LOGIN_LOCKED, { userId: user.id, email: user.email, success: false })
-    throw ApiError.tooManyRequests('Account temporarily locked after repeated failed logins. Try again later.')
+    logAuthEvent(req, AuthEventType.LOGIN_LOCKED, {
+      userId: user.id,
+      email: user.email,
+      success: false,
+    })
+    throw ApiError.tooManyRequests(
+      'Account temporarily locked after repeated failed logins. Try again later.',
+    )
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash)
@@ -77,25 +101,41 @@ export const login = asyncHandler(async (req, res) => {
       failedLoginCount: locked ? 0 : count,
       lockedUntil: locked ? new Date(Date.now() + LOCK_DURATION_MS) : null,
     })
-    logAuthEvent(req, locked ? AuthEventType.LOGIN_LOCKED : AuthEventType.LOGIN_FAILED, {
-      userId: user.id,
-      email: user.email,
-      success: false,
-    })
+    logAuthEvent(
+      req,
+      locked ? AuthEventType.LOGIN_LOCKED : AuthEventType.LOGIN_FAILED,
+      {
+        userId: user.id,
+        email: user.email,
+        success: false,
+      },
+    )
     throw ApiError.unauthorized('Invalid credentials')
   }
 
   // Disabled accounts: only revealed to someone who already has the correct password (the legit owner).
   if (!user.isActive) {
-    logAuthEvent(req, AuthEventType.LOGIN_DISABLED, { userId: user.id, email: user.email, success: false })
-    throw ApiError.forbidden('This account has been disabled. Contact your administrator.')
+    logAuthEvent(req, AuthEventType.LOGIN_DISABLED, {
+      userId: user.id,
+      email: user.email,
+      success: false,
+    })
+    throw ApiError.forbidden(
+      'This account has been disabled. Contact your administrator.',
+    )
   }
 
   if (user.failedLoginCount > 0 || user.lockedUntil) {
-    await UserModel.setLoginState(user.id, { failedLoginCount: 0, lockedUntil: null })
+    await UserModel.setLoginState(user.id, {
+      failedLoginCount: 0,
+      lockedUntil: null,
+    })
   }
 
-  logAuthEvent(req, AuthEventType.LOGIN_SUCCESS, { userId: user.id, email: user.email })
+  logAuthEvent(req, AuthEventType.LOGIN_SUCCESS, {
+    userId: user.id,
+    email: user.email,
+  })
   const token = signToken(user)
   setAuthCookie(res, token)
   res.json({ token, user: sanitize(user) })
@@ -107,7 +147,10 @@ export const logout = asyncHandler(async (req, res) => {
   res.status(204).send()
 })
 
-const GENERIC_RESET_RESPONSE = { message: 'If an account exists for that email, a password reset link has been sent.' }
+const GENERIC_RESET_RESPONSE = {
+  message:
+    'If an account exists for that email, a password reset link has been sent.',
+}
 
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body
@@ -117,7 +160,11 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   // Only act when the account exists, but always return the same response to prevent enumeration.
   if (user) {
     const rawToken = crypto.randomBytes(32).toString('hex')
-    await UserModel.setResetToken(user.id, hashResetToken(rawToken), new Date(Date.now() + RESET_TOKEN_TTL_MS))
+    await UserModel.setResetToken(
+      user.id,
+      hashResetToken(rawToken),
+      new Date(Date.now() + RESET_TOKEN_TTL_MS),
+    )
     // Swallow delivery failures: a send error must not flip the generic response and leak
     // whether the account exists. Log server-side and move on.
     try {
@@ -126,26 +173,39 @@ export const forgotPassword = asyncHandler(async (req, res) => {
       console.error('[password-reset] delivery failed:', err.message)
     }
   }
-  logAuthEvent(req, AuthEventType.PASSWORD_RESET_REQUEST, { userId: user?.id ?? null, email })
+  logAuthEvent(req, AuthEventType.PASSWORD_RESET_REQUEST, {
+    userId: user?.id ?? null,
+    email,
+  })
 
   res.json(GENERIC_RESET_RESPONSE)
 })
 
 export const resetPassword = asyncHandler(async (req, res) => {
   const { token, password } = req.body
-  if (!token || !password) throw ApiError.badRequest('token and password are required')
+  if (!token || !password)
+    throw ApiError.badRequest('token and password are required')
   assertValidPassword(password)
 
   const user = await UserModel.findByResetTokenHash(hashResetToken(token))
-  if (!user || !user.resetTokenExpiresAt || user.resetTokenExpiresAt < new Date()) {
+  if (
+    !user ||
+    !user.resetTokenExpiresAt ||
+    user.resetTokenExpiresAt < new Date()
+  ) {
     throw ApiError.badRequest('Invalid or expired reset token')
   }
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS)
   await UserModel.applyPasswordReset(user.id, passwordHash)
-  logAuthEvent(req, AuthEventType.PASSWORD_RESET_SUCCESS, { userId: user.id, email: user.email })
+  logAuthEvent(req, AuthEventType.PASSWORD_RESET_SUCCESS, {
+    userId: user.id,
+    email: user.email,
+  })
   // tokenVersion was bumped, so any existing sessions are now revoked — user must sign in again.
-  res.json({ message: 'Password updated. Please sign in with your new password.' })
+  res.json({
+    message: 'Password updated. Please sign in with your new password.',
+  })
 })
 
 export const me = asyncHandler(async (req, res) => {
@@ -158,13 +218,16 @@ export const me = asyncHandler(async (req, res) => {
 // address. Nothing changes yet — a token goes to the NEW address to prove they own it.
 export const requestEmailChange = asyncHandler(async (req, res) => {
   const { newEmail, currentPassword } = req.body
-  if (!newEmail || !currentPassword) throw ApiError.badRequest('newEmail and currentPassword are required')
+  if (!newEmail || !currentPassword)
+    throw ApiError.badRequest('newEmail and currentPassword are required')
   const email = String(newEmail).trim().toLowerCase()
-  if (!EMAIL_RE.test(email)) throw ApiError.badRequest('Enter a valid email address')
+  if (!EMAIL_RE.test(email))
+    throw ApiError.badRequest('Enter a valid email address')
 
   const user = await UserModel.findById(req.user.sub)
   if (!user) throw ApiError.notFound('User not found')
-  if (email === user.email.toLowerCase()) throw ApiError.badRequest('That is already your email address')
+  if (email === user.email.toLowerCase())
+    throw ApiError.badRequest('That is already your email address')
 
   const valid = await bcrypt.compare(currentPassword, user.passwordHash)
   if (!valid) throw ApiError.unauthorized('Current password is incorrect')
@@ -173,19 +236,32 @@ export const requestEmailChange = asyncHandler(async (req, res) => {
     UserModel.findByEmail(email),
     UserModel.findByPendingEmail(email),
   ])
-  if (emailTaken || (pendingTaken && pendingTaken.id !== user.id)) throw ApiError.conflict('That email is already in use')
+  if (emailTaken || (pendingTaken && pendingTaken.id !== user.id))
+    throw ApiError.conflict('That email is already in use')
 
   const rawToken = crypto.randomBytes(32).toString('hex')
-  await UserModel.setEmailChangeToken(user.id, email, hashResetToken(rawToken), new Date(Date.now() + EMAIL_TOKEN_TTL_MS))
+  await UserModel.setEmailChangeToken(
+    user.id,
+    email,
+    hashResetToken(rawToken),
+    new Date(Date.now() + EMAIL_TOKEN_TTL_MS),
+  )
   try {
     await deliverEmailChange(user, email, rawToken)
   } catch (err) {
     console.error('[email-change] delivery failed:', err.message)
-    throw ApiError.badRequest('Could not send the verification email. Try again shortly.')
+    throw ApiError.badRequest(
+      'Could not send the verification email. Try again shortly.',
+    )
   }
-  logAuthEvent(req, AuthEventType.EMAIL_CHANGE_REQUEST, { userId: user.id, email: user.email })
+  logAuthEvent(req, AuthEventType.EMAIL_CHANGE_REQUEST, {
+    userId: user.id,
+    email: user.email,
+  })
 
-  res.json({ message: `Verification link sent to ${email}. Open it to confirm the change.` })
+  res.json({
+    message: `Verification link sent to ${email}. Open it to confirm the change.`,
+  })
 })
 
 // Step 2: the link (public, token-bearing) is opened. Apply the pending email and sign
@@ -195,24 +271,36 @@ export const confirmEmailChange = asyncHandler(async (req, res) => {
   if (!token) throw ApiError.badRequest('token is required')
 
   const user = await UserModel.findByEmailTokenHash(hashResetToken(token))
-  if (!user || !user.pendingEmail || !user.emailTokenExpiresAt || user.emailTokenExpiresAt < new Date()) {
+  if (
+    !user ||
+    !user.pendingEmail ||
+    !user.emailTokenExpiresAt ||
+    user.emailTokenExpiresAt < new Date()
+  ) {
     throw ApiError.badRequest('Invalid or expired verification link')
   }
 
   try {
     await UserModel.applyEmailChange(user)
   } catch (err) {
-    if (err.code === 'P2002') throw ApiError.conflict('That email is already in use')
+    if (err.code === 'P2002')
+      throw ApiError.conflict('That email is already in use')
     throw err
   }
-  logAuthEvent(req, AuthEventType.EMAIL_CHANGE_SUCCESS, { userId: user.id, email: user.pendingEmail })
+  logAuthEvent(req, AuthEventType.EMAIL_CHANGE_SUCCESS, {
+    userId: user.id,
+    email: user.pendingEmail,
+  })
 
-  res.json({ message: 'Email updated. Please sign in with your new email address.' })
+  res.json({
+    message: 'Email updated. Please sign in with your new email address.',
+  })
 })
 
 export const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body
-  if (!currentPassword || !newPassword) throw ApiError.badRequest('currentPassword and newPassword are required')
+  if (!currentPassword || !newPassword)
+    throw ApiError.badRequest('currentPassword and newPassword are required')
   assertValidPassword(newPassword)
 
   const user = await UserModel.findById(req.user.sub)
@@ -220,17 +308,26 @@ export const changePassword = asyncHandler(async (req, res) => {
 
   const valid = await bcrypt.compare(currentPassword, user.passwordHash)
   if (!valid) {
-    logAuthEvent(req, AuthEventType.PASSWORD_CHANGE, { userId: user.id, email: user.email, success: false })
+    logAuthEvent(req, AuthEventType.PASSWORD_CHANGE, {
+      userId: user.id,
+      email: user.email,
+      success: false,
+    })
     throw ApiError.unauthorized('Current password is incorrect')
   }
 
   if (await bcrypt.compare(newPassword, user.passwordHash)) {
-    throw ApiError.badRequest('New password must be different from the current password')
+    throw ApiError.badRequest(
+      'New password must be different from the current password',
+    )
   }
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS)
   const updated = await UserModel.applyPasswordChange(user.id, passwordHash)
-  logAuthEvent(req, AuthEventType.PASSWORD_CHANGE, { userId: user.id, email: user.email })
+  logAuthEvent(req, AuthEventType.PASSWORD_CHANGE, {
+    userId: user.id,
+    email: user.email,
+  })
 
   // tokenVersion bumped → all other sessions are now invalid. Re-issue a cookie
   // for THIS session so the user who just changed their password stays signed in.

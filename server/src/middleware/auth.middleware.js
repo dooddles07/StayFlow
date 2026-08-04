@@ -12,14 +12,21 @@ const readCookie = (req, name) => {
   for (const part of raw.split(';')) {
     const idx = part.indexOf('=')
     if (idx === -1) continue
-    if (part.slice(0, idx).trim() === name) return decodeURIComponent(part.slice(idx + 1).trim())
+    if (part.slice(0, idx).trim() === name) {
+      try {
+        return decodeURIComponent(part.slice(idx + 1).trim())
+      } catch {
+        return null
+      }
+    }
   }
   return null
 }
 
 const extractToken = (req) => {
   const header = req.headers.authorization
-  if (header && header.startsWith('Bearer ')) return header.slice('Bearer '.length)
+  if (header && header.startsWith('Bearer '))
+    return header.slice('Bearer '.length)
   return readCookie(req, AUTH_COOKIE)
 }
 
@@ -57,7 +64,9 @@ export const requireRole =
 // wrap /auth with this), which is exactly what's needed to complete the change.
 export const blockIfMustChangePassword = (req, res, next) => {
   if (req.user?.mustChangePassword) {
-    throw ApiError.forbidden('You must change your temporary password before continuing.')
+    throw ApiError.forbidden(
+      'You must change your temporary password before continuing.',
+    )
   }
   next()
 }
@@ -106,23 +115,23 @@ export const requireOwnStaffParam =
   (paramName = 'staffId') =>
   (req, res, next) => {
     if (req.user.role === 'MANAGEMENT') return next()
-    if (req.user.role === 'STAFF' && req.params[paramName] === req.user.staffId) return next()
+    if (req.user.role === 'STAFF' && req.params[paramName] === req.user.staffId)
+      return next()
     throw ApiError.forbidden("Not allowed to access this staff member's data")
   }
 
 // A notification is owned by whichever of residentId/staffId is set, matching the
 // caller's own role — MEMBER checks residentId, STAFF checks staffId. MANAGEMENT
 // (and any other caller) passes through untouched, same as requireOwnerRecord.
-export const requireOwnNotification =
-  (model) =>
-  async (req, res, next) => {
-    if (req.user.role !== 'MEMBER' && req.user.role !== 'STAFF') return next()
-    const record = await model.findById(req.params.id)
-    if (!record) throw ApiError.notFound('Not found')
-    const ownField = req.user.role === 'MEMBER' ? 'residentId' : 'staffId'
-    const ownId = req.user.role === 'MEMBER' ? req.user.residentId : req.user.staffId
-    if (record[ownField] !== ownId) {
-      throw ApiError.forbidden('Not allowed to access this record')
-    }
-    next()
+export const requireOwnNotification = (model) => async (req, res, next) => {
+  if (req.user.role !== 'MEMBER' && req.user.role !== 'STAFF') return next()
+  const record = await model.findById(req.params.id)
+  if (!record) throw ApiError.notFound('Not found')
+  const ownField = req.user.role === 'MEMBER' ? 'residentId' : 'staffId'
+  const ownId =
+    req.user.role === 'MEMBER' ? req.user.residentId : req.user.staffId
+  if (record[ownField] !== ownId) {
+    throw ApiError.forbidden('Not allowed to access this record')
   }
+  next()
+}

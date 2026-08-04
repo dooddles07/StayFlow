@@ -10,22 +10,36 @@ const CREATE_FIELDS = ['kind', 'title', 'body', 'residentId', 'staffId']
 
 export const notificationController = {
   list: asyncHandler(async (req, res) => {
-    res.json(await NotificationModel.findAll({ limit: parseLimit(req.query.limit) }))
+    res.json(
+      await NotificationModel.findAll({ limit: parseLimit(req.query.limit) }),
+    )
   }),
   byResident: asyncHandler(async (req, res) => {
-    res.json(await NotificationModel.findByResident(req.params.residentId, { limit: parseLimit(req.query.limit) }))
+    res.json(
+      await NotificationModel.findByResident(req.params.residentId, {
+        limit: parseLimit(req.query.limit),
+      }),
+    )
   }),
   byStaff: asyncHandler(async (req, res) => {
-    res.json(await NotificationModel.findByStaff(req.params.staffId, { limit: parseLimit(req.query.limit) }))
+    res.json(
+      await NotificationModel.findByStaff(req.params.staffId, {
+        limit: parseLimit(req.query.limit),
+      }),
+    )
   }),
   // No client currently calls this (grep confirms zero frontend usage) — hardened anyway
   // rather than left as a raw, unvalidated `req.body` spread on a staffOnly write endpoint.
   create: asyncHandler(async (req, res) => {
     const data = pickAllowed(req.body, CREATE_FIELDS)
-    if (typeof data.kind !== 'string' || !data.kind.trim()) throw ApiError.badRequest('kind is required')
-    if (typeof data.title !== 'string' || !data.title.trim()) throw ApiError.badRequest('title is required')
-    if (typeof data.body !== 'string' || !data.body.trim()) throw ApiError.badRequest('body is required')
-    if (!!data.residentId === !!data.staffId) throw ApiError.badRequest('Provide exactly one of residentId or staffId.')
+    if (typeof data.kind !== 'string' || !data.kind.trim())
+      throw ApiError.badRequest('kind is required')
+    if (typeof data.title !== 'string' || !data.title.trim())
+      throw ApiError.badRequest('title is required')
+    if (typeof data.body !== 'string' || !data.body.trim())
+      throw ApiError.badRequest('body is required')
+    if (!!data.residentId === !!data.staffId)
+      throw ApiError.badRequest('Provide exactly one of residentId or staffId.')
 
     const notification = await NotificationModel.create(data)
     logAdminAction(req, 'CREATE', 'Notification', notification.id)
@@ -48,6 +62,7 @@ export const notificationController = {
   }),
   remove: asyncHandler(async (req, res) => {
     await NotificationModel.remove(req.params.id)
+    logAdminAction(req, 'DELETE', 'Notification', req.params.id)
     res.status(204).send()
   }),
 }
