@@ -4,6 +4,12 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+function daysFromNow(days) {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return d
+}
+
 async function main() {
   const password = process.env.SEED_PASSWORD || crypto.randomBytes(9).toString('base64url')
   const passwordHash = await bcrypt.hash(password, 10)
@@ -252,7 +258,7 @@ async function main() {
       category: 'Social',
       description: 'Sommelier-led tasting of six boutique vineyards as the sun sets over the skyline.',
       image: '/images/events/wine-tasting.svg',
-      date: new Date('2026-07-18'),
+      date: daysFromNow(14),
       time: '6:30 PM',
       location: 'Skyline Tower · Rooftop',
       capacity: 40,
