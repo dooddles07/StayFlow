@@ -15,7 +15,7 @@ function parseHourLabel(time: string): { hour: number; label: string } | null {
   const match = /^(\d{1,2}):\d{2}\s*(AM|PM)$/i.exec(time.trim())
   if (!match) return null
   let hour = Number(match[1]) % 12
-  if (match[2]!.toUpperCase() === 'PM') hour += 12
+  if (match[2].toUpperCase() === 'PM') hour += 12
   const period = hour >= 12 ? 'PM' : 'AM'
   const hour12 = hour % 12 === 0 ? 12 : hour % 12
   return { hour, label: `${hour12} ${period}` }
@@ -48,7 +48,7 @@ export function facilityPeakHours(bookings: BookingView[]) {
     if (counts.has(b.timeSlot)) counts.set(b.timeSlot, counts.get(b.timeSlot)! + 1)
   }
   return FACILITY_TIME_SLOTS.map((slot) => ({
-    hour: slot.split('–')[0]!.trim(),
+    hour: slot.split('–')[0].trim(),
     bookings: counts.get(slot) ?? 0,
   }))
 }
@@ -76,12 +76,12 @@ export function memberGrowth(residents: ResidentProfile[]) {
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59).getTime()
-    months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: MONTH_LABELS[d.getMonth()]!, monthEnd })
+    months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: MONTH_LABELS[d.getMonth()], monthEnd })
   }
   const moveIns = residents.map((r) => new Date(r.moveInDate).getTime())
   return months.map(({ key, label, monthEnd }) => {
     const [y, m] = key.split('-').map(Number)
-    const monthStart = new Date(y!, m!, 1).getTime()
+    const monthStart = new Date(y, m, 1).getTime()
     return {
       month: label,
       active: moveIns.filter((t) => t <= monthEnd).length,

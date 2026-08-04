@@ -6,9 +6,12 @@ import { SectionHeader } from '#/components/stayflow/section-header'
 import { StatusPill } from '#/components/stayflow/status-pill'
 import { EmptyState } from '#/components/stayflow/empty-state'
 import { Button } from '#/components/ui/button'
-import { getAllBookings, type BookingView } from '#/lib/api/booking'
-import { getAllReservations, type ReservationView } from '#/lib/api/diningReservation'
-import { getAllGuests, type GuestView } from '#/lib/api/guest'
+import { getAllBookings  } from '#/lib/api/booking'
+import type {BookingView} from '#/lib/api/booking';
+import { getAllReservations  } from '#/lib/api/diningReservation'
+import type {ReservationView} from '#/lib/api/diningReservation';
+import { getAllGuests  } from '#/lib/api/guest'
+import type {GuestView} from '#/lib/api/guest';
 import { getFacilities } from '#/lib/api/facility'
 import { timeToMinutes, toDateKey } from '#/lib/booking-slots'
 import type { Facility } from '#/lib/mock/types'

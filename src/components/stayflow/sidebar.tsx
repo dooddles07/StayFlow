@@ -2,7 +2,8 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { LogOut } from 'lucide-react'
 import { navConfig, portalLabels } from './nav-config'
 import { UserAvatar } from './user-avatar'
-import { clearStoredPortal, type Portal } from '#/lib/hooks/use-portal-preference'
+import { clearStoredPortal  } from '#/lib/hooks/use-portal-preference'
+import type {Portal} from '#/lib/hooks/use-portal-preference';
 import { useAuthStore } from '#/lib/store/auth-store'
 import { cn } from '#/lib/utils'
 
@@ -23,7 +24,7 @@ export function Sidebar({ portal, identityName, identitySubtitle, identityLoadin
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
   const items = navConfig[portal]
-  const rootPath = items[0]!.to
+  const rootPath = items[0].to
 
   return (
     <aside className={cn('sticky top-0 flex h-dvh w-64 flex-col bg-sidebar text-sidebar-foreground', className)}>

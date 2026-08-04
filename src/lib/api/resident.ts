@@ -119,6 +119,7 @@ const TIER_LABELS: Record<ResidentTier, string> = {
   ELITE: 'Elite',
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- guards a tier value from the DB that drifts from the union
 export const tierLabel = (tier: ResidentTier) => TIER_LABELS[tier] ?? tier
 
 export interface FamilyMemberInput {

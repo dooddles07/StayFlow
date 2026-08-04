@@ -30,18 +30,20 @@ import {
   deleteResident,
   getAllResidents,
   tierLabel,
-  updateResident,
-  type ResidentProfile,
-  type ResidentTier,
+  updateResident
+  
+  
 } from '#/lib/api/resident'
+import type {ResidentProfile, ResidentTier} from '#/lib/api/resident';
 import {
   createStaffMember,
   getAllStaff,
   removeStaffMember,
-  updateStaffMember,
-  type StaffMemberView,
-  type StaffShift,
+  updateStaffMember
+  
+  
 } from '#/lib/api/staff'
+import type {StaffMemberView, StaffShift} from '#/lib/api/staff';
 
 export const Route = createFileRoute('/management/users')({
   head: () => ({ meta: [{ title: 'Users — StayFlow Management' }] }),

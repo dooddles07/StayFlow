@@ -49,8 +49,8 @@ function RestaurantDetail() {
   const { profile } = useMyProfile()
   const days = React.useMemo(() => nextDays(14), [])
 
-  const [date, setDate] = React.useState(days[0]!)
-  const [time, setTime] = React.useState(TIME_OPTIONS[3]!)
+  const [date, setDate] = React.useState(days[0])
+  const [time, setTime] = React.useState(TIME_OPTIONS[3])
   const [partySize, setPartySize] = React.useState(2)
   const [occasion, setOccasion] = React.useState('')
   const [dietary, setDietary] = React.useState('')
@@ -144,7 +144,7 @@ function RestaurantDetail() {
 
           <div>
             <Label className="mb-1.5 text-xs text-muted-text">Date</Label>
-            <Select value={toDateKey(date)} onValueChange={(v) => setDate(days.find((d) => toDateKey(d) === v) ?? days[0]!)}>
+            <Select value={toDateKey(date)} onValueChange={(v) => setDate(days.find((d) => toDateKey(d) === v) ?? days[0])}>
               <SelectTrigger className="border-border bg-canvas">
                 <SelectValue />
               </SelectTrigger>

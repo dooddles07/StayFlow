@@ -12,7 +12,7 @@ export function MobileBottomNav({ portal, navBadges }: { portal: Portal; navBadg
   const location = useLocation()
   const [moreOpen, setMoreOpen] = React.useState(false)
   const items = navConfig[portal]
-  const rootPath = items[0]!.to
+  const rootPath = items[0].to
   const visible = items.slice(0, MAX_VISIBLE)
   const overflow = items.slice(MAX_VISIBLE)
 

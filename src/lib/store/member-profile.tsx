@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { ApiError } from '#/lib/api/client'
-import { getMyProfile, type ResidentProfile } from '#/lib/api/resident'
+import { getMyProfile  } from '#/lib/api/resident'
+import type {ResidentProfile} from '#/lib/api/resident';
 
 // 'no-resident' = the account authenticated fine but has no resident record linked
 // (404 from /residents/me) — a setup problem, not a transient failure, so it's kept

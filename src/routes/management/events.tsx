@@ -20,7 +20,8 @@ import {
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
-import { createEvent, deleteEvent, getEvents, updateEvent, type CommunityEventView } from '#/lib/api/event'
+import { createEvent, deleteEvent, getEvents, updateEvent  } from '#/lib/api/event'
+import type {CommunityEventView} from '#/lib/api/event';
 import type { EventCategory } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/management/events')({

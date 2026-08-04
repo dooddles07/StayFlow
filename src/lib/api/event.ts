@@ -49,6 +49,7 @@ const toEvent = (e: EventApiResponse): CommunityEventView => ({
   location: e.location,
   capacity: e.capacity,
   // Defensive: an endpoint that forgets to include the rsvps relation shouldn't crash the mapper.
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- guards a real API-response shape the type doesn't capture
   attendeeIds: (e.rsvps ?? []).map((r) => r.residentId),
 })
 

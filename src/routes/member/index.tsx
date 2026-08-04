@@ -10,13 +10,16 @@ import { EmptyState } from '#/components/stayflow/empty-state'
 import { Button } from '#/components/ui/button'
 import { getNotices } from '#/lib/api/notice'
 import { getFacilities } from '#/lib/api/facility'
-import { getMyBookings, type BookingView } from '#/lib/api/booking'
-import { getMyReservations, type ReservationView } from '#/lib/api/diningReservation'
+import { getMyBookings  } from '#/lib/api/booking'
+import type {BookingView} from '#/lib/api/booking';
+import { getMyReservations  } from '#/lib/api/diningReservation'
+import type {ReservationView} from '#/lib/api/diningReservation';
 import { getRestaurants } from '#/lib/api/restaurant'
 import { tierLabel } from '#/lib/api/resident'
 import { isPastDate } from '#/lib/history'
 import { useMyProfile } from '#/lib/store/member-profile'
-import { getWeather, type WeatherSnapshot } from '#/lib/weather'
+import { getWeather  } from '#/lib/weather'
+import type {WeatherSnapshot} from '#/lib/weather';
 import type { Facility, Notice } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/member/')({

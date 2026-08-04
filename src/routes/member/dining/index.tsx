@@ -20,9 +20,11 @@ import {
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
 import { getRestaurants } from '#/lib/api/restaurant'
-import { cancelReservation, getMyReservations, type ReservationView } from '#/lib/api/diningReservation'
+import { cancelReservation, getMyReservations  } from '#/lib/api/diningReservation'
+import type {ReservationView} from '#/lib/api/diningReservation';
 import { useMyProfile } from '#/lib/store/member-profile'
-import { byHistorySort, isPastDate, type HistorySort } from '#/lib/history'
+import { byHistorySort, isPastDate  } from '#/lib/history'
+import type {HistorySort} from '#/lib/history';
 import { cn, hideBrokenImg } from '#/lib/utils'
 import type { Restaurant } from '#/lib/mock/types'
 

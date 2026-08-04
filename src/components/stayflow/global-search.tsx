@@ -6,10 +6,14 @@ import { useUiStore } from '#/lib/store/ui-store'
 import { useAuthStore } from '#/lib/store/auth-store'
 import { getFacilities } from '#/lib/api/facility'
 import { getRestaurants } from '#/lib/api/restaurant'
-import { getEvents, type CommunityEventView } from '#/lib/api/event'
-import { getAllResidents, type ResidentProfile } from '#/lib/api/resident'
-import { getMyGuests, getAllGuests, type GuestView } from '#/lib/api/guest'
-import { getAllBookings, type BookingView } from '#/lib/api/booking'
+import { getEvents  } from '#/lib/api/event'
+import type {CommunityEventView} from '#/lib/api/event';
+import { getAllResidents  } from '#/lib/api/resident'
+import type {ResidentProfile} from '#/lib/api/resident';
+import { getMyGuests, getAllGuests  } from '#/lib/api/guest'
+import type {GuestView} from '#/lib/api/guest';
+import { getAllBookings  } from '#/lib/api/booking'
+import type {BookingView} from '#/lib/api/booking';
 import { getNotices } from '#/lib/api/notice'
 import { useCurrentPortal } from '#/lib/hooks/use-current-portal'
 import type { Portal } from '#/lib/hooks/use-portal-preference'

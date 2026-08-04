@@ -21,7 +21,8 @@ import {
   AlertDialogTrigger,
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
-import { checkInGuest, checkOutGuest, getAllGuests, setGuestStatus, type GuestView } from '#/lib/api/guest'
+import { checkInGuest, checkOutGuest, getAllGuests, setGuestStatus  } from '#/lib/api/guest'
+import type {GuestView} from '#/lib/api/guest';
 import { timeToMinutes, toDateKey } from '#/lib/booking-slots'
 
 export const Route = createFileRoute('/staff/guests')({

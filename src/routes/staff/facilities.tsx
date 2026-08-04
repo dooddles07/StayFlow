@@ -114,6 +114,7 @@ function StaffFacilitiesPage() {
                 {facility.status !== 'open' && (
                   <div className="flex flex-1 min-w-[200px] items-center gap-2">
                     <Input
+                      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- reasonDrafts is a plain index signature, entry may not exist yet
                       value={reasonDrafts[facility.id] ?? facility.statusReason ?? ''}
                       onChange={(e) => setReasonDrafts((prev) => ({ ...prev, [facility.id]: e.target.value }))}
                       placeholder="Reason (e.g. resurfacing courts)"

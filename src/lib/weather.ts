@@ -60,6 +60,7 @@ export async function getWeather(): Promise<WeatherSnapshot> {
   const data = await res.json()
   return {
     tempF: Math.round(data.current.temperature_2m),
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- weather_code is an untyped external API value, not guaranteed to be a mapped key
     condition: CONDITION_LABELS[data.current.weather_code] ?? 'Unknown',
     sunsetLabel: formatSunset(data.daily.sunset[0]),
   }

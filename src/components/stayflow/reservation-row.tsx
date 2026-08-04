@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { format, parseISO } from 'date-fns'
-import { StatusPill, type PillTone } from './status-pill'
+import { StatusPill  } from './status-pill'
+import type {PillTone} from './status-pill';
 import { cn } from '#/lib/utils'
 
 interface ReservationRowProps {

@@ -6,7 +6,8 @@ import { PageHeader } from '#/components/stayflow/page-header'
 import { EmptyState } from '#/components/stayflow/empty-state'
 import { AvatarInitials } from '#/components/stayflow/avatar-initials'
 import { Button } from '#/components/ui/button'
-import { getEvents, type CommunityEventView } from '#/lib/api/event'
+import { getEvents  } from '#/lib/api/event'
+import type {CommunityEventView} from '#/lib/api/event';
 import { getAllResidents } from '#/lib/api/resident'
 import { cn } from '#/lib/utils'
 
@@ -51,7 +52,9 @@ function StaffEventsPage() {
   React.useEffect(() => load(), [load])
 
   const sorted = [...events].sort((a, b) => a.date.localeCompare(b.date))
-  const selected = sorted.find((e) => e.id === selectedId) ?? sorted[0]
+  // .at(0) (unlike sorted[0]) types as possibly-undefined, so TS correctly treats
+  // `selected` as possibly-undefined when `sorted` is empty.
+  const selected = sorted.find((e) => e.id === selectedId) ?? sorted.at(0)
   const residentById = new Map(residents.map((r) => [r.id, r]))
   const attendees = selected ? selected.attendeeIds.map((id) => residentById.get(id)).filter((r): r is AttendeeResident => !!r) : []
 

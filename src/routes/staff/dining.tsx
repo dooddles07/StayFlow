@@ -23,7 +23,8 @@ import {
 import { ApiError } from '#/lib/api/client'
 import { getRestaurants } from '#/lib/api/restaurant'
 import { getAllTables } from '#/lib/api/table'
-import { getAllReservations, setReservationStatus, type ReservationView } from '#/lib/api/diningReservation'
+import { getAllReservations, setReservationStatus  } from '#/lib/api/diningReservation'
+import type {ReservationView} from '#/lib/api/diningReservation';
 import { timeToMinutes } from '#/lib/booking-slots'
 import { cn } from '#/lib/utils'
 import type { DiningTable, Restaurant } from '#/lib/mock/types'

@@ -20,7 +20,8 @@ import {
 import { FACILITY_TIME_SLOTS, clampPartySize, nextDays, toDateKey } from '#/lib/booking-slots'
 import { ApiError } from '#/lib/api/client'
 import { getFacility } from '#/lib/api/facility'
-import { getFacilityBookings, requestBooking, type FacilitySlot } from '#/lib/api/booking'
+import { getFacilityBookings, requestBooking  } from '#/lib/api/booking'
+import type {FacilitySlot} from '#/lib/api/booking';
 import { useMyProfile } from '#/lib/store/member-profile'
 import { cn, hideBrokenImg } from '#/lib/utils'
 
@@ -46,7 +47,7 @@ function FacilityDetail() {
   const { facility } = Route.useLoaderData()
   const { profile } = useMyProfile()
   const days = React.useMemo(() => nextDays(14), [])
-  const [selectedDay, setSelectedDay] = React.useState(days[0]!)
+  const [selectedDay, setSelectedDay] = React.useState(days[0])
   const [selectedSlot, setSelectedSlot] = React.useState<string | null>(null)
   const [partySize, setPartySize] = React.useState(1)
   const [notes, setNotes] = React.useState('')

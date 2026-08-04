@@ -13,9 +13,10 @@ import {
   markAllNotificationsRead,
   markAllNotificationsReadGlobal,
   markAllStaffNotificationsRead,
-  markNotificationRead,
-  type AppNotification,
+  markNotificationRead
+  
 } from '#/lib/api/notification'
+import type {AppNotification} from '#/lib/api/notification';
 import { cn } from '#/lib/utils'
 import type { NotificationKind } from '#/lib/mock/types'
 

@@ -6,7 +6,8 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { PasswordInput } from '#/components/stayflow/password-input'
-import { setStoredPortal, type Portal } from '#/lib/hooks/use-portal-preference'
+import { setStoredPortal  } from '#/lib/hooks/use-portal-preference'
+import type {Portal} from '#/lib/hooks/use-portal-preference';
 import { ApiError, isPortalRoleMatch, useAuthStore } from '#/lib/store/auth-store'
 import { cn } from '#/lib/utils'
 

@@ -19,7 +19,8 @@ import {
   AlertDialogTrigger,
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
-import { getAllBookings, setBookingStatus, type BookingView } from '#/lib/api/booking'
+import { getAllBookings, setBookingStatus  } from '#/lib/api/booking'
+import type {BookingView} from '#/lib/api/booking';
 import type { BookingStatus } from '#/lib/mock/types'
 import { cn } from '#/lib/utils'
 

@@ -42,12 +42,13 @@ import {
   tierLabel,
   updateFamilyMember,
   updateMyProfile,
-  updateVehicle,
-  type ResidentFamilyMember,
-  type ResidentProfile,
-  type ResidentProfileUpdate,
-  type ResidentVehicle,
+  updateVehicle
+  
+  
+  
+  
 } from '#/lib/api/resident'
+import type {ResidentFamilyMember, ResidentProfile, ResidentProfileUpdate, ResidentVehicle} from '#/lib/api/resident';
 import { useMyProfile } from '#/lib/store/member-profile'
 import { useAuthStore } from '#/lib/store/auth-store'
 

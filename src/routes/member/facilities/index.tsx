@@ -22,9 +22,11 @@ import {
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
 import { getFacilities } from '#/lib/api/facility'
-import { cancelBooking, getMyBookings, type BookingView } from '#/lib/api/booking'
+import { cancelBooking, getMyBookings  } from '#/lib/api/booking'
+import type {BookingView} from '#/lib/api/booking';
 import { useMyProfile } from '#/lib/store/member-profile'
-import { byHistorySort, isPastDate, type HistorySort } from '#/lib/history'
+import { byHistorySort, isPastDate  } from '#/lib/history'
+import type {HistorySort} from '#/lib/history';
 import { cn } from '#/lib/utils'
 import type { Facility, FacilityCategory } from '#/lib/mock/types'
 

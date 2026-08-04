@@ -23,10 +23,12 @@ import {
   AlertDialogTrigger,
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
-import { cancelGuest, getMyGuests, registerGuest, updateGuestDetails, type GuestView } from '#/lib/api/guest'
+import { cancelGuest, getMyGuests, registerGuest, updateGuestDetails  } from '#/lib/api/guest'
+import type {GuestView} from '#/lib/api/guest';
 import { useMyProfile } from '#/lib/store/member-profile'
 import { nextDays, toDateKey, TIME_OF_DAY_OPTIONS } from '#/lib/booking-slots'
-import { byHistorySort, isPastDate, type HistorySort } from '#/lib/history'
+import { byHistorySort, isPastDate  } from '#/lib/history'
+import type {HistorySort} from '#/lib/history';
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/member/guests')({
@@ -45,7 +47,7 @@ function GuestsPage() {
   const [name, setName] = React.useState('')
   const [purpose, setPurpose] = React.useState('')
   const [vehiclePlate, setVehiclePlate] = React.useState('')
-  const [arrivalDate, setArrivalDate] = React.useState(days[0]!)
+  const [arrivalDate, setArrivalDate] = React.useState(days[0])
   const [arrivalTime, setArrivalTime] = React.useState('2:00 PM')
   const [newGuest, setNewGuest] = React.useState<GuestView | null>(null)
   const [submitting, setSubmitting] = React.useState(false)
@@ -60,7 +62,7 @@ function GuestsPage() {
   const savingEditRef = React.useRef(false)
   const [editPurpose, setEditPurpose] = React.useState('')
   const [editPlate, setEditPlate] = React.useState('')
-  const [editDate, setEditDate] = React.useState(days[0]!)
+  const [editDate, setEditDate] = React.useState(days[0])
   const [editTime, setEditTime] = React.useState('')
   const [historySort, setHistorySort] = React.useState<HistorySort>('newest')
   const [showHistory, setShowHistory] = React.useState(false)
@@ -177,7 +179,7 @@ function GuestsPage() {
     if (!newGuest) return
     setEditPurpose(newGuest.purpose)
     setEditPlate(newGuest.vehiclePlate ?? '')
-    setEditDate(days.find((d) => toDateKey(d) === newGuest.arrivalDate.slice(0, 10)) ?? days[0]!)
+    setEditDate(days.find((d) => toDateKey(d) === newGuest.arrivalDate.slice(0, 10)) ?? days[0])
     setEditTime(newGuest.arrivalTime)
     setEditing(true)
   }
@@ -245,7 +247,7 @@ function GuestsPage() {
               <select
                 id="arrival-date"
                 value={toDateKey(arrivalDate)}
-                onChange={(e) => setArrivalDate(days.find((d) => toDateKey(d) === e.target.value) ?? days[0]!)}
+                onChange={(e) => setArrivalDate(days.find((d) => toDateKey(d) === e.target.value) ?? days[0])}
                 className="h-9 w-full rounded-md border border-border bg-canvas px-2 text-sm text-foreground"
               >
                 {days.map((d) => (
@@ -367,7 +369,7 @@ function GuestsPage() {
                   <select
                     id="edit-date"
                     value={toDateKey(editDate)}
-                    onChange={(e) => setEditDate(days.find((d) => toDateKey(d) === e.target.value) ?? days[0]!)}
+                    onChange={(e) => setEditDate(days.find((d) => toDateKey(d) === e.target.value) ?? days[0])}
                     className="h-9 w-full rounded-md border border-border bg-canvas px-2 text-sm text-foreground"
                   >
                     {days.map((d) => (
