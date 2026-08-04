@@ -26,14 +26,14 @@ graph TD
 
 **Components**
 
-| Component | Role |
-| --- | --- |
-| Browser (React) | Renders portals, holds non-sensitive user profile in `zustand`+`persist`; JWT never touches JS |
-| Node service | `createServer` router: `/api` → Express, static file hit → serve `dist/client`, else → SSR `handler.fetch` |
-| Express API | REST endpoints, auth, RBAC, rate limiting, security headers |
-| Prisma | Typed DB access + migrations |
-| PostgreSQL | System of record, hosted on Neon (free tier), connected via `DATABASE_URL` on Render |
-| Mailer | Reset/email-change link delivery via Resend; logs the link to console instead when `RESEND_API_KEY` is unset |
+| Component       | Role                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------ |
+| Browser (React) | Renders portals, holds non-sensitive user profile in `zustand`+`persist`; JWT never touches JS               |
+| Node service    | `createServer` router: `/api` → Express, static file hit → serve `dist/client`, else → SSR `handler.fetch`   |
+| Express API     | REST endpoints, auth, RBAC, rate limiting, security headers                                                  |
+| Prisma          | Typed DB access + migrations                                                                                 |
+| PostgreSQL      | System of record, hosted on Neon (free tier), connected via `DATABASE_URL` on Render                         |
+| Mailer          | Reset/email-change link delivery via Resend; logs the link to console instead when `RESEND_API_KEY` is unset |
 
 ## Complete System Architecture
 
@@ -184,6 +184,8 @@ StayFlow/
 │   │   └── management/ (index, users, facilities, restaurants, events, notices, analytics, reports)
 │   ├── components/
 │   │   ├── stayflow/          # App components (app-shell, sidebar, kpi-card, charts/, qr-code…)
+│   │   │   ├── users/          # management/users.tsx split: tabs, form sheets, action dialogs
+│   │   │   └── profile/        # member/profile.tsx split: avatar/family/vehicle dialogs, email section
 │   │   └── ui/                # shadcn/Radix primitives (button, dialog, table, calendar…)
 │   └── lib/
 │       ├── api/client.ts      # fetch wrapper (credentials:include)
@@ -208,57 +210,58 @@ StayFlow/
         ├── middleware/        # auth, rateLimit, error
         └── utils/             # crudRouter, crudController, authLog, adminLog, password, mailer, validate, ApiError, asyncHandler
 ```
+
 </details>
 
 ## Technology Stack
 
-| Purpose | Technology | Version | Description |
-| --- | --- | --- | --- |
-| UI framework | React | ^19.2 | Component UI, SSR-capable |
-| Meta-framework | TanStack Start / Router | latest | File routing, SSR, server functions |
-| Build tool | Vite | ^8.0 | Dev server + bundler |
-| Language | TypeScript | ^6.0 | Frontend types |
-| Styling | Tailwind CSS | ^4.1 | Utility-first + `@tailwindcss/vite` |
-| UI primitives | Radix UI / shadcn pattern | ^1.6 | Accessible components |
-| Icons | lucide-react | ^0.577 | Icon set |
-| Charts | Recharts | ^3.9 | Analytics visuals |
-| Client state | zustand (+persist) | ^5.0 | Auth/UI stores |
-| Dates | date-fns | ^4.4 | Date math, booking slots |
-| QR | qrcode | ^1.5 | Guest-pass QR codes |
-| Toasts | sonner | ^2.0 | Notifications UI |
-| Runtime | Node.js | — | Prod server + dev |
-| API framework | Express | ^4.21 | REST API |
-| ORM | Prisma | ^6.3 | DB access + migrations |
-| Database | PostgreSQL | — | System of record |
-| Auth | jsonwebtoken | ^9.0 | JWT sign/verify |
-| Hashing | bcryptjs | ^2.4 | Password hashing (cost 12) |
-| Rate limiting | express-rate-limit | ^8.5 | Login / password-reset / password-change / email-change limiters |
-| Security headers | helmet | ^8.3 | HSTS, nosniff, frameguard |
-| CORS | cors | ^2.8 | Allowlist-based |
-| Logging | morgan | ^1.10 | HTTP request logs |
-| Tests | Vitest + Testing Library | ^4.1 | Unit/component tests |
-| Lint/format | ESLint + Prettier | ^9 / ^3.8 | `@tanstack/eslint-config` |
+| Purpose          | Technology                | Version   | Description                                                      |
+| ---------------- | ------------------------- | --------- | ---------------------------------------------------------------- |
+| UI framework     | React                     | ^19.2     | Component UI, SSR-capable                                        |
+| Meta-framework   | TanStack Start / Router   | latest    | File routing, SSR, server functions                              |
+| Build tool       | Vite                      | ^8.0      | Dev server + bundler                                             |
+| Language         | TypeScript                | ^6.0      | Frontend types                                                   |
+| Styling          | Tailwind CSS              | ^4.1      | Utility-first + `@tailwindcss/vite`                              |
+| UI primitives    | Radix UI / shadcn pattern | ^1.6      | Accessible components                                            |
+| Icons            | lucide-react              | ^0.577    | Icon set                                                         |
+| Charts           | Recharts                  | ^3.9      | Analytics visuals                                                |
+| Client state     | zustand (+persist)        | ^5.0      | Auth/UI stores                                                   |
+| Dates            | date-fns                  | ^4.4      | Date math, booking slots                                         |
+| QR               | qrcode                    | ^1.5      | Guest-pass QR codes                                              |
+| Toasts           | sonner                    | ^2.0      | Notifications UI                                                 |
+| Runtime          | Node.js                   | —         | Prod server + dev                                                |
+| API framework    | Express                   | ^4.21     | REST API                                                         |
+| ORM              | Prisma                    | ^6.3      | DB access + migrations                                           |
+| Database         | PostgreSQL                | —         | System of record                                                 |
+| Auth             | jsonwebtoken              | ^9.0      | JWT sign/verify                                                  |
+| Hashing          | bcryptjs                  | ^2.4      | Password hashing (cost 12)                                       |
+| Rate limiting    | express-rate-limit        | ^8.5      | Login / password-reset / password-change / email-change limiters |
+| Security headers | helmet                    | ^8.3      | HSTS, nosniff, frameguard                                        |
+| CORS             | cors                      | ^2.8      | Allowlist-based                                                  |
+| Logging          | morgan                    | ^1.10     | HTTP request logs                                                |
+| Tests            | Vitest + Testing Library  | ^4.1      | Unit/component tests                                             |
+| Lint/format      | ESLint + Prettier         | ^9 / ^3.8 | `@tanstack/eslint-config`                                        |
 
 ## System Modules
 
 Each resource follows **route → middleware → controller → model → Prisma**. Generic CRUD is factored into `utils/crudRouter.js` + `utils/crudController.js`; resources with ownership rules add explicit routers.
 
-| Module | Purpose | Read roles | Write roles | Notable endpoints |
-| --- | --- | --- | --- | --- |
-| **Auth** | Login, logout, password reset/change, session — no self-registration | public / self | — | `/auth/*` |
-| **Residents** | Resident directory + profile + login issuance | STAFF, MGMT | MGMT only | CRUD, `/:id/create-login` |
-| **Staff** | Staff directory | STAFF, MGMT | MGMT | CRUD |
-| **Facilities** | Amenities catalog | any auth | STAFF, MGMT | CRUD |
-| **Bookings** | Facility reservations | STAFF list; owner get | member create; STAFF update | `/resident/:id`, ownership-gated |
-| **Restaurants** | Dining venues | any auth | MGMT only | CRUD |
-| **Tables** | Restaurant tables | any auth | MGMT only | `/restaurant/:id` |
-| **Dining Reservations** | Table bookings | STAFF list; owner get | member create; STAFF update | `/resident/:id`, ownership-gated |
-| **Guests** | Guest passes + check-in/out | STAFF list; owner get | member create/edit own | `/:id/check-in`, `/:id/check-out` |
-| **Events** | Community events + RSVP | any auth | MGMT only | `/:id/rsvp`, `/:id/rsvp/cancel` |
-| **Notices** | Announcements | any auth | MGMT only | CRUD |
-| **Notifications** | In-app notifications | any auth | STAFF, MGMT create/delete | `/:id/read` |
+| Module                  | Purpose                                                              | Read roles            | Write roles                 | Notable endpoints                 |
+| ----------------------- | -------------------------------------------------------------------- | --------------------- | --------------------------- | --------------------------------- |
+| **Auth**                | Login, logout, password reset/change, session — no self-registration | public / self         | —                           | `/auth/*`                         |
+| **Residents**           | Resident directory + profile + login issuance                        | STAFF, MGMT           | MGMT only                   | CRUD, `/:id/create-login`         |
+| **Staff**               | Staff directory                                                      | STAFF, MGMT           | MGMT                        | CRUD                              |
+| **Facilities**          | Amenities catalog                                                    | any auth              | STAFF, MGMT                 | CRUD                              |
+| **Bookings**            | Facility reservations                                                | STAFF list; owner get | member create; STAFF update | `/resident/:id`, ownership-gated  |
+| **Restaurants**         | Dining venues                                                        | any auth              | MGMT only                   | CRUD                              |
+| **Tables**              | Restaurant tables                                                    | any auth              | MGMT only                   | `/restaurant/:id`                 |
+| **Dining Reservations** | Table bookings                                                       | STAFF list; owner get | member create; STAFF update | `/resident/:id`, ownership-gated  |
+| **Guests**              | Guest passes + check-in/out                                          | STAFF list; owner get | member create/edit own      | `/:id/check-in`, `/:id/check-out` |
+| **Events**              | Community events + RSVP                                              | any auth              | MGMT only                   | `/:id/rsvp`, `/:id/rsvp/cancel`   |
+| **Notices**             | Announcements                                                        | any auth              | MGMT only                   | CRUD                              |
+| **Notifications**       | In-app notifications                                                 | any auth              | STAFF, MGMT create/delete   | `/:id/read`                       |
 
-*Inputs:* JSON bodies + JWT (cookie/Bearer). *Outputs:* JSON. *Connected services:* PostgreSQL via Prisma only.
+_Inputs:_ JSON bodies + JWT (cookie/Bearer). _Outputs:_ JSON. _Connected services:_ PostgreSQL via Prisma only.
 
 ## API Documentation
 
@@ -268,40 +271,40 @@ Base path: `/api`. Auth via `stayflow_token` httpOnly cookie **or** `Authorizati
 
 No public account-creation endpoint exists — see [RULES.md](RULES.md#resident-onboarding-no-self-registration).
 
-| Method | URL | Purpose | Auth | Request | Success | Errors |
-| --- | --- | --- | --- | --- | --- | --- |
-| POST | `/login` | Sign in | public (rate-limited) | `{email,password}` | 200 `{token,user}` + cookie | 401, 403, 429 |
-| POST | `/logout` | Clear cookie | any | — | 204 | — |
-| POST | `/forgot-password` | Request reset link | public (rate-limited) | `{email}` | 200 generic message | 400 |
-| POST | `/reset-password` | Set new password (clears `mustChangePassword`) | public (rate-limited) | `{token,password}` | 200 message | 400 |
-| POST | `/change-password` | Change password (clears `mustChangePassword`), re-issues cookie | requireAuth (rate-limited) | `{currentPassword,newPassword}` | 200 message | 400, 401 |
-| POST | `/change-email` | Request email change (verify-then-apply) | requireAuth (rate-limited) | `{newEmail,currentPassword}` | 200 message | 400, 401, 409 |
-| POST | `/confirm-email` | Apply a verified email change | public, token-bearing (rate-limited) | `{token}` | 200 message | 400 |
-| GET | `/me` | Current user | requireAuth | — | 200 `user` | 401, 404 |
+| Method | URL                | Purpose                                                         | Auth                                 | Request                         | Success                     | Errors        |
+| ------ | ------------------ | --------------------------------------------------------------- | ------------------------------------ | ------------------------------- | --------------------------- | ------------- |
+| POST   | `/login`           | Sign in                                                         | public (rate-limited)                | `{email,password}`              | 200 `{token,user}` + cookie | 401, 403, 429 |
+| POST   | `/logout`          | Clear cookie                                                    | any                                  | —                               | 204                         | —             |
+| POST   | `/forgot-password` | Request reset link                                              | public (rate-limited)                | `{email}`                       | 200 generic message         | 400           |
+| POST   | `/reset-password`  | Set new password (clears `mustChangePassword`)                  | public (rate-limited)                | `{token,password}`              | 200 message                 | 400           |
+| POST   | `/change-password` | Change password (clears `mustChangePassword`), re-issues cookie | requireAuth (rate-limited)           | `{currentPassword,newPassword}` | 200 message                 | 400, 401      |
+| POST   | `/change-email`    | Request email change (verify-then-apply)                        | requireAuth (rate-limited)           | `{newEmail,currentPassword}`    | 200 message                 | 400, 401, 409 |
+| POST   | `/confirm-email`   | Apply a verified email change                                   | public, token-bearing (rate-limited) | `{token}`                       | 200 message                 | 400           |
+| GET    | `/me`              | Current user                                                    | requireAuth                          | —                               | 200 `user`                  | 401, 404      |
 
 ### Resource routers (all under `requireAuth`)
 
 Generic CRUD (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) applies to **residents, staff, facilities, restaurants, tables, events, notices** with the role gates in System Modules above — reads stay open to STAFF/MGMT (or wider); writes on restaurants/tables/events/notices/residents are MGMT-only since STAFF has no screens that use them. Extra endpoints:
 
-| Method | URL | Purpose | Role |
-| --- | --- | --- | --- |
-| POST | `/residents/:id/create-login` | Issue a resident's login (temp password, shown once) | **MGMT only** |
-| GET | `/bookings` | List all (paginated) | STAFF/MGMT |
-| GET | `/bookings/resident/:residentId` | Resident's bookings | owner or STAFF/MGMT |
-| POST | `/bookings` | Create (residentId forced from JWT) | any member |
-| PUT | `/bookings/:id` | Update / confirm | STAFF/MGMT |
-| DELETE | `/bookings/:id` | Cancel own | owner |
-| GET/POST/PUT/DELETE | `/dining-reservations/*` | Same shape as bookings (paginated list) | same |
-| GET | `/guests/resident/:residentId` | Host's guests | owner or STAFF/MGMT |
-| POST | `/guests/:id/check-in` · `/check-out` | Front-desk actions | STAFF/MGMT |
-| GET | `/tables/restaurant/:restaurantId` | Tables by venue | any auth |
-| POST | `/events/:id/rsvp` · `/rsvp/cancel` | RSVP toggle | member (own) |
-| GET | `/notifications` | List (paginated, cross-property feed) | STAFF/MGMT |
-| GET | `/notifications/resident/:id` · `/staff/:id` | Own scoped feed (paginated) | owner |
-| POST | `/notifications/:id/read` | Mark read | owner or STAFF/MGMT |
-| POST | `/notifications/resident/:id/read-all` · `/staff/:id/read-all` | Mark all read (own feed) | owner |
-| POST | `/notifications/read-all` | Mark all read (every notification) | **MGMT only** |
-| GET | `/health` | Liveness → `{status:'ok',time}` | public |
+| Method              | URL                                                            | Purpose                                              | Role                |
+| ------------------- | -------------------------------------------------------------- | ---------------------------------------------------- | ------------------- |
+| POST                | `/residents/:id/create-login`                                  | Issue a resident's login (temp password, shown once) | **MGMT only**       |
+| GET                 | `/bookings`                                                    | List all (paginated)                                 | STAFF/MGMT          |
+| GET                 | `/bookings/resident/:residentId`                               | Resident's bookings                                  | owner or STAFF/MGMT |
+| POST                | `/bookings`                                                    | Create (residentId forced from JWT)                  | any member          |
+| PUT                 | `/bookings/:id`                                                | Update / confirm                                     | STAFF/MGMT          |
+| DELETE              | `/bookings/:id`                                                | Cancel own                                           | owner               |
+| GET/POST/PUT/DELETE | `/dining-reservations/*`                                       | Same shape as bookings (paginated list)              | same                |
+| GET                 | `/guests/resident/:residentId`                                 | Host's guests                                        | owner or STAFF/MGMT |
+| POST                | `/guests/:id/check-in` · `/check-out`                          | Front-desk actions                                   | STAFF/MGMT          |
+| GET                 | `/tables/restaurant/:restaurantId`                             | Tables by venue                                      | any auth            |
+| POST                | `/events/:id/rsvp` · `/rsvp/cancel`                            | RSVP toggle                                          | member (own)        |
+| GET                 | `/notifications`                                               | List (paginated, cross-property feed)                | STAFF/MGMT          |
+| GET                 | `/notifications/resident/:id` · `/staff/:id`                   | Own scoped feed (paginated)                          | owner               |
+| POST                | `/notifications/:id/read`                                      | Mark read                                            | owner or STAFF/MGMT |
+| POST                | `/notifications/resident/:id/read-all` · `/staff/:id/read-all` | Mark all read (own feed)                             | owner               |
+| POST                | `/notifications/read-all`                                      | Mark all read (every notification)                   | **MGMT only**       |
+| GET                 | `/health`                                                      | Liveness → `{status:'ok',time}`                      | public              |
 
 ## Deployment
 
@@ -326,26 +329,26 @@ graph TD
 
 ## Configuration Guide
 
-| File | Purpose |
-| --- | --- |
-| `vite.config.ts` | Vite plugins: devtools, tailwind, TanStack Start, React |
-| `tsconfig.json` / `tsr.config.json` | TS config + TanStack Router codegen |
-| `eslint.config.js` / `prettier.config.js` | Lint + format (`@tanstack/eslint-config`) |
-| `components.json` | shadcn/ui generator config |
-| `server/prisma/schema.prisma` | Data model, enums, datasource — see [SCHEMA.md](SCHEMA.md) |
-| `server/src/config/env.js` | Env validation + defaults (required: `DATABASE_URL`, `JWT_SECRET`) |
-| `server/src/config/db.js` | Prisma client singleton |
-| `scripts/start.mjs` | Prod server: MIME map, static caching, API/SSR routing |
+| File                                      | Purpose                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------ |
+| `vite.config.ts`                          | Vite plugins: devtools, tailwind, TanStack Start, React            |
+| `tsconfig.json` / `tsr.config.json`       | TS config + TanStack Router codegen                                |
+| `eslint.config.js` / `prettier.config.js` | Lint + format (`@tanstack/eslint-config`)                          |
+| `components.json`                         | shadcn/ui generator config                                         |
+| `server/prisma/schema.prisma`             | Data model, enums, datasource — see [SCHEMA.md](SCHEMA.md)         |
+| `server/src/config/env.js`                | Env validation + defaults (required: `DATABASE_URL`, `JWT_SECRET`) |
+| `server/src/config/db.js`                 | Prisma client singleton                                            |
+| `scripts/start.mjs`                       | Prod server: MIME map, static caching, API/SSR routing             |
 
 ## Automation
 
-| Concern | Status |
-| --- | --- |
-| Cron jobs / Scheduled tasks | None in repo |
-| Queues / Background workers | None |
-| Webhooks | None |
-| Retries / timeouts | Rate limiters (login 10/15min, password-reset/change/email-change 5/hr); account lock 15 min after 5 fails |
-| Async side-effects | Audit logging (`logAuthEvent`) is fire-and-forget; failures logged to console, never block auth |
+| Concern                     | Status                                                                                                     |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Cron jobs / Scheduled tasks | None in repo                                                                                               |
+| Queues / Background workers | None                                                                                                       |
+| Webhooks                    | None                                                                                                       |
+| Retries / timeouts          | Rate limiters (login 10/15min, password-reset/change/email-change 5/hr); account lock 15 min after 5 fails |
+| Async side-effects          | Audit logging (`logAuthEvent`) is fire-and-forget; failures logged to console, never block auth            |
 
 ## Performance
 
@@ -472,7 +475,7 @@ classDiagram
 - **Schema change:** edit `schema.prisma` → `prisma migrate dev` from root, commit the migration folder (see [SCHEMA.md](SCHEMA.md#schema-change-workflow)) — Render applies it on deploy via `prisma migrate deploy`.
 - **Deploy:** push to GitHub → Vercel auto-builds the frontend, Render auto-builds/starts the API.
 - **Rollback:** redeploy the previous build on Vercel and/or Render; revert schema with a new down migration, never by hand-editing data or deleting an applied migration file.
-- **Rotate demo creds:** `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js`.
+- **Rotate demo creds:** `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js --force` (`--force` is required unconditionally — the script has no way to tell a "safe" `DATABASE_URL` from production, so it always asks for confirmation).
 - **Create STAFF/MGMT users:** manually via seed / Prisma Studio (no API endpoint by design).
 - **Create a resident login:** MANAGEMENT-only, via the app UI (Users page → Create Login / Add Member) or `POST /residents/:id/create-login` directly — no seed/Studio step needed.
 - **Schema change via CLI:** run from repo root using server's pinned binary + explicit schema path (there's no `server/.env` for a `cd server`-relative Prisma invocation to find): `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, then commit the generated migration.

@@ -26,6 +26,17 @@
 - **fix(ui):** closed double-submit races on create/save/delete actions across the member portal (guests, dining, facility booking) and the full management portal (users, facilities, restaurants, notices, events) with the same ref-backed guard pattern used for staff — several of these (management create/save flows) had no guard at all beyond a disabled button, which doesn't block a second click before React re-renders.
 - **docs:** documented the email-change flow (`/auth/change-email` → `/auth/confirm-email`) in RULES.md — implemented but previously undocumented; added the booking/dining "status forced to PENDING on create" rule; added events to the admin-allowlisting resource list.
 
+## 2026-08-04 — Full code + security review, frontend component split
+
+- **fix(security):** close CSV formula-injection vector in report exports (`src/lib/export-csv.ts`) — cells starting with `=+-@` are now prefixed with `'` before quoting.
+- **fix(security):** close login timing side-channel (`auth.controller.js`) — unknown-email logins now run a dummy bcrypt compare, closing the gap that let response time distinguish "no such account" from "wrong password."
+- **fix(security):** `reset-test-passwords.js` now requires `--force` unconditionally instead of gating on `NODE_ENV=production` — this stack has no separate local database, so `NODE_ENV` was never a reliable signal that the script's `DATABASE_URL` was safe to write to.
+- **fix(audit):** `notification.controller.js`'s `remove` now logs to `admin_action_events`, matching every sibling delete endpoint (it was the one silent exception).
+- **fix(reliability):** `auth.middleware.js` cookie parsing no longer throws an uncaught `URIError` on a malformed percent-encoded cookie — treated as "no token" (401) instead of a 500.
+- **fix(a11y):** added `aria-label`s to the Edit/Delete icon buttons on the management Users page (residents + staff, mobile and desktop views).
+- **refactor(frontend):** split `src/routes/management/users.tsx` (683 lines) into `src/components/stayflow/users/` (tabs, form sheets, action dialogs — route file now 379 lines) and `src/routes/member/profile.tsx` (942 lines) into `src/components/stayflow/profile/` (avatar/family/vehicle dialogs, delete button, email section, shared helpers — route file now 517 lines). Pure extraction, independently re-verified against the original for prop-wiring and behavior regressions.
+- **process:** ran a full code review (backend security audit, backend code-quality pass, frontend review) plus an independent re-verification pass on all fixes above.
+
 ## Unreleased / Recent
 
 - **fix(dining):** make table assignment on confirm atomic — closes a double-booking race on dining tables under concurrent requests, same pattern as the facility-slot fix below.
@@ -72,3 +83,4 @@
 - Broken-access-control gap closed 2026-07-15 (see [SECURITY.md](SECURITY.md)).
 - Account-takeover via public self-registration closed 2026-07-22, by removing self-registration entirely (see [SECURITY.md](SECURITY.md)).
 - Mass-assignment gap on admin CRUD closed 2026-07-22 (field allowlisting).
+- CSV formula injection, login timing side-channel, and an unguarded `reset-test-passwords.js` closed 2026-08-04 (see [SECURITY.md](SECURITY.md)).
