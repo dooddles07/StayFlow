@@ -4,18 +4,21 @@ import { dateInput, nonEmptyString } from './shared.js'
 export const residentAdminCreateSchema = z.object({
   name: nonEmptyString,
   email: nonEmptyString,
-  phone: nonEmptyString,
+  // Phone and emergency contact are legitimately blank at admin-create time — the
+  // resident fills them in later via /residents/me once they have a login (see
+  // the Add Member form copy). Only required, non-empty once the resident sets them.
+  phone: z.string(),
   unit: nonEmptyString,
   tier: z.enum(['SIGNATURE', 'PRESTIGE', 'ELITE']),
   avatarSeed: nonEmptyString,
-  avatarStyle: z.string().optional(),
+  avatarStyle: z.string().nullable().optional(),
   moveInDate: dateInput,
   dietary: z.array(z.string()),
   notifications: z.boolean().optional(),
   newsletter: z.boolean().optional(),
-  emergencyName: nonEmptyString,
-  emergencyRelation: nonEmptyString,
-  emergencyPhone: nonEmptyString,
+  emergencyName: z.string(),
+  emergencyRelation: z.string(),
+  emergencyPhone: z.string(),
 })
 
 export const residentAdminUpdateSchema = z.object({

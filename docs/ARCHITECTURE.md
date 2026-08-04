@@ -482,7 +482,7 @@ classDiagram
 
 ## Credits
 
-- **Author:** QUAN7UM
+- **Author / Developer:** Brix
 - **Contributors:** none documented.
 - **Company:** not specified.
-- **License:** see [LICENSE.md](../LICENSE.md).
+- **License:** MIT — see [LICENSE.md](../LICENSE.md).

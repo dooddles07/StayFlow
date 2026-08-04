@@ -11,6 +11,7 @@ Residents book the pool and reserve dinner. The front desk knows who's arriving.
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20App-6d5efc?style=for-the-badge)](https://stay-flow-alpha.vercel.app/)
 ![Status](https://img.shields.io/badge/Status-Live-4ade80?style=for-the-badge)
 ![Portfolio Project](https://img.shields.io/badge/Type-Portfolio%20Project-fbbf24?style=for-the-badge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE.md)
 
 </div>
 
@@ -38,11 +39,11 @@ No install, no signup — just click in and look around.
 
 Pick a portal and sign in with any of these. They're demo accounts seeded with sample data — nothing here is a real person's information.
 
-| Portal | Who it's for | Email | Password |
-| --- | --- | --- | --- |
-| 🏠 Member | Residents | `member@stayflow.io` | `StayFlow2026!` |
-| 🛎️ Staff | Front desk | `staff@stayflow.io` | `StayFlow2026!` |
-| 📊 Management | Building admins | `admin@stayflow.io` | `StayFlow2026!` |
+| Portal        | Who it's for    | Email                | Password        |
+| ------------- | --------------- | -------------------- | --------------- |
+| 🏠 Member     | Residents       | `member@stayflow.io` | `StayFlow2026!` |
+| 🛎️ Staff      | Front desk      | `staff@stayflow.io`  | `StayFlow2026!` |
+| 📊 Management | Building admins | `admin@stayflow.io`  | `StayFlow2026!` |
 
 <br />
 
@@ -200,16 +201,16 @@ Full env var reference: [docs/SECURITY.md](docs/SECURITY.md#environment-variable
 
 ### Troubleshooting
 
-| Symptom | Likely cause | Fix |
-| --- | --- | --- |
-| Server exits: `Missing required env var` | `DATABASE_URL`/`JWT_SECRET` unset | Set them in the root `.env` or in Render's dashboard — there is no `server/.env` |
+| Symptom                                                        | Likely cause                                                                                      | Fix                                                                                                   |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Server exits: `Missing required env var`                       | `DATABASE_URL`/`JWT_SECRET` unset                                                                 | Set them in the root `.env` or in Render's dashboard — there is no `server/.env`                      |
 | `Environment variable not found: DATABASE_URL` from Prisma CLI | Ran `cd server && prisma ...` — Prisma looks for `.env` in the CWD, and there's none in `server/` | Run from root instead: `./server/node_modules/.bin/prisma <cmd> --schema=server/prisma/schema.prisma` |
-| `401 Invalid or expired token` after reset | `tokenVersion` bumped → old session revoked | Sign in again |
-| Stuck on "Set your password" screen after login | `mustChangePassword` still `true` — expected for a freshly management-issued login | Complete the form (or use forgot-password) — both clear the flag |
-| `429 Too many attempts` on login | rate limit / account lock | Wait window (15 min lock, 15 min login window) |
-| CORS blocked in browser | origin not in `CORS_ORIGIN` | Add exact origin to allowlist |
-| Reset link never arrives | mailer is stubbed without `RESEND_API_KEY` | Check server console (dev); set `RESEND_API_KEY` (prod) |
-| Debugging | — | Watch morgan logs + `auth_events`/`admin_action_events` tables |
+| `401 Invalid or expired token` after reset                     | `tokenVersion` bumped → old session revoked                                                       | Sign in again                                                                                         |
+| Stuck on "Set your password" screen after login                | `mustChangePassword` still `true` — expected for a freshly management-issued login                | Complete the form (or use forgot-password) — both clear the flag                                      |
+| `429 Too many attempts` on login                               | rate limit / account lock                                                                         | Wait window (15 min lock, 15 min login window)                                                        |
+| CORS blocked in browser                                        | origin not in `CORS_ORIGIN`                                                                       | Add exact origin to allowlist                                                                         |
+| Reset link never arrives                                       | mailer is stubbed without `RESEND_API_KEY`                                                        | Check server console (dev); set `RESEND_API_KEY` (prod)                                               |
+| Debugging                                                      | —                                                                                                 | Watch morgan logs + `auth_events`/`admin_action_events` tables                                        |
 
 ### Known limitations
 
@@ -223,6 +224,6 @@ Full env var reference: [docs/SECURITY.md](docs/SECURITY.md#environment-variable
 
 <div align="center">
 
-Built by **QUAN7UM** · [Live Demo](https://stay-flow-alpha.vercel.app/) · [Technical Docs](docs/ARCHITECTURE.md)
+Built by **Brix** · [Live Demo](https://stay-flow-alpha.vercel.app/) · [Technical Docs](docs/ARCHITECTURE.md) · [MIT License](LICENSE.md)
 
 </div>
