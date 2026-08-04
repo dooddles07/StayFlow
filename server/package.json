@@ -11,7 +11,8 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "seed": "node prisma/seed.js",
-    "reset-test-passwords": "node scripts/reset-test-passwords.js"
+    "reset-test-passwords": "node scripts/reset-test-passwords.js",
+    "fix-corrupted-booking": "node scripts/fix-corrupted-booking.js"
   },
   "dependencies": {
     "@prisma/client": "^6.3.0",
