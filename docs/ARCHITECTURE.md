@@ -191,7 +191,7 @@ StayFlow/
 │       ├── api/client.ts      # fetch wrapper (credentials:include)
 │       ├── store/             # zustand: auth-store, ui-store, member-profile
 │       ├── hooks/             # use-require-auth, use-portal-preference
-│       ├── mock/               # Shared TS types + the two intentionally-demo analytics charts only
+│       ├── mock/               # Shared TS domain types (no data — see live-analytics.ts for derived stats)
 │       └── {avatar,booking-slots,export-csv,session,utils}.ts
 └── server/
     ├── server.js              # Standalone API entry (dev): prisma.$connect + app.listen
@@ -215,32 +215,34 @@ StayFlow/
 
 ## Technology Stack
 
-| Purpose          | Technology                | Version   | Description                                                      |
-| ---------------- | ------------------------- | --------- | ---------------------------------------------------------------- |
-| UI framework     | React                     | ^19.2     | Component UI, SSR-capable                                        |
-| Meta-framework   | TanStack Start / Router   | latest    | File routing, SSR, server functions                              |
-| Build tool       | Vite                      | ^8.0      | Dev server + bundler                                             |
-| Language         | TypeScript                | ^6.0      | Frontend types                                                   |
-| Styling          | Tailwind CSS              | ^4.1      | Utility-first + `@tailwindcss/vite`                              |
-| UI primitives    | Radix UI / shadcn pattern | ^1.6      | Accessible components                                            |
-| Icons            | lucide-react              | ^0.577    | Icon set                                                         |
-| Charts           | Recharts                  | ^3.9      | Analytics visuals                                                |
-| Client state     | zustand (+persist)        | ^5.0      | Auth/UI stores                                                   |
-| Dates            | date-fns                  | ^4.4      | Date math, booking slots                                         |
-| QR               | qrcode                    | ^1.5      | Guest-pass QR codes                                              |
-| Toasts           | sonner                    | ^2.0      | Notifications UI                                                 |
-| Runtime          | Node.js                   | —         | Prod server + dev                                                |
-| API framework    | Express                   | ^4.21     | REST API                                                         |
-| ORM              | Prisma                    | ^6.3      | DB access + migrations                                           |
-| Database         | PostgreSQL                | —         | System of record                                                 |
-| Auth             | jsonwebtoken              | ^9.0      | JWT sign/verify                                                  |
-| Hashing          | bcryptjs                  | ^2.4      | Password hashing (cost 12)                                       |
-| Rate limiting    | express-rate-limit        | ^8.5      | Login / password-reset / password-change / email-change limiters |
-| Security headers | helmet                    | ^8.3      | HSTS, nosniff, frameguard                                        |
-| CORS             | cors                      | ^2.8      | Allowlist-based                                                  |
-| Logging          | morgan                    | ^1.10     | HTTP request logs                                                |
-| Tests            | Vitest + Testing Library  | ^4.1      | Unit/component tests                                             |
-| Lint/format      | ESLint + Prettier         | ^9 / ^3.8 | `@tanstack/eslint-config`                                        |
+| Purpose          | Technology                | Version   | Description                                                    |
+| ---------------- | ------------------------- | --------- | -------------------------------------------------------------- |
+| UI framework     | React                     | ^19.2     | Component UI, SSR-capable                                      |
+| Meta-framework   | TanStack Start / Router   | latest    | File routing, SSR, server functions                            |
+| Build tool       | Vite                      | ^8.0      | Dev server + bundler                                           |
+| Language         | TypeScript                | ^6.0      | Frontend types                                                 |
+| Styling          | Tailwind CSS              | ^4.1      | Utility-first + `@tailwindcss/vite`                            |
+| UI primitives    | Radix UI / shadcn pattern | ^1.6      | Accessible components                                          |
+| Icons            | lucide-react              | ^0.577    | Icon set                                                       |
+| Charts           | Recharts                  | ^3.9      | Analytics visuals                                              |
+| Client state     | zustand (+persist)        | ^5.0      | Auth/UI stores                                                 |
+| Dates            | date-fns                  | ^4.4      | Date math, booking slots                                       |
+| QR               | qrcode                    | ^1.5      | Guest-pass QR codes                                            |
+| Toasts           | in-house (`lib/toast.ts`) | —         | `useSyncExternalStore`-based; see note below                   |
+| Runtime          | Node.js                   | —         | Prod server + dev                                              |
+| API framework    | Express                   | ^4.21     | REST API                                                       |
+| ORM              | Prisma                    | ^6.3      | DB access + migrations                                         |
+| Database         | PostgreSQL                | —         | System of record                                               |
+| Auth             | jsonwebtoken              | ^9.0      | JWT sign/verify                                                |
+| Hashing          | bcryptjs                  | ^2.4      | Password hashing (cost 12)                                     |
+| Rate limiting    | express-rate-limit        | ^8.5      | General `/api` limiter + tighter login/password-reset limiters |
+| Security headers | helmet                    | ^8.3      | HSTS, nosniff, frameguard                                      |
+| CORS             | cors                      | ^2.8      | Allowlist-based                                                |
+| Logging          | morgan                    | ^1.10     | HTTP request logs                                              |
+| Tests            | Vitest + Testing Library  | ^4.1      | Unit/component tests                                           |
+| Lint/format      | ESLint + Prettier         | ^9 / ^3.8 | `@tanstack/eslint-config`                                      |
+
+**Why toasts are hand-rolled:** sonner's `<Toaster>` never receives its mount effect under this app's SSR shell — its internal `subscribe()` call never registers, in both the 1.x and 2.x implementations, so every `toast()` call silently no-ops. `lib/toast.ts` + `components/ui/toast-viewport.tsx` replace it with a minimal store on `useSyncExternalStore`, React's own primitive for external state + SSR, which sidesteps that class of bug entirely. Same `toast.success/error/info(message, { description? })` call shape at all 28 call sites.
 
 ## System Modules
 
@@ -475,7 +477,7 @@ classDiagram
 - **Schema change:** edit `schema.prisma` → `prisma migrate dev` from root, commit the migration folder (see [SCHEMA.md](SCHEMA.md#schema-change-workflow)) — Render applies it on deploy via `prisma migrate deploy`.
 - **Deploy:** push to GitHub → Vercel auto-builds the frontend, Render auto-builds/starts the API.
 - **Rollback:** redeploy the previous build on Vercel and/or Render; revert schema with a new down migration, never by hand-editing data or deleting an applied migration file.
-- **Rotate demo creds:** `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js --force` (`--force` is required unconditionally — the script has no way to tell a "safe" `DATABASE_URL` from production, so it always asks for confirmation).
+- **Rotate sample creds:** `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js --force` (`--force` is required unconditionally — the script has no way to tell a "safe" `DATABASE_URL` from production, so it always asks for confirmation).
 - **Create STAFF/MGMT users:** manually via seed / Prisma Studio (no API endpoint by design).
 - **Create a resident login:** MANAGEMENT-only, via the app UI (Users page → Create Login / Add Member) or `POST /residents/:id/create-login` directly — no seed/Studio step needed.
 - **Schema change via CLI:** run from repo root using server's pinned binary + explicit schema path (there's no `server/.env` for a `cd server`-relative Prisma invocation to find): `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, then commit the generated migration.

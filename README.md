@@ -37,7 +37,7 @@ No install, no signup — just click in and look around.
 
 **➜ [stay-flow-alpha.vercel.app](https://stay-flow-alpha.vercel.app/)**
 
-Pick a portal and sign in with any of these. They're demo accounts seeded with sample data — nothing here is a real person's information.
+Pick a portal and sign in with any of these sample accounts — seeded test data, not a real person's information.
 
 | Portal        | Who it's for    | Email                | Password        |
 | ------------- | --------------- | -------------------- | --------------- |

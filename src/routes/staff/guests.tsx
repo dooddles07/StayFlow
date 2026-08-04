@@ -1,14 +1,26 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
-import { toast } from 'sonner'
-import { CheckCircle2, LogOut, QrCode as QrCodeIcon, ScanLine, Search, UserCheck } from 'lucide-react'
+import { toast } from '#/lib/toast'
+import {
+  CheckCircle2,
+  LogOut,
+  QrCode as QrCodeIcon,
+  ScanLine,
+  Search,
+  UserCheck,
+} from 'lucide-react'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { StatusPill } from '#/components/stayflow/status-pill'
 import { EmptyState } from '#/components/stayflow/empty-state'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '#/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +33,13 @@ import {
   AlertDialogTrigger,
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
-import { checkInGuest, checkOutGuest, getAllGuests, setGuestStatus  } from '#/lib/api/guest'
-import type {GuestView} from '#/lib/api/guest';
+import {
+  checkInGuest,
+  checkOutGuest,
+  getAllGuests,
+  setGuestStatus,
+} from '#/lib/api/guest'
+import type { GuestView } from '#/lib/api/guest'
 import { timeToMinutes, toDateKey } from '#/lib/booking-slots'
 
 export const Route = createFileRoute('/staff/guests')({
@@ -30,12 +47,15 @@ export const Route = createFileRoute('/staff/guests')({
   component: StaffGuestsPage,
 })
 
-const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const errText = (err: unknown) =>
+  err instanceof ApiError ? err.message : 'Something went wrong. Try again.'
 
 function StaffGuestsPage() {
   const today = toDateKey(new Date())
   const [guests, setGuests] = React.useState<GuestView[]>([])
-  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  )
   const [tab, setTab] = React.useState<'arriving' | 'history'>('arriving')
   const [scannerOpen, setScannerOpen] = React.useState(false)
   const [passInput, setPassInput] = React.useState('')
@@ -77,7 +97,12 @@ function StaffGuestsPage() {
   // guest who checked in before midnight fall into History (no action buttons) with
   // no way to ever check them out.
   const arriving = guests
-    .filter((g) => g.status === 'checked-in' || (g.arrivalDate.slice(0, 10) === today && (g.status === 'pending' || g.status === 'approved')))
+    .filter(
+      (g) =>
+        g.status === 'checked-in' ||
+        (g.arrivalDate.slice(0, 10) === today &&
+          (g.status === 'pending' || g.status === 'approved')),
+    )
     .filter(matchesQuery)
     .sort((a, b) => timeToMinutes(a.arrivalTime) - timeToMinutes(b.arrivalTime))
 
@@ -86,7 +111,11 @@ function StaffGuestsPage() {
     .filter(matchesQuery)
     .sort((a, b) => b.arrivalDate.localeCompare(a.arrivalDate))
 
-  async function withBusy(id: string, action: () => Promise<GuestView>, successMessage: string) {
+  async function withBusy(
+    id: string,
+    action: () => Promise<GuestView>,
+    successMessage: string,
+  ) {
     if (busyRef.current.has(id)) return
     busyRef.current.add(id)
     setBusyIds(new Set(busyRef.current))
@@ -102,12 +131,17 @@ function StaffGuestsPage() {
     }
   }
 
-  const approve = (id: string) => withBusy(id, () => setGuestStatus(id, 'approved'), 'Guest approved')
-  const checkIn = (id: string) => withBusy(id, () => checkInGuest(id), 'Guest checked in')
-  const checkOut = (id: string) => withBusy(id, () => checkOutGuest(id), 'Guest checked out')
+  const approve = (id: string) =>
+    withBusy(id, () => setGuestStatus(id, 'approved'), 'Guest approved')
+  const checkIn = (id: string) =>
+    withBusy(id, () => checkInGuest(id), 'Guest checked in')
+  const checkOut = (id: string) =>
+    withBusy(id, () => checkOutGuest(id), 'Guest checked out')
 
   function handleScanLookup() {
-    const guest = guests.find((g) => g.passNumber.toLowerCase() === passInput.trim().toLowerCase())
+    const guest = guests.find(
+      (g) => g.passNumber.toLowerCase() === passInput.trim().toLowerCase(),
+    )
     if (!guest) {
       toast.error('Pass number not found')
       return
@@ -115,7 +149,9 @@ function StaffGuestsPage() {
     // Server now rejects this too, but checking client-side gives an immediate,
     // specific error instead of a generic failure toast after a round trip.
     if (guest.status !== 'approved') {
-      toast.error(`${guest.name}'s pass is ${guest.status} — only approved guests can be checked in.`)
+      toast.error(
+        `${guest.name}'s pass is ${guest.status} — only approved guests can be checked in.`,
+      )
       return
     }
     checkIn(guest.id)
@@ -130,7 +166,11 @@ function StaffGuestsPage() {
         title="Guests"
         description="Check guests in and out of the community."
         actions={
-          <Button size="lg" className="gap-2 bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => setScannerOpen(true)}>
+          <Button
+            size="lg"
+            className="gap-2 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+            onClick={() => setScannerOpen(true)}
+          >
             <ScanLine className="size-4" />
             Check In
           </Button>
@@ -148,12 +188,22 @@ function StaffGuestsPage() {
         />
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mb-6">
+      <Tabs
+        value={tab}
+        onValueChange={(v) => setTab(v as typeof tab)}
+        className="mb-6"
+      >
         <TabsList className="bg-surface">
-          <TabsTrigger value="arriving" className="data-[state=active]:bg-accent-indigo/20 data-[state=active]:text-accent-gold">
+          <TabsTrigger
+            value="arriving"
+            className="data-[state=active]:bg-accent-indigo/20 data-[state=active]:text-accent-gold"
+          >
             Arriving Today
           </TabsTrigger>
-          <TabsTrigger value="history" className="data-[state=active]:bg-accent-indigo/20 data-[state=active]:text-accent-gold">
+          <TabsTrigger
+            value="history"
+            className="data-[state=active]:bg-accent-indigo/20 data-[state=active]:text-accent-gold"
+          >
             History
           </TabsTrigger>
         </TabsList>
@@ -162,58 +212,105 @@ function StaffGuestsPage() {
       {status === 'loading' ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl border border-border bg-surface" />
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-2xl border border-border bg-surface"
+            />
           ))}
         </div>
       ) : status === 'error' ? (
         <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-          <p className="text-sm text-muted-text">We couldn't load guests right now.</p>
-          <Button onClick={load} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <p className="text-sm text-muted-text">
+            We couldn't load guests right now.
+          </p>
+          <Button
+            onClick={load}
+            className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             Retry
           </Button>
         </div>
       ) : tab === 'arriving' ? (
         arriving.length === 0 ? (
-          <EmptyState icon={UserCheck} title={q ? 'No guests match your search' : 'No guests arriving today'} />
+          <EmptyState
+            icon={UserCheck}
+            title={
+              q ? 'No guests match your search' : 'No guests arriving today'
+            }
+          />
         ) : (
           <div className="space-y-3">
             {arriving.map((guest) => {
               const busy = busyIds.has(guest.id)
               return (
-                <div key={guest.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4">
+                <div
+                  key={guest.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4"
+                >
                   <div>
-                    <p className="text-sm font-medium text-foreground">{guest.name}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {guest.name}
+                    </p>
                     <p className="text-xs text-muted-text">
-                      Hosted by {guest.hostName ?? 'Resident'} · {guest.arrivalTime} · Pass {guest.passNumber}
+                      Hosted by {guest.hostName ?? 'Resident'} ·{' '}
+                      {guest.arrivalTime} · Pass {guest.passNumber}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <StatusPill status={guest.status} />
                     {guest.status === 'pending' && (
-                      <Button size="sm" variant="outline" disabled={busy} className="border-border text-foreground hover:bg-surface-hover" onClick={() => approve(guest.id)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        className="border-border text-foreground hover:bg-surface-hover"
+                        onClick={() => approve(guest.id)}
+                      >
                         {busy ? 'Approving…' : 'Approve'}
                       </Button>
                     )}
                     {guest.status === 'approved' && (
-                      <Button size="sm" disabled={busy} className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => checkIn(guest.id)}>
-                        <CheckCircle2 className="size-3.5" /> {busy ? 'Checking in…' : 'Check In'}
+                      <Button
+                        size="sm"
+                        disabled={busy}
+                        className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+                        onClick={() => checkIn(guest.id)}
+                      >
+                        <CheckCircle2 className="size-3.5" />{' '}
+                        {busy ? 'Checking in…' : 'Check In'}
                       </Button>
                     )}
                     {guest.status === 'checked-in' && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline" disabled={busy} className="gap-1.5 border-border text-foreground hover:bg-surface-hover">
-                            <LogOut className="size-3.5" /> {busy ? 'Checking out…' : 'Check Out'}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={busy}
+                            className="gap-1.5 border-border text-foreground hover:bg-surface-hover"
+                          >
+                            <LogOut className="size-3.5" />{' '}
+                            {busy ? 'Checking out…' : 'Check Out'}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="border-border bg-surface">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Check out {guest.name}?</AlertDialogTitle>
-                            <AlertDialogDescription>This marks their visit as complete. Make sure they're actually leaving before confirming.</AlertDialogDescription>
+                            <AlertDialogTitle>
+                              Check out {guest.name}?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This marks their visit as complete. Make sure
+                              they're actually leaving before confirming.
+                            </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="border-border">Not yet</AlertDialogCancel>
-                            <AlertDialogAction className="bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => checkOut(guest.id)}>
+                            <AlertDialogCancel className="border-border">
+                              Not yet
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+                              onClick={() => checkOut(guest.id)}
+                            >
                               Check Out
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -227,15 +324,26 @@ function StaffGuestsPage() {
           </div>
         )
       ) : history.length === 0 ? (
-        <EmptyState icon={UserCheck} title={q ? 'No guests match your search' : 'No guest history yet'} />
+        <EmptyState
+          icon={UserCheck}
+          title={q ? 'No guests match your search' : 'No guest history yet'}
+        />
       ) : (
         <>
           <div className="space-y-3 sm:hidden">
             {history.map((guest) => (
-              <div key={guest.id} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4">
+              <div
+                key={guest.id}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4"
+              >
                 <div>
-                  <p className="text-sm font-medium text-foreground">{guest.name}</p>
-                  <p className="text-xs text-muted-text">{guest.arrivalDate.slice(0, 10)} · Hosted by {guest.hostName ?? 'Resident'}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {guest.name}
+                  </p>
+                  <p className="text-xs text-muted-text">
+                    {guest.arrivalDate.slice(0, 10)} · Hosted by{' '}
+                    {guest.hostName ?? 'Resident'}
+                  </p>
                 </div>
                 <StatusPill status={guest.status} />
               </div>
@@ -255,8 +363,12 @@ function StaffGuestsPage() {
                 {history.map((guest) => (
                   <tr key={guest.id}>
                     <td className="px-4 py-3 text-foreground">{guest.name}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-muted-text">{guest.arrivalDate.slice(0, 10)}</td>
-                    <td className="px-4 py-3 text-muted-text">{guest.hostName ?? 'Resident'}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-text">
+                      {guest.arrivalDate.slice(0, 10)}
+                    </td>
+                    <td className="px-4 py-3 text-muted-text">
+                      {guest.hostName ?? 'Resident'}
+                    </td>
                     <td className="px-4 py-3">
                       <StatusPill status={guest.status} />
                     </td>
@@ -277,7 +389,9 @@ function StaffGuestsPage() {
             <span className="flex size-16 items-center justify-center rounded-full bg-accent-indigo/15 text-accent-gold">
               <QrCodeIcon className="size-7" />
             </span>
-            <p className="text-sm text-muted-text">Type the guest's pass number below to check them in.</p>
+            <p className="text-sm text-muted-text">
+              Type the guest's pass number below to check them in.
+            </p>
           </div>
           <div className="mt-2 flex gap-2">
             <Input
@@ -287,7 +401,10 @@ function StaffGuestsPage() {
               className="border-border bg-canvas"
               onKeyDown={(e) => e.key === 'Enter' && handleScanLookup()}
             />
-            <Button onClick={handleScanLookup} className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+            <Button
+              onClick={handleScanLookup}
+              className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+            >
               <Search className="size-4" />
               Look up
             </Button>

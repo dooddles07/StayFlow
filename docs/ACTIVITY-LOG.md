@@ -1,5 +1,35 @@
 # Activity Log
 
+## 2026-08-04 — Real-product copy pass, full QA sweep, toast system replaced
+
+Ran a full functional QA pass across all three portals (auth permutations, cross-role authorization blocks, CRUD flows per portal, account lockout, login rate limiting) plus a copy pass removing "demo" framing app-wide, per request to make the deployed instance read as a real product rather than a portfolio demo shell.
+
+### Toast notifications were completely broken app-wide (found during QA, root-caused, fixed)
+
+Every `toast.success()`/`toast.error()` call in the app — 28 call sites, every portal — silently did nothing. No visual symptom beyond "nothing happens after save," easy to miss without deliberately checking.
+
+Root cause, confirmed via direct instrumentation of the `sonner` package: `<Toaster>`'s mount effect (`useEffect(() => ToastState.subscribe(...), [])`) never fired, so its internal subscriber count stayed at 0 regardless of how many toasts were pushed. Verified this wasn't a false read by exposing the `Observer` instance on `window` and checking `subscribers.length` directly (bypassing console logging, which was itself unreliable — see below). Ruled out, in order: HMR/dev-cache artifacts (full server restarts + cleared Vite dep cache, still broken), module duplication (only one `sonner` copy in `node_modules`, confirmed via `npm ls`), a sonner 2.x regression (downgraded to the stable 1.7.4 line — identical failure), `ClientOnly`-forced fresh mounting (still broken), and StrictMode double-invoke breaking the subscribe/cleanup pattern (a hand-rolled reproduction of the exact same pattern worked correctly). No thrown exception at any point — confirmed uncaught errors in this exact async context are visible via a calibration throw, so this was a silent no-op, not a crash.
+
+Replaced sonner entirely with an in-house store (`src/lib/toast.ts` + `src/components/ui/toast-viewport.tsx`) built on `useSyncExternalStore` — React's own primitive for external state + SSR, which sidesteps this whole bug class. Same `toast.success/error/info(message, { description? })` call shape, so only the import path changed at all 28 call sites. Verified working end-to-end after the fix, live, across member/staff/management flows.
+
+Also caught mid-investigation: `browser_evaluate`-injected `console.log` calls were unreliable for diagnosis in this environment — likely intercepted by `@tanstack/devtools-vite`'s console-pipe panel before reaching the outer console listener. Direct state inspection (exposing objects on `window`) was the reliable technique; noting this since it cost real debugging time before the switch.
+
+### "Demo" framing removed app-wide
+
+- Management login splash: replaced three fabricated KPI numbers (`96% Occupancy`, `72 NPS`, `3 Open tickets` — no ticket or survey system exists in this app) with the same capability-bullet-list pattern already used on the staff/member login splashes.
+- Login footers ("Demo access — ask your administrator") and the portal-picker footer ("Demo data. Sign in...") reworded to real-product phrasing; no functional change (self-registration was already off).
+- README "Try It Live" section and `docs/SECURITY.md`'s sample-login section reworded away from "demo accounts" language; the actual security disclosures (shared writable DB, rotate before real use) are unchanged, just no longer prefixed with "demo."
+- Removed the now-fully-dead `demo` prop and "Demo data" badge from `SectionHeader` — no caller has passed it since the analytics charts were converted to real data.
+
+### QA findings that were not bugs (worth recording so they aren't re-investigated)
+
+- Local dev quirk: Nitro's dev server claims port 4000 by default regardless of the frontend's `--port 3000` flag, colliding with the backend's own port 4000. Not a code bug — just start the backend first and let the frontend fall back to 4001, temporarily widening `CORS_ORIGIN` for the session.
+- `npm run build`'s `prisma generate` step can fail with `EPERM` on Windows if a running `node --watch server/server.js` still has the query-engine DLL open. Stop the backend first.
+
+### Verification
+
+`lint`, `lint:server`, `typecheck`, `test` (42/42), and `build` all pass. Full manual QA: 3-portal auth matrix, all 6 cross-role authorization blocks, member facility/dining/guest/event/profile flows, staff booking/guest approval, management resident create-login + forced-password-change gate + account lockout (5 fails → 429), login rate limiting (confirmed live by hitting it). Test data created during the pass was cleaned up afterward.
+
 ## 2026-08-04 — Full code + security review, oversized-file refactor
 
 Ran a full code review (backend security audit, backend code-quality pass, frontend review — 3 parallel agents, read-only) since there was no open PR/diff to review against; this covered the whole codebase as it stood. Fixed the findings, then independently re-verified every fix with a second round of agents before closing out.

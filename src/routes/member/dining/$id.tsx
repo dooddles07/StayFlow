@@ -1,11 +1,17 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { ArrowLeft, MapPin, Star } from 'lucide-react'
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,13 +42,32 @@ export const Route = createFileRoute('/member/dining/$id')({
       throw err
     }
   },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.restaurant.name ?? 'Restaurant'} — StayFlow` }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: `${loaderData?.restaurant.name ?? 'Restaurant'} — StayFlow` },
+    ],
+  }),
   component: RestaurantDetail,
 })
 
-const TIME_OPTIONS = ['11:30 AM', '12:30 PM', '1:30 PM', '5:30 PM', '6:30 PM', '7:30 PM', '8:30 PM', '9:30 PM']
-const SEATING_OPTIONS: DiningReservation['seating'][] = ['Indoor', 'Outdoor', 'Private Room', 'Bar']
-const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const TIME_OPTIONS = [
+  '11:30 AM',
+  '12:30 PM',
+  '1:30 PM',
+  '5:30 PM',
+  '6:30 PM',
+  '7:30 PM',
+  '8:30 PM',
+  '9:30 PM',
+]
+const SEATING_OPTIONS: DiningReservation['seating'][] = [
+  'Indoor',
+  'Outdoor',
+  'Private Room',
+  'Bar',
+]
+const errText = (err: unknown) =>
+  err instanceof ApiError ? err.message : 'Something went wrong. Try again.'
 
 function RestaurantDetail() {
   const { restaurant } = Route.useLoaderData()
@@ -54,7 +79,8 @@ function RestaurantDetail() {
   const [partySize, setPartySize] = React.useState(2)
   const [occasion, setOccasion] = React.useState('')
   const [dietary, setDietary] = React.useState('')
-  const [seating, setSeating] = React.useState<DiningReservation['seating']>('Indoor')
+  const [seating, setSeating] =
+    React.useState<DiningReservation['seating']>('Indoor')
   const [submitting, setSubmitting] = React.useState(false)
   // Mirrors submitting but checked/updated synchronously — two clicks before React
   // re-renders (and disables the button) would both read the same stale false and
@@ -100,7 +126,10 @@ function RestaurantDetail() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <Link to="/member/dining" className="mb-4 inline-flex items-center gap-1.5 text-xs font-medium text-muted-text hover:text-foreground">
+      <Link
+        to="/member/dining"
+        className="mb-4 inline-flex items-center gap-1.5 text-xs font-medium text-muted-text hover:text-foreground"
+      >
         <ArrowLeft className="size-3.5" />
         Back to Dining
       </Link>
@@ -118,8 +147,12 @@ function RestaurantDetail() {
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-canvas via-canvas/20 to-transparent" />
         <div className="absolute bottom-4 left-5 right-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="mb-1 text-xs font-medium text-accent-gold">{restaurant.cuisine}</p>
-            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">{restaurant.name}</h1>
+            <p className="mb-1 text-xs font-medium text-accent-gold">
+              {restaurant.cuisine}
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              {restaurant.name}
+            </h1>
             <p className="mt-1 flex items-center gap-1 text-xs text-white/80">
               <MapPin className="size-3.5" />
               {restaurant.location}
@@ -135,23 +168,41 @@ function RestaurantDetail() {
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <h2 className="text-sm font-semibold text-foreground">About</h2>
-          <p className="text-sm leading-relaxed text-muted-text">{restaurant.description}</p>
-          <p className="text-xs text-muted-text">Open {restaurant.openHours} · {restaurant.priceRange}</p>
+          <p className="text-sm leading-relaxed text-muted-text">
+            {restaurant.description}
+          </p>
+          <p className="text-xs text-muted-text">
+            Open {restaurant.openHours} · {restaurant.priceRange}
+          </p>
         </div>
 
-        <form onSubmit={openConfirm} className="animate-fade-in space-y-4 rounded-2xl border border-border bg-surface p-5">
-          <h2 className="text-sm font-semibold text-foreground">Reserve a Table</h2>
+        <form
+          onSubmit={openConfirm}
+          className="animate-fade-in space-y-4 rounded-2xl border border-border bg-surface p-5"
+        >
+          <h2 className="text-sm font-semibold text-foreground">
+            Reserve a Table
+          </h2>
 
           <div>
             <Label className="mb-1.5 text-xs text-muted-text">Date</Label>
-            <Select value={toDateKey(date)} onValueChange={(v) => setDate(days.find((d) => toDateKey(d) === v) ?? days[0])}>
+            <Select
+              value={toDateKey(date)}
+              onValueChange={(v) =>
+                setDate(days.find((d) => toDateKey(d) === v) ?? days[0])
+              }
+            >
               <SelectTrigger className="border-border bg-canvas">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="border-border bg-surface text-foreground">
                 {days.map((d) => (
                   <SelectItem key={toDateKey(d)} value={toDateKey(d)}>
-                    {d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    {d.toLocaleDateString(undefined, {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -175,7 +226,10 @@ function RestaurantDetail() {
           </div>
 
           <div>
-            <Label htmlFor="party-size" className="mb-1.5 text-xs text-muted-text">
+            <Label
+              htmlFor="party-size"
+              className="mb-1.5 text-xs text-muted-text"
+            >
               Party size
             </Label>
             <Input
@@ -184,19 +238,29 @@ function RestaurantDetail() {
               min={1}
               max={restaurant.maxPartySize}
               value={partySize}
-              onChange={(e) => setPartySize(clampPartySize(e.target.value, restaurant.maxPartySize))}
+              onChange={(e) =>
+                setPartySize(
+                  clampPartySize(e.target.value, restaurant.maxPartySize),
+                )
+              }
               className="border-border bg-canvas"
             />
             {partySize >= restaurant.maxPartySize && (
               <p className="mt-1.5 text-xs text-muted-text">
-                For parties larger than {restaurant.maxPartySize}, call the restaurant directly to arrange private dining.
+                For parties larger than {restaurant.maxPartySize}, call the
+                restaurant directly to arrange private dining.
               </p>
             )}
           </div>
 
           <div>
             <Label className="mb-1.5 text-xs text-muted-text">Seating</Label>
-            <Select value={seating} onValueChange={(v) => setSeating(v as DiningReservation['seating'])}>
+            <Select
+              value={seating}
+              onValueChange={(v) =>
+                setSeating(v as DiningReservation['seating'])
+              }
+            >
               <SelectTrigger className="border-border bg-canvas">
                 <SelectValue />
               </SelectTrigger>
@@ -211,7 +275,10 @@ function RestaurantDetail() {
           </div>
 
           <div>
-            <Label htmlFor="occasion" className="mb-1.5 text-xs text-muted-text">
+            <Label
+              htmlFor="occasion"
+              className="mb-1.5 text-xs text-muted-text"
+            >
               Occasion (optional)
             </Label>
             <Input
@@ -236,7 +303,11 @@ function RestaurantDetail() {
             />
           </div>
 
-          <Button type="submit" disabled={submitting || !profile} className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <Button
+            type="submit"
+            disabled={submitting || !profile}
+            className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             Request Reservation
           </Button>
         </form>
@@ -250,9 +321,16 @@ function RestaurantDetail() {
               <span className="mt-2 flex flex-col gap-1 text-sm text-foreground">
                 <span className="font-medium">{restaurant.name}</span>
                 <span>
-                  {date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} · {time}
+                  {date.toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                  })}{' '}
+                  · {time}
                 </span>
-                <span className="text-xs text-muted-text">Party of {partySize} · {seating}</span>
+                <span className="text-xs text-muted-text">
+                  Party of {partySize} · {seating}
+                </span>
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -260,7 +338,11 @@ function RestaurantDetail() {
             <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-surface-hover">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction disabled={submitting} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={handleConfirmSubmit}>
+            <AlertDialogAction
+              disabled={submitting}
+              className="bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+              onClick={handleConfirmSubmit}
+            >
               {submitting ? 'Requesting…' : 'Confirm Reservation'}
             </AlertDialogAction>
           </AlertDialogFooter>

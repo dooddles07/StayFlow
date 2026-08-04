@@ -1,5 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowLeft, ArrowUpRight, BarChart3 } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  BarChart3,
+  ClipboardList,
+  ShieldCheck,
+  Users,
+} from 'lucide-react'
 import { LoginForm } from '#/components/stayflow/login-form'
 
 export const Route = createFileRoute('/login/management')({
@@ -9,10 +16,10 @@ export const Route = createFileRoute('/login/management')({
   component: ManagementLogin,
 })
 
-const kpis = [
-  { label: 'Occupancy', value: '96%' },
-  { label: 'NPS', value: '72' },
-  { label: 'Open tickets', value: '3' },
+const capabilities = [
+  { icon: Users, label: 'Resident and staff directory' },
+  { icon: ClipboardList, label: 'Community-wide analytics and reporting' },
+  { icon: ShieldCheck, label: 'Full administrative control' },
 ]
 
 function ManagementLogin() {
@@ -39,20 +46,28 @@ function ManagementLogin() {
           <BarChart3 className="size-6" />
         </div>
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">Management Console</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Executive oversight, in one place.</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
+            Management Console
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+            Executive oversight, in one place.
+          </h1>
           <p className="mt-3 text-sm text-muted-text">
-            Community KPIs, analytics, and full administrative control over the platform.
+            Community KPIs, analytics, and full administrative control over the
+            platform.
           </p>
         </div>
-        <div className="flex gap-4">
-          {kpis.map((kpi) => (
-            <div key={kpi.label} className="rounded-xl border border-border bg-surface px-4 py-3">
-              <p className="text-lg font-semibold text-accent-gold">{kpi.value}</p>
-              <p className="text-[11px] text-muted-text">{kpi.label}</p>
-            </div>
+        <ul className="space-y-3">
+          {capabilities.map((item) => (
+            <li
+              key={item.label}
+              className="flex items-center gap-3 text-sm text-muted-text"
+            >
+              <item.icon className="size-4 shrink-0 text-accent-gold" />
+              {item.label}
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
 
       <div className="relative w-full max-w-sm animate-fade-in">
@@ -60,12 +75,18 @@ function ManagementLogin() {
           <div className="flex size-11 items-center justify-center rounded-xl bg-accent-gold/15 text-accent-gold">
             <BarChart3 className="size-5" />
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">Management Console</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
+            Management Console
+          </p>
         </div>
 
         <div className="rounded-2xl border border-border bg-surface p-6 shadow-xl">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">Sign in</h2>
-          <p className="mt-1 mb-6 text-sm text-muted-text">Authorized personnel only.</p>
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+            Sign in
+          </h2>
+          <p className="mt-1 mb-6 text-sm text-muted-text">
+            Authorized personnel only.
+          </p>
           <LoginForm
             portal="management"
             portalLabel="Management"

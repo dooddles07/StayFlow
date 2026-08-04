@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { Camera, Shuffle } from 'lucide-react'
 import { UserAvatar } from '#/components/stayflow/user-avatar'
 import { Button } from '#/components/ui/button'

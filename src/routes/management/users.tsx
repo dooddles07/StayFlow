@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { Plus } from 'lucide-react'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { Button } from '#/components/ui/button'

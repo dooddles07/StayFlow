@@ -45,7 +45,9 @@ function MemberLogin() {
           <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-accent-gold/15 text-accent-gold">
             <UserCircle2 className="size-7" />
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">Member Portal</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
+            Member Portal
+          </p>
           <h1
             className="mt-2 text-3xl font-medium tracking-tight text-foreground sm:text-4xl"
             style={{ fontFamily: "'Playfair Display', serif" }}
@@ -53,7 +55,8 @@ function MemberLogin() {
             Welcome back
           </h1>
           <p className="mt-3 max-w-xs text-sm text-muted-text">
-            Sign in to book facilities, reserve dining, manage guests, and stay in the loop on community life.
+            Sign in to book facilities, reserve dining, manage guests, and stay
+            in the loop on community life.
           </p>
         </div>
 
@@ -65,7 +68,9 @@ function MemberLogin() {
           />
         </div>
 
-        <p className="mt-6 text-center text-[11px] text-muted-text/60">Demo access — ask your administrator for credentials.</p>
+        <p className="mt-6 text-center text-[11px] text-muted-text/60">
+          Don't have an account? Contact your building's management office.
+        </p>
       </div>
     </div>
   )

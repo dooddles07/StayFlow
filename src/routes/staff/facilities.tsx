@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { StatusPill } from '#/components/stayflow/status-pill'
 import { Button } from '#/components/ui/button'
@@ -16,12 +16,17 @@ export const Route = createFileRoute('/staff/facilities')({
 })
 
 const statusOptions: FacilityStatus[] = ['open', 'maintenance', 'closed']
-const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const errText = (err: unknown) =>
+  err instanceof ApiError ? err.message : 'Something went wrong. Try again.'
 
 function StaffFacilitiesPage() {
   const [facilities, setFacilities] = React.useState<Facility[]>([])
-  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
-  const [reasonDrafts, setReasonDrafts] = React.useState<Record<string, string>>({})
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  )
+  const [reasonDrafts, setReasonDrafts] = React.useState<
+    Record<string, string | undefined>
+  >({})
   const [savingId, setSavingId] = React.useState<string | null>(null)
   // Mirrors savingId but checked/updated synchronously — two clicks (on different
   // facilities) before React re-renders would both read the same stale null savingId
@@ -47,11 +52,16 @@ function StaffFacilitiesPage() {
 
   React.useEffect(() => load(), [load])
 
-  async function updateStatus(id: string, next: FacilityStatus, currentReason?: string) {
+  async function updateStatus(
+    id: string,
+    next: FacilityStatus,
+    currentReason?: string,
+  ) {
     if (savingRef.current) return
     savingRef.current = id
     setSavingId(id)
-    const reason = next === 'open' ? undefined : (reasonDrafts[id] ?? currentReason)
+    const reason =
+      next === 'open' ? undefined : (reasonDrafts[id] ?? currentReason)
     try {
       const updated = await setFacilityStatus(id, next, reason)
       setFacilities((prev) => prev.map((f) => (f.id === id ? updated : f)))
@@ -66,29 +76,48 @@ function StaffFacilitiesPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader eyebrow="Amenities" title="Facilities" description="Update facility availability for residents in real time." />
+      <PageHeader
+        eyebrow="Amenities"
+        title="Facilities"
+        description="Update facility availability for residents in real time."
+      />
 
       {status === 'loading' ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl border border-border bg-surface" />
+            <div
+              key={i}
+              className="h-24 animate-pulse rounded-2xl border border-border bg-surface"
+            />
           ))}
         </div>
       ) : status === 'error' ? (
         <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-          <p className="text-sm text-muted-text">We couldn't load facilities right now.</p>
-          <Button onClick={load} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <p className="text-sm text-muted-text">
+            We couldn't load facilities right now.
+          </p>
+          <Button
+            onClick={load}
+            className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             Retry
           </Button>
         </div>
       ) : (
         <div className="space-y-3">
           {facilities.map((facility) => (
-            <div key={facility.id} className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+            <div
+              key={facility.id}
+              className="rounded-2xl border border-border bg-surface p-4 sm:p-5"
+            >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-foreground">{facility.name}</p>
-                  <p className="text-xs text-muted-text">{facility.location} · {facility.category}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {facility.name}
+                  </p>
+                  <p className="text-xs text-muted-text">
+                    {facility.location} · {facility.category}
+                  </p>
                 </div>
                 <StatusPill status={facility.status} />
               </div>
@@ -99,7 +128,9 @@ function StaffFacilitiesPage() {
                     key={s}
                     type="button"
                     disabled={savingId === facility.id}
-                    onClick={() => updateStatus(facility.id, s, facility.statusReason)}
+                    onClick={() =>
+                      updateStatus(facility.id, s, facility.statusReason)
+                    }
                     className={cn(
                       'rounded-full border px-3 py-1.5 text-xs font-medium capitalize transition-colors disabled:cursor-not-allowed disabled:opacity-50',
                       facility.status === s
@@ -114,9 +145,15 @@ function StaffFacilitiesPage() {
                 {facility.status !== 'open' && (
                   <div className="flex flex-1 min-w-[200px] items-center gap-2">
                     <Input
-                      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- reasonDrafts is a plain index signature, entry may not exist yet
-                      value={reasonDrafts[facility.id] ?? facility.statusReason ?? ''}
-                      onChange={(e) => setReasonDrafts((prev) => ({ ...prev, [facility.id]: e.target.value }))}
+                      value={
+                        reasonDrafts[facility.id] ?? facility.statusReason ?? ''
+                      }
+                      onChange={(e) =>
+                        setReasonDrafts((prev) => ({
+                          ...prev,
+                          [facility.id]: e.target.value,
+                        }))
+                      }
                       placeholder="Reason (e.g. resurfacing courts)"
                       className="h-8 border-border bg-canvas text-xs"
                     />
@@ -125,7 +162,13 @@ function StaffFacilitiesPage() {
                       variant="outline"
                       disabled={savingId === facility.id}
                       className="h-8 shrink-0 border-border text-xs text-foreground hover:bg-surface-hover"
-                      onClick={() => updateStatus(facility.id, facility.status, reasonDrafts[facility.id])}
+                      onClick={() =>
+                        updateStatus(
+                          facility.id,
+                          facility.status,
+                          reasonDrafts[facility.id],
+                        )
+                      }
                     >
                       Save reason
                     </Button>

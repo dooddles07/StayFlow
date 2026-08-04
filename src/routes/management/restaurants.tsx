@@ -1,14 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Textarea } from '#/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '#/components/ui/sheet'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '#/components/ui/sheet'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +30,12 @@ import {
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
-import { createRestaurant, deleteRestaurant, getRestaurants, updateRestaurant } from '#/lib/api/restaurant'
+import {
+  createRestaurant,
+  deleteRestaurant,
+  getRestaurants,
+  updateRestaurant,
+} from '#/lib/api/restaurant'
 import { getAllTables } from '#/lib/api/table'
 import { clampPositiveInt } from '#/lib/booking-slots'
 import type { DiningTable, Restaurant } from '#/lib/mock/types'
@@ -30,7 +46,8 @@ export const Route = createFileRoute('/management/restaurants')({
 })
 
 const priceRanges: Restaurant['priceRange'][] = ['$', '$$', '$$$', '$$$$']
-const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const errText = (err: unknown) =>
+  err instanceof ApiError ? err.message : 'Something went wrong. Try again.'
 const DEFAULT_RESTAURANT_IMAGE = '/images/restaurants/ember-oak.webp'
 
 function newDraft(): Restaurant {
@@ -51,9 +68,13 @@ function newDraft(): Restaurant {
 function RestaurantsPage() {
   const [restaurants, setRestaurants] = React.useState<Restaurant[]>([])
   const [tables, setTables] = React.useState<DiningTable[]>([])
-  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  )
   const [editing, setEditing] = React.useState<Restaurant | null>(null)
-  const [deleteTarget, setDeleteTarget] = React.useState<Restaurant | null>(null)
+  const [deleteTarget, setDeleteTarget] = React.useState<Restaurant | null>(
+    null,
+  )
   const [saving, setSaving] = React.useState(false)
   // Mirror saving/delete-in-flight but checked/updated synchronously — two clicks
   // before React re-renders (and disables the button) would both read the same
@@ -83,7 +104,11 @@ function RestaurantsPage() {
 
   async function save() {
     if (!editing || savingRef.current) return
-    if (editing.name.trim() === '' || editing.cuisine.trim() === '' || editing.location.trim() === '') {
+    if (
+      editing.name.trim() === '' ||
+      editing.cuisine.trim() === '' ||
+      editing.location.trim() === ''
+    ) {
       toast.error('Name, cuisine, and location are required.')
       return
     }
@@ -101,10 +126,14 @@ function RestaurantsPage() {
         location: editing.location.trim(),
         maxPartySize: editing.maxPartySize,
       }
-      const saved = editing.id ? await updateRestaurant(editing.id, payload) : await createRestaurant(payload)
+      const saved = editing.id
+        ? await updateRestaurant(editing.id, payload)
+        : await createRestaurant(payload)
       setRestaurants((prev) => {
         const exists = prev.some((r) => r.id === saved.id)
-        const next = exists ? prev.map((r) => (r.id === saved.id ? saved : r)) : [...prev, saved]
+        const next = exists
+          ? prev.map((r) => (r.id === saved.id ? saved : r))
+          : [...prev, saved]
         return next.sort((a, b) => a.name.localeCompare(b.name))
       })
       toast.success(editing.id ? 'Restaurant updated' : 'Restaurant added')
@@ -140,7 +169,10 @@ function RestaurantsPage() {
         title="Restaurants"
         description="Manage dining venues, tables, and menus."
         actions={
-          <Button className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => setEditing(newDraft())}>
+          <Button
+            className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+            onClick={() => setEditing(newDraft())}
+          >
             <Plus className="size-4" /> Add Restaurant
           </Button>
         }
@@ -149,13 +181,21 @@ function RestaurantsPage() {
       {status === 'loading' ? (
         <div className="grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="h-32 animate-pulse rounded-2xl border border-border bg-surface" />
+            <div
+              key={i}
+              className="h-32 animate-pulse rounded-2xl border border-border bg-surface"
+            />
           ))}
         </div>
       ) : status === 'error' ? (
         <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-          <p className="text-sm text-muted-text">We couldn't load restaurants right now.</p>
-          <Button onClick={load} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <p className="text-sm text-muted-text">
+            We couldn't load restaurants right now.
+          </p>
+          <Button
+            onClick={load}
+            className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             Retry
           </Button>
         </div>
@@ -166,13 +206,22 @@ function RestaurantsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {restaurants.map((restaurant) => {
-            const tableCount = tables.filter((t) => t.restaurantId === restaurant.id).length
+            const tableCount = tables.filter(
+              (t) => t.restaurantId === restaurant.id,
+            ).length
             return (
-              <div key={restaurant.id} className="rounded-2xl border border-border bg-surface p-5">
+              <div
+                key={restaurant.id}
+                className="rounded-2xl border border-border bg-surface p-5"
+              >
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium text-foreground">{restaurant.name}</p>
-                    <p className="text-xs text-muted-text">{restaurant.cuisine}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {restaurant.name}
+                    </p>
+                    <p className="text-xs text-muted-text">
+                      {restaurant.cuisine}
+                    </p>
                   </div>
                   <div className="flex gap-1.5">
                     <Button
@@ -208,29 +257,67 @@ function RestaurantsPage() {
         </div>
       )}
 
-      <Sheet open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+      <Sheet
+        open={!!editing}
+        onOpenChange={(open) => !open && setEditing(null)}
+      >
         <SheetContent className="border-border bg-surface text-foreground">
           <SheetHeader>
-            <SheetTitle className="text-foreground">{editing?.id ? 'Edit Restaurant' : 'Add Restaurant'}</SheetTitle>
+            <SheetTitle className="text-foreground">
+              {editing?.id ? 'Edit Restaurant' : 'Add Restaurant'}
+            </SheetTitle>
           </SheetHeader>
           {editing && (
             <div className="space-y-4 px-4 pb-6">
               <div>
                 <Label className="mb-1.5 text-xs text-muted-text">Name</Label>
-                <Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="border-border bg-canvas" />
+                <Input
+                  value={editing.name}
+                  onChange={(e) =>
+                    setEditing({ ...editing, name: e.target.value })
+                  }
+                  className="border-border bg-canvas"
+                />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Cuisine</Label>
-                <Input value={editing.cuisine} onChange={(e) => setEditing({ ...editing, cuisine: e.target.value })} className="border-border bg-canvas" />
+                <Label className="mb-1.5 text-xs text-muted-text">
+                  Cuisine
+                </Label>
+                <Input
+                  value={editing.cuisine}
+                  onChange={(e) =>
+                    setEditing({ ...editing, cuisine: e.target.value })
+                  }
+                  className="border-border bg-canvas"
+                />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Description</Label>
-                <Textarea value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className="border-border bg-canvas" rows={3} />
+                <Label className="mb-1.5 text-xs text-muted-text">
+                  Description
+                </Label>
+                <Textarea
+                  value={editing.description}
+                  onChange={(e) =>
+                    setEditing({ ...editing, description: e.target.value })
+                  }
+                  className="border-border bg-canvas"
+                  rows={3}
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">Price range</Label>
-                  <Select value={editing.priceRange} onValueChange={(v) => setEditing({ ...editing, priceRange: v as Restaurant['priceRange'] })}>
+                  <Label className="mb-1.5 text-xs text-muted-text">
+                    Price range
+                  </Label>
+                  <Select
+                    value={editing.priceRange}
+                    onValueChange={(v) =>
+                      setEditing({
+                        ...editing,
+                        priceRange: v as Restaurant['priceRange'],
+                      })
+                    }
+                  >
                     <SelectTrigger className="border-border bg-canvas">
                       <SelectValue />
                     </SelectTrigger>
@@ -244,27 +331,59 @@ function RestaurantsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="mb-1.5 text-xs text-muted-text">Open hours</Label>
-                  <Input value={editing.openHours} onChange={(e) => setEditing({ ...editing, openHours: e.target.value })} className="border-border bg-canvas" />
+                  <Label className="mb-1.5 text-xs text-muted-text">
+                    Open hours
+                  </Label>
+                  <Input
+                    value={editing.openHours}
+                    onChange={(e) =>
+                      setEditing({ ...editing, openHours: e.target.value })
+                    }
+                    className="border-border bg-canvas"
+                  />
                 </div>
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Location</Label>
-                <Input value={editing.location} onChange={(e) => setEditing({ ...editing, location: e.target.value })} className="border-border bg-canvas" />
+                <Label className="mb-1.5 text-xs text-muted-text">
+                  Location
+                </Label>
+                <Input
+                  value={editing.location}
+                  onChange={(e) =>
+                    setEditing({ ...editing, location: e.target.value })
+                  }
+                  className="border-border bg-canvas"
+                />
               </div>
               <div>
-                <Label className="mb-1.5 text-xs text-muted-text">Max party size (online booking)</Label>
+                <Label className="mb-1.5 text-xs text-muted-text">
+                  Max party size (online booking)
+                </Label>
                 <Input
                   type="number"
                   min={1}
                   max={30}
                   value={editing.maxPartySize}
-                  onChange={(e) => setEditing({ ...editing, maxPartySize: clampPositiveInt(e.target.value, editing.maxPartySize) })}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      maxPartySize: clampPositiveInt(
+                        e.target.value,
+                        editing.maxPartySize,
+                      ),
+                    })
+                  }
                   className="border-border bg-canvas"
                 />
-                <p className="mt-1.5 text-xs text-muted-text">Larger groups are expected to call in for private dining.</p>
+                <p className="mt-1.5 text-xs text-muted-text">
+                  Larger groups are expected to call in for private dining.
+                </p>
               </div>
-              <Button className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft" disabled={saving} onClick={save}>
+              <Button
+                className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+                disabled={saving}
+                onClick={save}
+              >
                 {saving ? 'Saving…' : 'Save Restaurant'}
               </Button>
             </div>
@@ -272,14 +391,22 @@ function RestaurantsPage() {
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
         <AlertDialogContent className="border-border bg-surface text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove {deleteTarget?.name}?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-surface-hover">Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-rose-500 text-white hover:bg-rose-600" onClick={confirmDelete}>
+            <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-surface-hover">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-500 text-white hover:bg-rose-600"
+              onClick={confirmDelete}
+            >
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>

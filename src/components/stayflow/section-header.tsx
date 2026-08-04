@@ -9,25 +9,26 @@ interface SectionHeaderProps {
   viewAllHref?: string
   action?: React.ReactNode
   className?: string
-  demo?: boolean
 }
 
-export function SectionHeader({ title, description, viewAllHref, action, className, demo }: SectionHeaderProps) {
+export function SectionHeader({
+  title,
+  description,
+  viewAllHref,
+  action,
+  className,
+}: SectionHeaderProps) {
   return (
-    <div className={cn('mb-4 flex items-center justify-between gap-3', className)}>
+    <div
+      className={cn('mb-4 flex items-center justify-between gap-3', className)}
+    >
       <div>
-        <div className="flex items-center gap-2">
-          <h2 className="text-[15px] font-semibold tracking-tight text-foreground">{title}</h2>
-          {demo && (
-            <span
-              className="rounded-full bg-accent-gold/15 px-1.5 py-0.5 text-[10px] font-medium text-accent-gold"
-              title="Sample data — not yet tracked in the live database"
-            >
-              Demo data
-            </span>
-          )}
-        </div>
-        {description && <p className="mt-0.5 text-xs text-muted-text">{description}</p>}
+        <h2 className="text-[15px] font-semibold tracking-tight text-foreground">
+          {title}
+        </h2>
+        {description && (
+          <p className="mt-0.5 text-xs text-muted-text">{description}</p>
+        )}
       </div>
       {action}
       {viewAllHref && (

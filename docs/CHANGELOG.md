@@ -37,6 +37,15 @@
 - **refactor(frontend):** split `src/routes/management/users.tsx` (683 lines) into `src/components/stayflow/users/` (tabs, form sheets, action dialogs — route file now 379 lines) and `src/routes/member/profile.tsx` (942 lines) into `src/components/stayflow/profile/` (avatar/family/vehicle dialogs, delete button, email section, shared helpers — route file now 517 lines). Pure extraction, independently re-verified against the original for prop-wiring and behavior regressions.
 - **process:** ran a full code review (backend security audit, backend code-quality pass, frontend review) plus an independent re-verification pass on all fixes above.
 
+## 2026-08-04 — Toast system replaced, real-product copy pass, full QA sweep
+
+- **fix(critical):** every `toast()` call in the app (28 call sites, all 3 portals) was silently doing nothing — `sonner`'s `<Toaster>` never received its mount effect under this app's SSR shell, so it never had a live subscriber. Replaced sonner entirely with an in-house store on `useSyncExternalStore` (`src/lib/toast.ts` + `src/components/ui/toast-viewport.tsx`); same call shape, all 28 sites updated. See `docs/ARCHITECTURE.md` and `docs/ACTIVITY-LOG.md` for the full root-cause writeup.
+- **feat(security):** general rate limiter on all of `/api` (300 req/15min/IP), on top of the existing route-specific limiters.
+- **fix(analytics):** management dashboard/analytics charts now derive dining trend and member engagement from real bookings/reservations/guests data, closing the last mock-data surface in the app (`lib/mock/analytics.ts` deleted).
+- **chore(copy):** removed "demo" framing app-wide — management login splash's three fabricated KPIs replaced with the same capability-bullet pattern used on staff/member login; login footers, portal picker, and README/SECURITY.md sample-login language reworded to real-product phrasing. No security disclosures were softened, only the "just a demo" framing.
+- **chore(cleanup):** removed the now-dead `demo` prop/badge from `SectionHeader` (no caller since the analytics fix above).
+- **process:** full manual QA pass — 3-portal auth matrix, all 6 cross-role authorization blocks, member/staff/management CRUD flows, account lockout, login rate limiting — all verified live.
+
 ## Unreleased / Recent
 
 - **fix(dining):** make table assignment on confirm atomic — closes a double-booking race on dining tables under concurrent requests, same pattern as the facility-slot fix below.

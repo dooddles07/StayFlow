@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { format, parseISO } from 'date-fns'
 import { Pencil, Plus, Trash2, Upload } from 'lucide-react'
 import { PageHeader } from '#/components/stayflow/page-header'
@@ -8,8 +8,19 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Textarea } from '#/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '#/components/ui/sheet'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '#/components/ui/sheet'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,8 +31,13 @@ import {
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog'
 import { ApiError } from '#/lib/api/client'
-import { createEvent, deleteEvent, getEvents, updateEvent  } from '#/lib/api/event'
-import type {CommunityEventView} from '#/lib/api/event';
+import {
+  createEvent,
+  deleteEvent,
+  getEvents,
+  updateEvent,
+} from '#/lib/api/event'
+import type { CommunityEventView } from '#/lib/api/event'
 import type { EventCategory } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/management/events')({
@@ -29,11 +45,19 @@ export const Route = createFileRoute('/management/events')({
   component: ManagementEventsPage,
 })
 
-const categories: EventCategory[] = ['Social', 'Wellness', 'Kids', 'Seasonal', 'Cultural']
-const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const categories: EventCategory[] = [
+  'Social',
+  'Wellness',
+  'Kids',
+  'Seasonal',
+  'Cultural',
+]
+const errText = (err: unknown) =>
+  err instanceof ApiError ? err.message : 'Something went wrong. Try again.'
 const DEFAULT_EVENT_IMAGE = '/images/events/wine-tasting.webp'
 const eventDate = (iso: string) => format(parseISO(iso), 'MMM d, yyyy')
-const eventTimeRange = (event: CommunityEventView) => (event.endTime ? `${event.time} – ${event.endTime}` : event.time)
+const eventTimeRange = (event: CommunityEventView) =>
+  event.endTime ? `${event.time} – ${event.endTime}` : event.time
 
 // Real community spaces (from the facilities list + past events), so staff pick a place
 // instead of retyping it. "Other" reveals a free-text field for anything not listed.
@@ -47,7 +71,7 @@ const LOCATION_OPTIONS = [
   'Serenity Spa & Sauna',
   'Junior Play Lounge',
   'Skyline Tower · Rooftop',
-  "Koi & Copper · Private Room",
+  'Koi & Copper · Private Room',
 ]
 const OTHER_LOCATION = 'Other'
 
@@ -94,9 +118,12 @@ function readImageFile(file: File): Promise<string> {
 
 function ManagementEventsPage() {
   const [events, setEvents] = React.useState<CommunityEventView[]>([])
-  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  )
   const [editing, setEditing] = React.useState<EventDraft | null>(null)
-  const [deleteTarget, setDeleteTarget] = React.useState<CommunityEventView | null>(null)
+  const [deleteTarget, setDeleteTarget] =
+    React.useState<CommunityEventView | null>(null)
   const [saving, setSaving] = React.useState(false)
   const photoInputRef = React.useRef<HTMLInputElement>(null)
   // Mirror saving/delete-in-flight but checked/updated synchronously — two clicks
@@ -126,7 +153,11 @@ function ManagementEventsPage() {
 
   async function save() {
     if (!editing || savingRef.current) return
-    if (editing.title.trim() === '' || editing.description.trim() === '' || editing.location.trim() === '') {
+    if (
+      editing.title.trim() === '' ||
+      editing.description.trim() === '' ||
+      editing.location.trim() === ''
+    ) {
       toast.error('Title, description, and location are required.')
       return
     }
@@ -154,10 +185,14 @@ function ManagementEventsPage() {
         location: editing.location.trim(),
         capacity: editing.capacity,
       }
-      const saved = editing.id ? await updateEvent(editing.id, payload) : await createEvent(payload)
+      const saved = editing.id
+        ? await updateEvent(editing.id, payload)
+        : await createEvent(payload)
       setEvents((prev) => {
         const exists = prev.some((e) => e.id === saved.id)
-        const next = exists ? prev.map((e) => (e.id === saved.id ? saved : e)) : [saved, ...prev]
+        const next = exists
+          ? prev.map((e) => (e.id === saved.id ? saved : e))
+          : [saved, ...prev]
         return next.sort((a, b) => a.date.localeCompare(b.date))
       })
       toast.success(editing.id ? 'Event updated' : 'Event created')
@@ -193,7 +228,10 @@ function ManagementEventsPage() {
         title="Events"
         description="Create and manage community events."
         actions={
-          <Button className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={() => setEditing(newDraft())}>
+          <Button
+            className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+            onClick={() => setEditing(newDraft())}
+          >
             <Plus className="size-4" /> Create Event
           </Button>
         }
@@ -202,13 +240,21 @@ function ManagementEventsPage() {
       {status === 'loading' ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-2xl border border-border bg-surface" />
+            <div
+              key={i}
+              className="h-16 animate-pulse rounded-2xl border border-border bg-surface"
+            />
           ))}
         </div>
       ) : status === 'error' ? (
         <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-          <p className="text-sm text-muted-text">We couldn't load events right now.</p>
-          <Button onClick={load} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <p className="text-sm text-muted-text">
+            We couldn't load events right now.
+          </p>
+          <Button
+            onClick={load}
+            className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             Retry
           </Button>
         </div>
@@ -220,13 +266,23 @@ function ManagementEventsPage() {
         <>
           <div className="space-y-3 sm:hidden">
             {events.map((event) => (
-              <div key={event.id} className="rounded-2xl border border-border bg-surface p-4">
+              <div
+                key={event.id}
+                className="rounded-2xl border border-border bg-surface p-4"
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium text-foreground">{event.title}</p>
-                    <p className="text-xs text-muted-text">{event.category} · {eventDate(event.date)} · {eventTimeRange(event)}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {event.title}
+                    </p>
+                    <p className="text-xs text-muted-text">
+                      {event.category} · {eventDate(event.date)} ·{' '}
+                      {eventTimeRange(event)}
+                    </p>
                   </div>
-                  <span className="shrink-0 text-xs text-muted-text">{event.attendeeIds.length}/{event.capacity}</span>
+                  <span className="shrink-0 text-xs text-muted-text">
+                    {event.attendeeIds.length}/{event.capacity}
+                  </span>
                 </div>
                 <div className="mt-3 flex justify-end gap-1.5">
                   <Button
@@ -234,7 +290,13 @@ function ManagementEventsPage() {
                     variant="ghost"
                     className="size-7 text-muted-text hover:text-foreground"
                     aria-label={`Edit ${event.title}`}
-                    onClick={() => setEditing({ ...event, date: event.date.slice(0, 10), endTime: event.endTime ?? '' })}
+                    onClick={() =>
+                      setEditing({
+                        ...event,
+                        date: event.date.slice(0, 10),
+                        endTime: event.endTime ?? '',
+                      })
+                    }
                   >
                     <Pencil className="size-3.5" />
                   </Button>
@@ -266,10 +328,18 @@ function ManagementEventsPage() {
               <tbody className="divide-y divide-border bg-surface">
                 {events.map((event) => (
                   <tr key={event.id}>
-                    <td className="px-4 py-3 font-medium text-foreground">{event.title}</td>
-                    <td className="px-4 py-3 text-muted-text">{event.category}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-muted-text">{eventDate(event.date)} · {eventTimeRange(event)}</td>
-                    <td className="px-4 py-3 text-muted-text">{event.attendeeIds.length} / {event.capacity}</td>
+                    <td className="px-4 py-3 font-medium text-foreground">
+                      {event.title}
+                    </td>
+                    <td className="px-4 py-3 text-muted-text">
+                      {event.category}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-text">
+                      {eventDate(event.date)} · {eventTimeRange(event)}
+                    </td>
+                    <td className="px-4 py-3 text-muted-text">
+                      {event.attendeeIds.length} / {event.capacity}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1.5">
                         <Button
@@ -277,7 +347,13 @@ function ManagementEventsPage() {
                           variant="ghost"
                           className="size-7 text-muted-text hover:text-foreground"
                           aria-label={`Edit ${event.title}`}
-                          onClick={() => setEditing({ ...event, date: event.date.slice(0, 10), endTime: event.endTime ?? '' })}
+                          onClick={() =>
+                            setEditing({
+                              ...event,
+                              date: event.date.slice(0, 10),
+                              endTime: event.endTime ?? '',
+                            })
+                          }
                         >
                           <Pencil className="size-3.5" />
                         </Button>
@@ -300,24 +376,60 @@ function ManagementEventsPage() {
         </>
       )}
 
-      <Sheet open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+      <Sheet
+        open={!!editing}
+        onOpenChange={(open) => !open && setEditing(null)}
+      >
         <SheetContent className="border-border bg-surface text-foreground">
           <SheetHeader>
-            <SheetTitle className="text-foreground">{editing?.id ? 'Edit Event' : 'Create Event'}</SheetTitle>
+            <SheetTitle className="text-foreground">
+              {editing?.id ? 'Edit Event' : 'Create Event'}
+            </SheetTitle>
           </SheetHeader>
           {editing && (
             <div className="space-y-4 px-4 pb-6">
               <div>
-                <Label htmlFor="event-title" className="mb-1.5 text-xs text-muted-text">Title</Label>
-                <Input id="event-title" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} className="border-border bg-canvas" />
+                <Label
+                  htmlFor="event-title"
+                  className="mb-1.5 text-xs text-muted-text"
+                >
+                  Title
+                </Label>
+                <Input
+                  id="event-title"
+                  value={editing.title}
+                  onChange={(e) =>
+                    setEditing({ ...editing, title: e.target.value })
+                  }
+                  className="border-border bg-canvas"
+                />
               </div>
               <div>
-                <Label htmlFor="event-description" className="mb-1.5 text-xs text-muted-text">Description</Label>
-                <Textarea id="event-description" value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className="border-border bg-canvas" rows={3} />
+                <Label
+                  htmlFor="event-description"
+                  className="mb-1.5 text-xs text-muted-text"
+                >
+                  Description
+                </Label>
+                <Textarea
+                  id="event-description"
+                  value={editing.description}
+                  onChange={(e) =>
+                    setEditing({ ...editing, description: e.target.value })
+                  }
+                  className="border-border bg-canvas"
+                  rows={3}
+                />
               </div>
               <div>
-                <Label htmlFor="event-image-url" className="mb-1.5 text-xs text-muted-text">
-                  Event photo <span className="font-normal text-muted-text/70">· optional</span>
+                <Label
+                  htmlFor="event-image-url"
+                  className="mb-1.5 text-xs text-muted-text"
+                >
+                  Event photo{' '}
+                  <span className="font-normal text-muted-text/70">
+                    · optional
+                  </span>
                 </Label>
                 <div className="flex items-center gap-3">
                   <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-surface-hover">
@@ -333,7 +445,9 @@ function ManagementEventsPage() {
                   <Input
                     id="event-image-url"
                     value={editing.image}
-                    onChange={(e) => setEditing({ ...editing, image: e.target.value })}
+                    onChange={(e) =>
+                      setEditing({ ...editing, image: e.target.value })
+                    }
                     placeholder="Paste a photo link, or upload one"
                     className="border-border bg-canvas"
                   />
@@ -351,14 +465,20 @@ function ManagementEventsPage() {
                         return
                       }
                       if (file.size > MAX_PHOTO_BYTES) {
-                        toast.error('That photo is too large — please use one under 2 MB.')
+                        toast.error(
+                          'That photo is too large — please use one under 2 MB.',
+                        )
                         return
                       }
                       try {
                         const dataUrl = await readImageFile(file)
-                        setEditing((prev) => (prev ? { ...prev, image: dataUrl } : prev))
+                        setEditing((prev) =>
+                          prev ? { ...prev, image: dataUrl } : prev,
+                        )
                       } catch {
-                        toast.error('Could not read that photo. Try a different file.')
+                        toast.error(
+                          'Could not read that photo. Try a different file.',
+                        )
                       }
                     }}
                   />
@@ -373,13 +493,29 @@ function ManagementEventsPage() {
                     <Upload className="size-4" />
                   </Button>
                 </div>
-                <p className="mt-1.5 text-[11px] text-muted-text/70">Paste a link above, or use the upload button to choose a photo from your phone or computer.</p>
+                <p className="mt-1.5 text-[11px] text-muted-text/70">
+                  Paste a link above, or use the upload button to choose a photo
+                  from your phone or computer.
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="event-category" className="mb-1.5 text-xs text-muted-text">Category</Label>
-                  <Select value={editing.category} onValueChange={(v) => setEditing({ ...editing, category: v as EventCategory })}>
-                    <SelectTrigger id="event-category" className="border-border bg-canvas">
+                  <Label
+                    htmlFor="event-category"
+                    className="mb-1.5 text-xs text-muted-text"
+                  >
+                    Category
+                  </Label>
+                  <Select
+                    value={editing.category}
+                    onValueChange={(v) =>
+                      setEditing({ ...editing, category: v as EventCategory })
+                    }
+                  >
+                    <SelectTrigger
+                      id="event-category"
+                      className="border-border bg-canvas"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-border bg-surface text-foreground">
@@ -392,33 +528,105 @@ function ManagementEventsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="event-capacity" className="mb-1.5 text-xs text-muted-text">Capacity</Label>
-                  <Input id="event-capacity" type="number" min={1} value={editing.capacity} onChange={(e) => setEditing({ ...editing, capacity: Number(e.target.value) || 0 })} className="border-border bg-canvas" />
+                  <Label
+                    htmlFor="event-capacity"
+                    className="mb-1.5 text-xs text-muted-text"
+                  >
+                    Capacity
+                  </Label>
+                  <Input
+                    id="event-capacity"
+                    type="number"
+                    min={1}
+                    value={editing.capacity}
+                    onChange={(e) =>
+                      setEditing({
+                        ...editing,
+                        capacity: Number(e.target.value) || 0,
+                      })
+                    }
+                    className="border-border bg-canvas"
+                  />
                 </div>
               </div>
               <div>
-                <Label htmlFor="event-date" className="mb-1.5 text-xs text-muted-text">Date</Label>
-                <Input id="event-date" type="date" value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className="border-border bg-canvas" />
+                <Label
+                  htmlFor="event-date"
+                  className="mb-1.5 text-xs text-muted-text"
+                >
+                  Date
+                </Label>
+                <Input
+                  id="event-date"
+                  type="date"
+                  value={editing.date}
+                  onChange={(e) =>
+                    setEditing({ ...editing, date: e.target.value })
+                  }
+                  className="border-border bg-canvas"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="event-start-time" className="mb-1.5 text-xs text-muted-text">Start time</Label>
-                  <Input id="event-start-time" value={editing.time} onChange={(e) => setEditing({ ...editing, time: e.target.value })} className="border-border bg-canvas" />
+                  <Label
+                    htmlFor="event-start-time"
+                    className="mb-1.5 text-xs text-muted-text"
+                  >
+                    Start time
+                  </Label>
+                  <Input
+                    id="event-start-time"
+                    value={editing.time}
+                    onChange={(e) =>
+                      setEditing({ ...editing, time: e.target.value })
+                    }
+                    className="border-border bg-canvas"
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="event-end-time" className="mb-1.5 text-xs text-muted-text">
-                    End time <span className="font-normal text-muted-text/70">· optional</span>
+                  <Label
+                    htmlFor="event-end-time"
+                    className="mb-1.5 text-xs text-muted-text"
+                  >
+                    End time{' '}
+                    <span className="font-normal text-muted-text/70">
+                      · optional
+                    </span>
                   </Label>
-                  <Input id="event-end-time" value={editing.endTime} onChange={(e) => setEditing({ ...editing, endTime: e.target.value })} className="border-border bg-canvas" />
+                  <Input
+                    id="event-end-time"
+                    value={editing.endTime}
+                    onChange={(e) =>
+                      setEditing({ ...editing, endTime: e.target.value })
+                    }
+                    className="border-border bg-canvas"
+                  />
                 </div>
               </div>
               <div>
-                <Label htmlFor="event-location" className="mb-1.5 text-xs text-muted-text">Location</Label>
-                <Select
-                  value={LOCATION_OPTIONS.includes(editing.location) ? editing.location : OTHER_LOCATION}
-                  onValueChange={(v) => setEditing({ ...editing, location: v === OTHER_LOCATION ? '' : v })}
+                <Label
+                  htmlFor="event-location"
+                  className="mb-1.5 text-xs text-muted-text"
                 >
-                  <SelectTrigger id="event-location" className="border-border bg-canvas">
+                  Location
+                </Label>
+                <Select
+                  value={
+                    LOCATION_OPTIONS.includes(editing.location)
+                      ? editing.location
+                      : OTHER_LOCATION
+                  }
+                  onValueChange={(v) =>
+                    setEditing({
+                      ...editing,
+                      location: v === OTHER_LOCATION ? '' : v,
+                    })
+                  }
+                >
+                  <SelectTrigger
+                    id="event-location"
+                    className="border-border bg-canvas"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="border-border bg-surface text-foreground">
@@ -427,20 +635,28 @@ function ManagementEventsPage() {
                         {l}
                       </SelectItem>
                     ))}
-                    <SelectItem value={OTHER_LOCATION}>Other (type your own)</SelectItem>
+                    <SelectItem value={OTHER_LOCATION}>
+                      Other (type your own)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 {!LOCATION_OPTIONS.includes(editing.location) && (
                   <Input
                     aria-label="Custom location"
                     value={editing.location}
-                    onChange={(e) => setEditing({ ...editing, location: e.target.value })}
+                    onChange={(e) =>
+                      setEditing({ ...editing, location: e.target.value })
+                    }
                     placeholder="Enter the location"
                     className="mt-2 border-border bg-canvas"
                   />
                 )}
               </div>
-              <Button className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft" disabled={saving} onClick={save}>
+              <Button
+                className="w-full bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+                disabled={saving}
+                onClick={save}
+              >
                 {saving ? 'Saving…' : 'Save Event'}
               </Button>
             </div>
@@ -448,14 +664,22 @@ function ManagementEventsPage() {
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
         <AlertDialogContent className="border-border bg-surface text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {deleteTarget?.title}?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-surface-hover">Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-rose-500 text-white hover:bg-rose-600" onClick={confirmDelete}>
+            <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-surface-hover">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-500 text-white hover:bg-rose-600"
+              onClick={confirmDelete}
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

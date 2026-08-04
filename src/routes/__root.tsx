@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react'
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { TooltipProvider } from '#/components/ui/tooltip'
-import { Toaster } from '#/components/ui/sonner'
+import { ToastViewport } from '#/components/ui/toast-viewport'
 import { GlobalSearch } from '#/components/stayflow/global-search'
 
 import appCss from '../styles.css?url'
@@ -66,7 +67,7 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
 })
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark">
       <head>
@@ -76,7 +77,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <TooltipProvider delayDuration={200}>
           {children}
           <GlobalSearch />
-          <Toaster position="top-right" richColors closeButton />
+          <ToastViewport />
         </TooltipProvider>
         <TanStackDevtools
           config={{

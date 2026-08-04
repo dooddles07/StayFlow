@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { CheckCircle2, Search, UtensilsCrossed, X } from 'lucide-react'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { SectionHeader } from '#/components/stayflow/section-header'
@@ -23,8 +23,11 @@ import {
 import { ApiError } from '#/lib/api/client'
 import { getRestaurants } from '#/lib/api/restaurant'
 import { getAllTables } from '#/lib/api/table'
-import { getAllReservations, setReservationStatus  } from '#/lib/api/diningReservation'
-import type {ReservationView} from '#/lib/api/diningReservation';
+import {
+  getAllReservations,
+  setReservationStatus,
+} from '#/lib/api/diningReservation'
+import type { ReservationView } from '#/lib/api/diningReservation'
 import { timeToMinutes } from '#/lib/booking-slots'
 import { cn } from '#/lib/utils'
 import type { DiningTable, Restaurant } from '#/lib/mock/types'
@@ -34,7 +37,8 @@ export const Route = createFileRoute('/staff/dining')({
   component: StaffDiningPage,
 })
 
-const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const errText = (err: unknown) =>
+  err instanceof ApiError ? err.message : 'Something went wrong. Try again.'
 
 const tableStatusClasses: Record<DiningTable['status'], string> = {
   available: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
@@ -42,11 +46,24 @@ const tableStatusClasses: Record<DiningTable['status'], string> = {
   occupied: 'border-rose-500/30 bg-rose-500/10 text-rose-400',
 }
 
-function DeclineButton({ reservation, busy, onConfirm }: { reservation: ReservationView; busy: boolean; onConfirm: () => void }) {
+function DeclineButton({
+  reservation,
+  busy,
+  onConfirm,
+}: {
+  reservation: ReservationView
+  busy: boolean
+  onConfirm: () => void
+}) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="outline" disabled={busy} className="gap-1.5 border-border text-xs text-rose-400 hover:bg-rose-500/10 hover:text-rose-400">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={busy}
+          className="gap-1.5 border-border text-xs text-rose-400 hover:bg-rose-500/10 hover:text-rose-400"
+        >
           <X className="size-3.5" /> Decline
         </Button>
       </AlertDialogTrigger>
@@ -54,12 +71,19 @@ function DeclineButton({ reservation, busy, onConfirm }: { reservation: Reservat
         <AlertDialogHeader>
           <AlertDialogTitle>Decline this reservation?</AlertDialogTitle>
           <AlertDialogDescription>
-            {reservation.residentName ?? 'This resident'}'s table for {reservation.date.slice(0, 10)} at {reservation.time} will be released. This can't be undone.
+            {reservation.residentName ?? 'This resident'}'s table for{' '}
+            {reservation.date.slice(0, 10)} at {reservation.time} will be
+            released. This can't be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="border-border">Keep it</AlertDialogCancel>
-          <AlertDialogAction className="bg-rose-600 text-white hover:bg-rose-700" onClick={onConfirm}>
+          <AlertDialogCancel className="border-border">
+            Keep it
+          </AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-rose-600 text-white hover:bg-rose-700"
+            onClick={onConfirm}
+          >
             Decline Reservation
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -72,7 +96,9 @@ function StaffDiningPage() {
   const [restaurants, setRestaurants] = React.useState<Restaurant[]>([])
   const [tables, setTables] = React.useState<DiningTable[]>([])
   const [reservations, setReservations] = React.useState<ReservationView[]>([])
-  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  )
   const [tab, setTab] = React.useState<'tables' | 'reservations'>('tables')
   const [busyIds, setBusyIds] = React.useState<Set<string>>(new Set())
   // Mirrors busyIds but checked/updated synchronously — two clicks before React
@@ -102,7 +128,11 @@ function StaffDiningPage() {
 
   React.useEffect(() => load(), [load])
 
-  async function updateStatus(id: string, next: ReservationView['status'], successMessage: string) {
+  async function updateStatus(
+    id: string,
+    next: ReservationView['status'],
+    successMessage: string,
+  ) {
     if (busyRef.current.has(id)) return
     busyRef.current.add(id)
     setBusyIds(new Set(busyRef.current))
@@ -112,7 +142,9 @@ function StaffDiningPage() {
       // Confirming/arriving/declining all change a table's status server-side (assign,
       // occupy, or release) — refresh Table Map too, or it silently goes stale until a
       // full page reload. Best-effort: a failed refresh shouldn't fail the action itself.
-      getAllTables().then(setTables).catch(() => {})
+      getAllTables()
+        .then(setTables)
+        .catch(() => {})
       toast.success(successMessage)
     } catch (err) {
       toast.error(errText(err))
@@ -122,25 +154,51 @@ function StaffDiningPage() {
     }
   }
 
-  const confirmReservation = (id: string) => updateStatus(id, 'confirmed', 'Reservation confirmed')
-  const confirmArrival = (id: string) => updateStatus(id, 'arrived', 'Arrival confirmed')
-  const declineReservation = (id: string) => updateStatus(id, 'cancelled', 'Reservation declined')
+  const confirmReservation = (id: string) =>
+    updateStatus(id, 'confirmed', 'Reservation confirmed')
+  const confirmArrival = (id: string) =>
+    updateStatus(id, 'arrived', 'Arrival confirmed')
+  const declineReservation = (id: string) =>
+    updateStatus(id, 'cancelled', 'Reservation declined')
 
   const q = query.trim().toLowerCase()
   const sortedReservations = [...reservations]
-    .filter((r) => q === '' || (r.restaurantName ?? '').toLowerCase().includes(q) || (r.residentName ?? '').toLowerCase().includes(q))
-    .sort((a, b) => a.date.localeCompare(b.date) || timeToMinutes(a.time) - timeToMinutes(b.time))
+    .filter(
+      (r) =>
+        q === '' ||
+        (r.restaurantName ?? '').toLowerCase().includes(q) ||
+        (r.residentName ?? '').toLowerCase().includes(q),
+    )
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        timeToMinutes(a.time) - timeToMinutes(b.time),
+    )
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader eyebrow="Culinary Operations" title="Dining" description="Monitor table status and manage reservation arrivals." />
+      <PageHeader
+        eyebrow="Culinary Operations"
+        title="Dining"
+        description="Monitor table status and manage reservation arrivals."
+      />
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mb-6">
+      <Tabs
+        value={tab}
+        onValueChange={(v) => setTab(v as typeof tab)}
+        className="mb-6"
+      >
         <TabsList className="bg-surface">
-          <TabsTrigger value="tables" className="data-[state=active]:bg-accent-indigo/20 data-[state=active]:text-accent-gold">
+          <TabsTrigger
+            value="tables"
+            className="data-[state=active]:bg-accent-indigo/20 data-[state=active]:text-accent-gold"
+          >
             Table Map
           </TabsTrigger>
-          <TabsTrigger value="reservations" className="data-[state=active]:bg-accent-indigo/20 data-[state=active]:text-accent-gold">
+          <TabsTrigger
+            value="reservations"
+            className="data-[state=active]:bg-accent-indigo/20 data-[state=active]:text-accent-gold"
+          >
             Reservations
           </TabsTrigger>
         </TabsList>
@@ -162,23 +220,36 @@ function StaffDiningPage() {
       {status === 'loading' ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl border border-border bg-surface" />
+            <div
+              key={i}
+              className="h-24 animate-pulse rounded-2xl border border-border bg-surface"
+            />
           ))}
         </div>
       ) : status === 'error' ? (
         <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-          <p className="text-sm text-muted-text">We couldn't load dining data right now.</p>
-          <Button onClick={load} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <p className="text-sm text-muted-text">
+            We couldn't load dining data right now.
+          </p>
+          <Button
+            onClick={load}
+            className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             Retry
           </Button>
         </div>
       ) : tab === 'tables' ? (
         <div className="space-y-8">
           {restaurants.map((restaurant) => {
-            const restaurantTables = tables.filter((t) => t.restaurantId === restaurant.id)
+            const restaurantTables = tables.filter(
+              (t) => t.restaurantId === restaurant.id,
+            )
             return (
               <div key={restaurant.id}>
-                <SectionHeader title={restaurant.name} description={`${restaurantTables.length} tables`} />
+                <SectionHeader
+                  title={restaurant.name}
+                  description={`${restaurantTables.length} tables`}
+                />
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
                   {restaurantTables.map((table) => (
                     <div
@@ -189,8 +260,12 @@ function StaffDiningPage() {
                       )}
                     >
                       <p className="text-sm font-semibold">{table.label}</p>
-                      <p className="text-[11px] capitalize opacity-80">{table.status}</p>
-                      <p className="text-[10px] opacity-60">{table.seats} seats</p>
+                      <p className="text-[11px] capitalize opacity-80">
+                        {table.status}
+                      </p>
+                      <p className="text-[10px] opacity-60">
+                        {table.seats} seats
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -199,38 +274,68 @@ function StaffDiningPage() {
           })}
         </div>
       ) : sortedReservations.length === 0 ? (
-        <EmptyState icon={UtensilsCrossed} title={q ? 'No reservations match your search' : 'No reservations yet'} />
+        <EmptyState
+          icon={UtensilsCrossed}
+          title={
+            q ? 'No reservations match your search' : 'No reservations yet'
+          }
+        />
       ) : (
         <>
           <div className="space-y-3 sm:hidden">
             {sortedReservations.map((r) => {
               const busy = busyIds.has(r.id)
               return (
-                <div key={r.id} className="rounded-2xl border border-border bg-surface p-4">
+                <div
+                  key={r.id}
+                  className="rounded-2xl border border-border bg-surface p-4"
+                >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-sm font-medium text-foreground">{r.restaurantName}</p>
-                      <p className="text-xs text-muted-text">{r.residentName}</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {r.restaurantName}
+                      </p>
+                      <p className="text-xs text-muted-text">
+                        {r.residentName}
+                      </p>
                     </div>
                     <StatusPill status={r.status} />
                   </div>
                   <p className="mt-2 text-xs text-muted-text">
-                    {r.date.slice(0, 10)} · {r.time} · Party of {r.partySize} · {r.seating}
+                    {r.date.slice(0, 10)} · {r.time} · Party of {r.partySize} ·{' '}
+                    {r.seating}
                     {r.tableLabel && <> · Table {r.tableLabel}</>}
                   </p>
                   {(r.status === 'pending' || r.status === 'confirmed') && (
                     <div className="mt-3 flex gap-2">
                       {r.status === 'pending' && (
-                        <Button size="sm" disabled={busy} className="gap-1.5 bg-accent-indigo text-xs text-white hover:bg-accent-indigo-soft" onClick={() => confirmReservation(r.id)}>
-                          <CheckCircle2 className="size-3.5" /> {busy ? 'Confirming…' : 'Confirm'}
+                        <Button
+                          size="sm"
+                          disabled={busy}
+                          className="gap-1.5 bg-accent-indigo text-xs text-white hover:bg-accent-indigo-soft"
+                          onClick={() => confirmReservation(r.id)}
+                        >
+                          <CheckCircle2 className="size-3.5" />{' '}
+                          {busy ? 'Confirming…' : 'Confirm'}
                         </Button>
                       )}
                       {r.status === 'confirmed' && (
-                        <Button size="sm" variant="outline" disabled={busy} className="gap-1.5 border-border text-xs text-foreground hover:bg-surface-hover" onClick={() => confirmArrival(r.id)}>
-                          <CheckCircle2 className="size-3.5" /> {busy ? 'Confirming…' : 'Confirm arrival'}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busy}
+                          className="gap-1.5 border-border text-xs text-foreground hover:bg-surface-hover"
+                          onClick={() => confirmArrival(r.id)}
+                        >
+                          <CheckCircle2 className="size-3.5" />{' '}
+                          {busy ? 'Confirming…' : 'Confirm arrival'}
                         </Button>
                       )}
-                      <DeclineButton reservation={r} busy={busy} onConfirm={() => declineReservation(r.id)} />
+                      <DeclineButton
+                        reservation={r}
+                        busy={busy}
+                        onConfirm={() => declineReservation(r.id)}
+                      />
                     </div>
                   )}
                 </div>
@@ -257,30 +362,60 @@ function StaffDiningPage() {
                   const busy = busyIds.has(r.id)
                   return (
                     <tr key={r.id}>
-                      <td className="whitespace-nowrap px-4 py-3 text-foreground">{r.date.slice(0, 10)}</td>
-                      <td className="px-4 py-3 text-foreground">{r.restaurantName}</td>
-                      <td className="px-4 py-3 text-muted-text">{r.residentName}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-muted-text">{r.time}</td>
-                      <td className="px-4 py-3 text-muted-text">{r.partySize}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-foreground">
+                        {r.date.slice(0, 10)}
+                      </td>
+                      <td className="px-4 py-3 text-foreground">
+                        {r.restaurantName}
+                      </td>
+                      <td className="px-4 py-3 text-muted-text">
+                        {r.residentName}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-muted-text">
+                        {r.time}
+                      </td>
+                      <td className="px-4 py-3 text-muted-text">
+                        {r.partySize}
+                      </td>
                       <td className="px-4 py-3 text-muted-text">{r.seating}</td>
-                      <td className="px-4 py-3 text-muted-text">{r.tableLabel ?? '—'}</td>
+                      <td className="px-4 py-3 text-muted-text">
+                        {r.tableLabel ?? '—'}
+                      </td>
                       <td className="px-4 py-3">
                         <StatusPill status={r.status} />
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
                           {r.status === 'pending' && (
-                            <Button size="sm" disabled={busy} className="gap-1.5 bg-accent-indigo text-xs text-white hover:bg-accent-indigo-soft" onClick={() => confirmReservation(r.id)}>
-                              <CheckCircle2 className="size-3.5" /> {busy ? 'Confirming…' : 'Confirm'}
+                            <Button
+                              size="sm"
+                              disabled={busy}
+                              className="gap-1.5 bg-accent-indigo text-xs text-white hover:bg-accent-indigo-soft"
+                              onClick={() => confirmReservation(r.id)}
+                            >
+                              <CheckCircle2 className="size-3.5" />{' '}
+                              {busy ? 'Confirming…' : 'Confirm'}
                             </Button>
                           )}
                           {r.status === 'confirmed' && (
-                            <Button size="sm" variant="outline" disabled={busy} className="gap-1.5 border-border text-xs text-foreground hover:bg-surface-hover" onClick={() => confirmArrival(r.id)}>
-                              <CheckCircle2 className="size-3.5" /> {busy ? 'Confirming…' : 'Confirm arrival'}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={busy}
+                              className="gap-1.5 border-border text-xs text-foreground hover:bg-surface-hover"
+                              onClick={() => confirmArrival(r.id)}
+                            >
+                              <CheckCircle2 className="size-3.5" />{' '}
+                              {busy ? 'Confirming…' : 'Confirm arrival'}
                             </Button>
                           )}
-                          {(r.status === 'pending' || r.status === 'confirmed') && (
-                            <DeclineButton reservation={r} busy={busy} onConfirm={() => declineReservation(r.id)} />
+                          {(r.status === 'pending' ||
+                            r.status === 'confirmed') && (
+                            <DeclineButton
+                              reservation={r}
+                              busy={busy}
+                              onConfirm={() => declineReservation(r.id)}
+                            />
                           )}
                         </div>
                       </td>

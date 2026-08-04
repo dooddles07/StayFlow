@@ -10,7 +10,10 @@ export const Route = createFileRoute('/')({
   head: () => ({
     meta: [
       { title: 'StayFlow by QUAN7UM — Choose Your Portal' },
-      { name: 'description', content: 'Enter the Member, Staff, or Management portal for StayFlow.' },
+      {
+        name: 'description',
+        content: 'Enter the Member, Staff, or Management portal for StayFlow.',
+      },
     ],
   }),
   component: LandingPage,
@@ -25,19 +28,22 @@ const portals: {
   {
     id: 'member',
     title: 'Member',
-    description: 'Book facilities, reserve dining, manage guests, and stay in the loop on community life.',
+    description:
+      'Book facilities, reserve dining, manage guests, and stay in the loop on community life.',
     icon: UserCircle2,
   },
   {
     id: 'staff',
     title: 'Staff',
-    description: 'Run daily operations — approve bookings, check in guests, and manage facility status.',
+    description:
+      'Run daily operations — approve bookings, check in guests, and manage facility status.',
     icon: ShieldCheck,
   },
   {
     id: 'management',
     title: 'Management',
-    description: 'Executive KPIs, analytics, and full administrative control over the community platform.',
+    description:
+      'Executive KPIs, analytics, and full administrative control over the community platform.',
     icon: BarChart3,
   },
 ]
@@ -89,8 +95,12 @@ function LandingPage() {
         <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-accent-indigo/15">
           <img src="/logo.svg?v=3" alt="StayFlow" className="size-9" />
         </div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">by QUAN7UM</p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">StayFlow</h1>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
+          by QUAN7UM
+        </p>
+        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+          StayFlow
+        </h1>
         <p className="mt-3 max-w-md text-sm text-muted-text sm:text-base">
           A premium community management platform. Choose a portal to continue.
         </p>
@@ -115,8 +125,12 @@ function LandingPage() {
                 <Icon className="size-5" />
               </span>
               <div>
-                <p className="text-base font-semibold text-foreground">{portal.title}</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted-text">{portal.description}</p>
+                <p className="text-base font-semibold text-foreground">
+                  {portal.title}
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-text">
+                  {portal.description}
+                </p>
               </div>
               <span className="mt-1 flex items-center gap-1 text-xs font-medium text-accent-indigo-soft transition-colors group-hover:text-accent-gold">
                 Enter portal
@@ -127,7 +141,9 @@ function LandingPage() {
         })}
       </div>
 
-      <p className="relative mt-12 text-[11px] text-muted-text/60">Demo data. Sign in with your portal credentials.</p>
+      <p className="relative mt-12 text-[11px] text-muted-text/60">
+        Sign in with your portal credentials to continue.
+      </p>
     </div>
   )
 }

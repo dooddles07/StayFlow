@@ -1,14 +1,18 @@
 import * as React from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { PasswordInput } from '#/components/stayflow/password-input'
-import { setStoredPortal  } from '#/lib/hooks/use-portal-preference'
-import type {Portal} from '#/lib/hooks/use-portal-preference';
-import { ApiError, isPortalRoleMatch, useAuthStore } from '#/lib/store/auth-store'
+import { setStoredPortal } from '#/lib/hooks/use-portal-preference'
+import type { Portal } from '#/lib/hooks/use-portal-preference'
+import {
+  ApiError,
+  isPortalRoleMatch,
+  useAuthStore,
+} from '#/lib/store/auth-store'
 import { cn } from '#/lib/utils'
 
 interface LoginFormProps {
@@ -18,7 +22,12 @@ interface LoginFormProps {
   submitClassName?: string
 }
 
-export function LoginForm({ portal, portalLabel, className, submitClassName }: LoginFormProps) {
+export function LoginForm({
+  portal,
+  portalLabel,
+  className,
+  submitClassName,
+}: LoginFormProps) {
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
   const [email, setEmail] = React.useState('')
@@ -46,14 +55,20 @@ export function LoginForm({ portal, portalLabel, className, submitClassName }: L
       const user = await login(email, password)
       if (!isPortalRoleMatch(user.role, portal)) {
         await useAuthStore.getState().logout()
-        setError(`That account isn't a ${portalLabel} account. Use the correct portal login.`)
+        setError(
+          `That account isn't a ${portalLabel} account. Use the correct portal login.`,
+        )
         return
       }
       setStoredPortal(portal)
       toast.success(`Welcome back, ${user.displayName}`)
       navigate({ to: `/${portal}` })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Unable to reach the server. Try again.')
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : 'Unable to reach the server. Try again.',
+      )
     } finally {
       loadingRef.current = false
       setLoading(false)
@@ -61,7 +76,10 @@ export function LoginForm({ portal, portalLabel, className, submitClassName }: L
   }
 
   return (
-    <form onSubmit={handleSubmit} className={cn('flex flex-col gap-4', className)}>
+    <form
+      onSubmit={handleSubmit}
+      className={cn('flex flex-col gap-4', className)}
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`${portal}-email`}>Email</Label>
         <Input
@@ -95,12 +113,19 @@ export function LoginForm({ portal, portalLabel, className, submitClassName }: L
       </div>
 
       {error && (
-        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <p
+          role="alert"
+          className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive"
+        >
           {error}
         </p>
       )}
 
-      <Button type="submit" disabled={loading} className={cn('mt-1 gap-2', submitClassName)}>
+      <Button
+        type="submit"
+        disabled={loading}
+        className={cn('mt-1 gap-2', submitClassName)}
+      >
         {loading && <Loader2 className="size-4 animate-spin" />}
         {loading ? 'Signing in…' : 'Sign in'}
       </Button>

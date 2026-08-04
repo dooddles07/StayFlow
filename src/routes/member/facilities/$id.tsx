@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { ArrowLeft, Info, MapPin, Star, Users as UsersIcon } from 'lucide-react'
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { StatusPill } from '#/components/stayflow/status-pill'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -17,11 +17,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog'
-import { FACILITY_TIME_SLOTS, clampPartySize, nextDays, toDateKey } from '#/lib/booking-slots'
+import {
+  FACILITY_TIME_SLOTS,
+  clampPartySize,
+  nextDays,
+  toDateKey,
+} from '#/lib/booking-slots'
 import { ApiError } from '#/lib/api/client'
 import { getFacility } from '#/lib/api/facility'
-import { getFacilityBookings, requestBooking  } from '#/lib/api/booking'
-import type {FacilitySlot} from '#/lib/api/booking';
+import { getFacilityBookings, requestBooking } from '#/lib/api/booking'
+import type { FacilitySlot } from '#/lib/api/booking'
 import { useMyProfile } from '#/lib/store/member-profile'
 import { cn, hideBrokenImg } from '#/lib/utils'
 
@@ -37,11 +42,14 @@ export const Route = createFileRoute('/member/facilities/$id')({
       throw err
     }
   },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.facility.name ?? 'Facility'} — StayFlow` }] }),
+  head: ({ loaderData }) => ({
+    meta: [{ title: `${loaderData?.facility.name ?? 'Facility'} — StayFlow` }],
+  }),
   component: FacilityDetail,
 })
 
-const errText = (err: unknown) => (err instanceof ApiError ? err.message : 'Something went wrong. Try again.')
+const errText = (err: unknown) =>
+  err instanceof ApiError ? err.message : 'Something went wrong. Try again.'
 
 function FacilityDetail() {
   const { facility } = Route.useLoaderData()
@@ -72,7 +80,9 @@ function FacilityDetail() {
   const dateKey = toDateKey(selectedDay)
 
   function slotStatus(slot: string): 'available' | 'pending' | 'booked' {
-    const match = slots.find((s) => s.date.slice(0, 10) === dateKey && s.timeSlot === slot)
+    const match = slots.find(
+      (s) => s.date.slice(0, 10) === dateKey && s.timeSlot === slot,
+    )
     if (!match) return 'available'
     return match.status === 'pending' ? 'pending' : 'booked'
   }
@@ -90,7 +100,10 @@ function FacilityDetail() {
         partySize,
         notes: notes.trim() || undefined,
       })
-      setSlots((prev) => [...prev, { date: dateIso, timeSlot: selectedSlot, status: 'pending' }])
+      setSlots((prev) => [
+        ...prev,
+        { date: dateIso, timeSlot: selectedSlot, status: 'pending' },
+      ])
       setConfirmOpen(false)
       setSelectedSlot(null)
       setNotes('')
@@ -109,7 +122,10 @@ function FacilityDetail() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <Link to="/member/facilities" className="mb-4 inline-flex items-center gap-1.5 text-xs font-medium text-muted-text hover:text-foreground">
+      <Link
+        to="/member/facilities"
+        className="mb-4 inline-flex items-center gap-1.5 text-xs font-medium text-muted-text hover:text-foreground"
+      >
         <ArrowLeft className="size-3.5" />
         Back to Facilities
       </Link>
@@ -128,7 +144,9 @@ function FacilityDetail() {
         <div className="absolute bottom-4 left-5 right-5 flex flex-wrap items-end justify-between gap-3">
           <div>
             <StatusPill status={facility.status} className="mb-2" />
-            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">{facility.name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              {facility.name}
+            </h1>
             <p className="mt-1 flex items-center gap-1 text-xs text-white/80">
               <MapPin className="size-3.5" />
               {facility.location}
@@ -144,16 +162,27 @@ function FacilityDetail() {
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <div>
-            <h2 className="mb-2 text-sm font-semibold text-foreground">About</h2>
-            <p className="text-sm leading-relaxed text-muted-text">{facility.description}</p>
-            <p className="mt-3 text-xs text-muted-text">Open {facility.openHours} · Capacity {facility.capacity}</p>
+            <h2 className="mb-2 text-sm font-semibold text-foreground">
+              About
+            </h2>
+            <p className="text-sm leading-relaxed text-muted-text">
+              {facility.description}
+            </p>
+            <p className="mt-3 text-xs text-muted-text">
+              Open {facility.openHours} · Capacity {facility.capacity}
+            </p>
           </div>
 
           <div>
-            <h2 className="mb-2 text-sm font-semibold text-foreground">House Rules</h2>
+            <h2 className="mb-2 text-sm font-semibold text-foreground">
+              House Rules
+            </h2>
             <ul className="space-y-1.5">
               {facility.rules.map((rule) => (
-                <li key={rule} className="flex items-start gap-2 text-xs text-muted-text">
+                <li
+                  key={rule}
+                  className="flex items-start gap-2 text-xs text-muted-text"
+                >
                   <Info className="mt-0.5 size-3.5 shrink-0 text-accent-indigo-soft" />
                   {rule}
                 </li>
@@ -169,7 +198,9 @@ function FacilityDetail() {
         </div>
 
         <div className="animate-fade-in rounded-2xl border border-border bg-surface p-5">
-          <h2 className="mb-4 text-sm font-semibold text-foreground">Reserve a Slot</h2>
+          <h2 className="mb-4 text-sm font-semibold text-foreground">
+            Reserve a Slot
+          </h2>
 
           {isDisabled ? (
             <p className="rounded-xl bg-surface-hover px-3 py-4 text-center text-xs text-muted-text">
@@ -177,7 +208,9 @@ function FacilityDetail() {
             </p>
           ) : (
             <>
-              <p className="mb-2 text-xs font-medium text-muted-text">Select a date</p>
+              <p className="mb-2 text-xs font-medium text-muted-text">
+                Select a date
+              </p>
               <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
                 {days.map((day) => {
                   const active = toDateKey(day) === dateKey
@@ -196,14 +229,25 @@ function FacilityDetail() {
                           : 'border-border text-muted-text hover:border-accent-indigo/40',
                       )}
                     >
-                      <span className="font-medium">{day.toLocaleDateString(undefined, { weekday: 'short' })}</span>
-                      <span className="text-[11px]">{day.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                      <span className="font-medium">
+                        {day.toLocaleDateString(undefined, {
+                          weekday: 'short',
+                        })}
+                      </span>
+                      <span className="text-[11px]">
+                        {day.toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
                     </button>
                   )
                 })}
               </div>
 
-              <p className="mb-2 text-xs font-medium text-muted-text">Select a time</p>
+              <p className="mb-2 text-xs font-medium text-muted-text">
+                Select a time
+              </p>
               <div className="mb-5 grid grid-cols-1 gap-2">
                 {FACILITY_TIME_SLOTS.map((slot) => {
                   const status = slotStatus(slot)
@@ -216,10 +260,15 @@ function FacilityDetail() {
                       onClick={() => setSelectedSlot(slot)}
                       className={cn(
                         'flex items-center justify-between rounded-xl border px-3 py-2.5 text-xs transition-colors disabled:cursor-not-allowed',
-                        active && 'border-accent-gold bg-accent-indigo/15 text-foreground',
-                        !active && status === 'available' && 'border-border text-foreground hover:border-accent-indigo/40',
-                        status === 'pending' && 'border-accent-gold/30 bg-accent-gold/10 text-accent-gold/70',
-                        status === 'booked' && 'border-rose-500/20 bg-rose-500/5 text-rose-400/60',
+                        active &&
+                          'border-accent-gold bg-accent-indigo/15 text-foreground',
+                        !active &&
+                          status === 'available' &&
+                          'border-border text-foreground hover:border-accent-indigo/40',
+                        status === 'pending' &&
+                          'border-accent-gold/30 bg-accent-gold/10 text-accent-gold/70',
+                        status === 'booked' &&
+                          'border-rose-500/20 bg-rose-500/5 text-rose-400/60',
                       )}
                     >
                       {slot}
@@ -238,7 +287,10 @@ function FacilityDetail() {
 
               <div className="mb-4 space-y-3">
                 <div>
-                  <Label htmlFor="party-size" className="mb-1.5 text-xs text-muted-text">
+                  <Label
+                    htmlFor="party-size"
+                    className="mb-1.5 text-xs text-muted-text"
+                  >
                     Party size
                   </Label>
                   <Input
@@ -247,12 +299,19 @@ function FacilityDetail() {
                     min={1}
                     max={facility.capacity}
                     value={partySize}
-                    onChange={(e) => setPartySize(clampPartySize(e.target.value, facility.capacity))}
+                    onChange={(e) =>
+                      setPartySize(
+                        clampPartySize(e.target.value, facility.capacity),
+                      )
+                    }
                     className="border-border bg-canvas"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="notes" className="mb-1.5 text-xs text-muted-text">
+                  <Label
+                    htmlFor="notes"
+                    className="mb-1.5 text-xs text-muted-text"
+                  >
                     Notes (optional)
                   </Label>
                   <Textarea
@@ -286,7 +345,12 @@ function FacilityDetail() {
               <span className="mt-2 flex flex-col gap-1 text-sm text-foreground">
                 <span className="font-medium">{facility.name}</span>
                 <span>
-                  {selectedDay.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} · {selectedSlot}
+                  {selectedDay.toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                  })}{' '}
+                  · {selectedSlot}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-muted-text">
                   <UsersIcon className="size-3.5" /> Party of {partySize}
@@ -298,7 +362,11 @@ function FacilityDetail() {
             <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-surface-hover">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction disabled={submitting} className="bg-accent-indigo text-white hover:bg-accent-indigo-soft" onClick={handleConfirmBooking}>
+            <AlertDialogAction
+              disabled={submitting}
+              className="bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+              onClick={handleConfirmBooking}
+            >
               {submitting ? 'Confirming…' : 'Confirm Booking'}
             </AlertDialogAction>
           </AlertDialogFooter>

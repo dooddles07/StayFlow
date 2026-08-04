@@ -1,6 +1,6 @@
 import { createFileRoute, useBlocker } from '@tanstack/react-router'
 import * as React from 'react'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import {
   Car,
   Heart,

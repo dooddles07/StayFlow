@@ -1,7 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
-import { toast } from 'sonner'
-import { Calendar, ClipboardList, Download, FileText, Users, UtensilsCrossed } from 'lucide-react'
+import { toast } from '#/lib/toast'
+import {
+  Calendar,
+  ClipboardList,
+  Download,
+  FileText,
+  Users,
+  UtensilsCrossed,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { Button } from '#/components/ui/button'
@@ -114,12 +121,20 @@ const reports: ReportDef[] = [
 
 function ReportsPage() {
   const [data, setData] = React.useState<ReportData | null>(null)
-  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  )
 
   const load = React.useCallback(() => {
     let active = true
     setStatus('loading')
-    Promise.all([getAllBookings(), getAllReservations(), getAllGuests(), getAllResidents(), getEvents()])
+    Promise.all([
+      getAllBookings(),
+      getAllReservations(),
+      getAllGuests(),
+      getAllResidents(),
+      getEvents(),
+    ])
       .then(([bookings, reservations, guests, residents, events]) => {
         if (!active) return
         setData({ bookings, reservations, guests, residents, events })
@@ -137,18 +152,30 @@ function ReportsPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <PageHeader eyebrow="Exports" title="Reports" description="Download operational reports as CSV or PDF." />
+      <PageHeader
+        eyebrow="Exports"
+        title="Reports"
+        description="Download operational reports as CSV or PDF."
+      />
 
       {status === 'loading' ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl border border-border bg-surface" />
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-2xl border border-border bg-surface"
+            />
           ))}
         </div>
       ) : status === 'error' || !data ? (
         <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-          <p className="text-sm text-muted-text">We couldn't load report data right now.</p>
-          <Button onClick={load} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <p className="text-sm text-muted-text">
+            We couldn't load report data right now.
+          </p>
+          <Button
+            onClick={load}
+            className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             Retry
           </Button>
         </div>
@@ -157,14 +184,21 @@ function ReportsPage() {
           {reports.map((report) => {
             const Icon = report.icon
             return (
-              <div key={report.id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5">
+              <div
+                key={report.id}
+                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5"
+              >
                 <div className="flex items-start gap-3">
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-indigo/15 text-accent-gold">
                     <Icon className="size-[18px]" />
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{report.title}</p>
-                    <p className="text-xs text-muted-text">{report.description}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {report.title}
+                    </p>
+                    <p className="text-xs text-muted-text">
+                      {report.description}
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -172,7 +206,9 @@ function ReportsPage() {
                     variant="outline"
                     size="sm"
                     className="gap-1.5 border-border text-foreground hover:bg-surface-hover"
-                    onClick={() => toast.info('PDF export is coming in a future release')}
+                    onClick={() =>
+                      toast.info('PDF export is coming in a future release')
+                    }
                   >
                     <FileText className="size-3.5" />
                     PDF
@@ -183,7 +219,9 @@ function ReportsPage() {
                     onClick={() => {
                       const rows = report.buildRows(data)
                       if (rows.length === 0) {
-                        toast.info(`No ${report.title.toLowerCase()} data to export`)
+                        toast.info(
+                          `No ${report.title.toLowerCase()} data to export`,
+                        )
                         return
                       }
                       exportToCsv(`stayflow-${report.id}.csv`, rows)

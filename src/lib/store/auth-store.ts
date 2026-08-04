@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { toast } from 'sonner'
+import { toast } from '#/lib/toast'
 import { api, ApiError, setUnauthorizedHandler } from '#/lib/api/client'
 import type { Portal } from '#/lib/hooks/use-portal-preference'
 
@@ -35,8 +35,14 @@ interface AuthState {
   hasHydrated: boolean
   login: (email: string, password: string) => Promise<AuthUser>
   logout: () => Promise<void>
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>
-  requestEmailChange: (newEmail: string, currentPassword: string) => Promise<string>
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<void>
+  requestEmailChange: (
+    newEmail: string,
+    currentPassword: string,
+  ) => Promise<string>
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -47,7 +53,10 @@ export const useAuthStore = create<AuthState>()(
       // The JWT lives in an httpOnly cookie set by the server — never stored in JS.
       // Only the non-sensitive user profile is persisted, purely for portal-gating UX.
       login: async (email, password) => {
-        const { user } = await api.post<LoginResponse>('/auth/login', { email, password })
+        const { user } = await api.post<LoginResponse>('/auth/login', {
+          email,
+          password,
+        })
         set({ user })
         return user
       },
@@ -61,14 +70,24 @@ export const useAuthStore = create<AuthState>()(
       },
       changePassword: async (currentPassword, newPassword) => {
         // Server rotates the password and re-issues this session's cookie; other sessions are revoked.
-        await api.post('/auth/change-password', { currentPassword, newPassword })
+        await api.post('/auth/change-password', {
+          currentPassword,
+          newPassword,
+        })
         // Clears mustChangePassword locally so the forced-change gate lifts immediately,
         // without waiting on a reload or a fresh /auth/me fetch.
-        set((state) => (state.user ? { user: { ...state.user, mustChangePassword: false } } : state))
+        set((state) =>
+          state.user
+            ? { user: { ...state.user, mustChangePassword: false } }
+            : state,
+        )
       },
       requestEmailChange: async (newEmail, currentPassword) => {
         // Server emails a verification link to the new address; nothing changes until it's opened.
-        const { message } = await api.post<{ message: string }>('/auth/change-email', { newEmail, currentPassword })
+        const { message } = await api.post<{ message: string }>(
+          '/auth/change-email',
+          { newEmail, currentPassword },
+        )
         return message
       },
     }),
