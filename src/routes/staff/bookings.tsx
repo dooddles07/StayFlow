@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
 import { toast } from '#/lib/toast'
 import { Calendar, Check, ClipboardList, List, Loader2, X } from 'lucide-react'
+import { AnimatedTableRow } from '#/components/stayflow/animated-table-row'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { StatusPill } from '#/components/stayflow/status-pill'
 import { EmptyState } from '#/components/stayflow/empty-state'
@@ -299,10 +300,10 @@ function BookingsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-surface">
-                {filtered.map((b) => {
+                {filtered.map((b, i) => {
                   const busy = busyIds.has(b.id)
                   return (
-                    <tr key={b.id}>
+                    <AnimatedTableRow key={b.id} index={i}>
                       <td className="whitespace-nowrap px-4 py-3 text-foreground">
                         {b.date.slice(0, 10)}
                       </td>
@@ -350,7 +351,7 @@ function BookingsPage() {
                           </span>
                         )}
                       </td>
-                    </tr>
+                    </AnimatedTableRow>
                   )
                 })}
               </tbody>

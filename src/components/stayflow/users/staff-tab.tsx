@@ -1,4 +1,5 @@
 import { Pencil, Trash2 } from 'lucide-react'
+import { AnimatedTableRow } from '#/components/stayflow/animated-table-row'
 import { AvatarInitials } from '#/components/stayflow/avatar-initials'
 import { Button } from '#/components/ui/button'
 import type { StaffMemberView } from '#/lib/api/staff'
@@ -66,8 +67,8 @@ export function StaffTab({
             </tr>
           </thead>
           <tbody className="divide-y divide-border bg-surface">
-            {staff.map((s) => (
-              <tr key={s.id}>
+            {staff.map((s, i) => (
+              <AnimatedTableRow key={s.id} index={i}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <AvatarInitials seed={s.name} className="size-8" />
@@ -101,7 +102,7 @@ export function StaffTab({
                     </Button>
                   </div>
                 </td>
-              </tr>
+              </AnimatedTableRow>
             ))}
           </tbody>
         </table>

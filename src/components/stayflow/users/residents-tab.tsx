@@ -1,4 +1,5 @@
 import { KeyRound, Pencil, Trash2 } from 'lucide-react'
+import { AnimatedTableRow } from '#/components/stayflow/animated-table-row'
 import { AvatarInitials } from '#/components/stayflow/avatar-initials'
 import { Button } from '#/components/ui/button'
 import { tierLabel } from '#/lib/api/resident'
@@ -85,8 +86,8 @@ export function ResidentsTab({
             </tr>
           </thead>
           <tbody className="divide-y divide-border bg-surface">
-            {residents.map((r) => (
-              <tr key={r.id}>
+            {residents.map((r, i) => (
+              <AnimatedTableRow key={r.id} index={i}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <AvatarInitials seed={r.name} className="size-8" />
@@ -136,7 +137,7 @@ export function ResidentsTab({
                     </Button>
                   </div>
                 </td>
-              </tr>
+              </AnimatedTableRow>
             ))}
           </tbody>
         </table>

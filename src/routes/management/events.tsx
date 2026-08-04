@@ -3,6 +3,7 @@ import * as React from 'react'
 import { toast } from '#/lib/toast'
 import { format, parseISO } from 'date-fns'
 import { Pencil, Plus, Trash2, Upload } from 'lucide-react'
+import { AnimatedTableRow } from '#/components/stayflow/animated-table-row'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -326,8 +327,8 @@ function ManagementEventsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-surface">
-                {events.map((event) => (
-                  <tr key={event.id}>
+                {events.map((event, i) => (
+                  <AnimatedTableRow key={event.id} index={i}>
                     <td className="px-4 py-3 font-medium text-foreground">
                       {event.title}
                     </td>
@@ -368,7 +369,7 @@ function ManagementEventsPage() {
                         </Button>
                       </div>
                     </td>
-                  </tr>
+                  </AnimatedTableRow>
                 ))}
               </tbody>
             </table>

@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import * as React from 'react'
 import { toast } from '#/lib/toast'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { AnimatedTableRow } from '#/components/stayflow/animated-table-row'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { StatusPill } from '#/components/stayflow/status-pill'
 import { Button } from '#/components/ui/button'
@@ -264,8 +265,8 @@ function ManagementFacilitiesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-surface">
-                {facilities.map((f) => (
-                  <tr key={f.id}>
+                {facilities.map((f, i) => (
+                  <AnimatedTableRow key={f.id} index={i}>
                     <td className="px-4 py-3 font-medium text-foreground">
                       {f.name}
                     </td>
@@ -294,7 +295,7 @@ function ManagementFacilitiesPage() {
                         </Button>
                       </div>
                     </td>
-                  </tr>
+                  </AnimatedTableRow>
                 ))}
               </tbody>
             </table>

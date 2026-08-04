@@ -9,6 +9,7 @@ import {
   Search,
   UserCheck,
 } from 'lucide-react'
+import { AnimatedTableRow } from '#/components/stayflow/animated-table-row'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { StatusPill } from '#/components/stayflow/status-pill'
 import { EmptyState } from '#/components/stayflow/empty-state'
@@ -360,8 +361,8 @@ function StaffGuestsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-surface">
-                {history.map((guest) => (
-                  <tr key={guest.id}>
+                {history.map((guest, i) => (
+                  <AnimatedTableRow key={guest.id} index={i}>
                     <td className="px-4 py-3 text-foreground">{guest.name}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-muted-text">
                       {guest.arrivalDate.slice(0, 10)}
@@ -372,7 +373,7 @@ function StaffGuestsPage() {
                     <td className="px-4 py-3">
                       <StatusPill status={guest.status} />
                     </td>
-                  </tr>
+                  </AnimatedTableRow>
                 ))}
               </tbody>
             </table>
