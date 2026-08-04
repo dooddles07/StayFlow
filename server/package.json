@@ -12,7 +12,8 @@
     "prisma:studio": "prisma studio",
     "seed": "node prisma/seed.js",
     "reset-test-passwords": "node scripts/reset-test-passwords.js",
-    "fix-corrupted-booking": "node scripts/fix-corrupted-booking.js"
+    "fix-corrupted-booking": "node scripts/fix-corrupted-booking.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@prisma/client": "^6.3.0",
@@ -28,6 +29,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "eslint": "^9.20.0",
+    "globals": "^17.7.0",
     "prisma": "^6.3.0"
   },
   "prisma": {
