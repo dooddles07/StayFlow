@@ -32,10 +32,17 @@ const ADMIN_CREATE_FIELDS = [
 // resident's own to manage via /residents/me once they have a login.
 const ADMIN_UPDATE_FIELDS = ['name', 'email', 'unit', 'tier']
 
+// A bare "YYYY-MM-DD" makes Prisma's DateTime column throw an unhandled validation
+// error. Accept it defensively server-side too — same guard booking/dining/guest/
+// event controllers already have; moveInDate was missing it.
+const toFullDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00.000Z` : value)
+
 export const residentController = {
   ...base,
   create: asyncHandler(async (req, res) => {
-    const item = await ResidentModel.create(pickAllowed(req.body, ADMIN_CREATE_FIELDS))
+    const data = pickAllowed(req.body, ADMIN_CREATE_FIELDS)
+    data.moveInDate = toFullDate(data.moveInDate)
+    const item = await ResidentModel.create(data)
     logAdminAction(req, 'CREATE', 'Resident', item.id)
     res.status(201).json(item)
   }),

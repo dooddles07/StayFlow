@@ -10,15 +10,24 @@ const base = buildCrudController(EventModel, 'Event')
 // Matches src/lib/api/event.ts's writable fields.
 const FIELDS = ['title', 'category', 'description', 'image', 'date', 'time', 'endTime', 'location', 'capacity']
 
+// A bare "YYYY-MM-DD" makes Prisma's DateTime column throw an unhandled validation
+// error. Accept it defensively server-side too — same guard booking/dining/guest
+// controllers already have; this one was missing it.
+const toFullDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00.000Z` : value)
+
 export const eventController = {
   ...base,
   create: asyncHandler(async (req, res) => {
-    const item = await EventModel.create(pickAllowed(req.body, FIELDS))
+    const data = pickAllowed(req.body, FIELDS)
+    data.date = toFullDate(data.date)
+    const item = await EventModel.create(data)
     logAdminAction(req, 'CREATE', 'Event', item.id)
     res.status(201).json(item)
   }),
   update: asyncHandler(async (req, res) => {
-    const item = await EventModel.update(req.params.id, pickAllowed(req.body, FIELDS))
+    const data = pickAllowed(req.body, FIELDS)
+    if ('date' in data) data.date = toFullDate(data.date)
+    const item = await EventModel.update(req.params.id, data)
     logAdminAction(req, 'UPDATE', 'Event', item.id)
     res.json(item)
   }),

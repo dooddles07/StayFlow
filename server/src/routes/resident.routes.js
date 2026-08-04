@@ -3,20 +3,28 @@ import { residentController, residentSelfController } from '../controllers/resid
 import { buildCrudRouter } from '../utils/crudRouter.js'
 import { requireRole } from '../middleware/auth.middleware.js'
 import { createLoginLimiter } from '../middleware/rateLimit.middleware.js'
+import { validateBody } from '../middleware/validate.middleware.js'
+import {
+  familyMemberSchema,
+  residentAdminCreateSchema,
+  residentAdminUpdateSchema,
+  residentSelfUpdateSchema,
+  vehicleSchema,
+} from '../schemas/resident.schema.js'
 
 const router = Router()
 
 // Self routes first so "me" is never captured by the CRUD "/:id" param route.
 // Any authenticated user with a linked residentId (i.e. MEMBERs) may use these.
 router.get('/me', residentSelfController.getMe)
-router.put('/me', residentSelfController.updateMe)
+router.put('/me', validateBody(residentSelfUpdateSchema), residentSelfController.updateMe)
 
-router.post('/me/family', residentSelfController.addFamilyMember)
-router.put('/me/family/:id', residentSelfController.updateFamilyMember)
+router.post('/me/family', validateBody(familyMemberSchema), residentSelfController.addFamilyMember)
+router.put('/me/family/:id', validateBody(familyMemberSchema), residentSelfController.updateFamilyMember)
 router.delete('/me/family/:id', residentSelfController.removeFamilyMember)
 
-router.post('/me/vehicles', residentSelfController.addVehicle)
-router.put('/me/vehicles/:id', residentSelfController.updateVehicle)
+router.post('/me/vehicles', validateBody(vehicleSchema), residentSelfController.addVehicle)
+router.put('/me/vehicles/:id', validateBody(vehicleSchema), residentSelfController.updateVehicle)
 router.delete('/me/vehicles/:id', residentSelfController.removeVehicle)
 
 router.post('/me/notices-seen', residentSelfController.markNoticesSeen)
@@ -32,6 +40,8 @@ router.use(
     // MANAGEMENT-only writes: no /staff/* screen exists for resident profile editing,
     // so STAFF write access was an unused permission, not an intended capability.
     writeRoles: ['MANAGEMENT'],
+    createSchema: residentAdminCreateSchema,
+    updateSchema: residentAdminUpdateSchema,
   }),
 )
 
