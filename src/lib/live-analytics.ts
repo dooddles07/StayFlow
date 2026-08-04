@@ -1,6 +1,4 @@
 // Real analytics derived from live booking/reservation/resident/guest data.
-// Counterpart to lib/mock/analytics.ts, which still backs the handful of charts
-// (dining revenue, member engagement) that need data this schema doesn't track yet.
 import { FACILITY_TIME_SLOTS } from './booking-slots'
 import type { BookingView } from './api/booking'
 import type { ReservationView } from './api/diningReservation'
@@ -8,7 +6,20 @@ import type { GuestView } from './api/guest'
 import type { ResidentProfile } from './api/resident'
 import type { Facility } from './mock/types'
 
-const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const MONTH_LABELS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+]
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 function parseHourLabel(time: string): { hour: number; label: string } | null {
@@ -24,7 +35,10 @@ function parseHourLabel(time: string): { hour: number; label: string } | null {
 // Utilization window: bookings within ±15 days of today against the fixed 7 daily
 // slots every facility offers (see FACILITY_TIME_SLOTS) — the closest real proxy to
 // occupancy this schema supports, since facilities have no explicit slot inventory.
-export function facilityUtilization(facilities: Facility[], bookings: BookingView[]) {
+export function facilityUtilization(
+  facilities: Facility[],
+  bookings: BookingView[],
+) {
   const WINDOW_DAYS = 30
   const now = Date.now()
   const windowStart = now - 15 * 86400000
@@ -37,7 +51,10 @@ export function facilityUtilization(facilities: Facility[], bookings: BookingVie
       const t = new Date(b.date).getTime()
       return t >= windowStart && t <= windowEnd
     }).length
-    return { name: f.name, utilization: Math.min(100, Math.round((booked / totalSlots) * 100)) }
+    return {
+      name: f.name,
+      utilization: Math.min(100, Math.round((booked / totalSlots) * 100)),
+    }
   })
 }
 
@@ -45,7 +62,8 @@ export function facilityPeakHours(bookings: BookingView[]) {
   const counts = new Map(FACILITY_TIME_SLOTS.map((slot) => [slot, 0]))
   for (const b of bookings) {
     if (b.status === 'cancelled') continue
-    if (counts.has(b.timeSlot)) counts.set(b.timeSlot, counts.get(b.timeSlot)! + 1)
+    if (counts.has(b.timeSlot))
+      counts.set(b.timeSlot, counts.get(b.timeSlot)! + 1)
   }
   return FACILITY_TIME_SLOTS.map((slot) => ({
     hour: slot.split('–')[0].trim(),
@@ -75,8 +93,19 @@ export function memberGrowth(residents: ResidentProfile[]) {
   const months: { key: string; label: string; monthEnd: number }[] = []
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59).getTime()
-    months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: MONTH_LABELS[d.getMonth()], monthEnd })
+    const monthEnd = new Date(
+      now.getFullYear(),
+      now.getMonth() - i + 1,
+      0,
+      23,
+      59,
+      59,
+    ).getTime()
+    months.push({
+      key: `${d.getFullYear()}-${d.getMonth()}`,
+      label: MONTH_LABELS[d.getMonth()],
+      monthEnd,
+    })
   }
   const moveIns = residents.map((r) => new Date(r.moveInDate).getTime())
   return months.map(({ key, label, monthEnd }) => {
@@ -109,6 +138,62 @@ export function guestTraffic(guests: GuestView[]) {
   return DAY_LABELS.map((day, i) => ({ day, guests: counts[i] }))
 }
 
+// Dining momentum by month: confirmed/arrived reservations, trailing 6 months.
+// No menu-price data exists in this schema (see docs/PRD.md — no payment/billing),
+// so reservation volume is the only honest dining metric available.
+export function diningTrend(reservations: ReservationView[]) {
+  const now = new Date()
+  const months: { key: string; label: string }[] = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    months.push({
+      key: `${d.getFullYear()}-${d.getMonth()}`,
+      label: MONTH_LABELS[d.getMonth()],
+    })
+  }
+  const counts = new Map(months.map((m) => [m.key, 0]))
+  for (const r of reservations) {
+    if (r.status === 'cancelled') continue
+    const d = new Date(r.date)
+    const key = `${d.getFullYear()}-${d.getMonth()}`
+    if (counts.has(key)) counts.set(key, counts.get(key)! + 1)
+  }
+  return months.map(({ key, label }) => ({
+    month: label,
+    reservations: counts.get(key) ?? 0,
+  }))
+}
+
+// Engagement tiers from real activity volume (bookings + dining + guest passes) in the
+// trailing 90 days — the closest honest proxy without a login/session-analytics table.
+export function memberEngagement(
+  residents: ResidentProfile[],
+  bookings: BookingView[],
+  reservations: ReservationView[],
+  guests: GuestView[],
+) {
+  const cutoff = Date.now() - 90 * 86400000
+  const counts = new Map<string, number>(residents.map((r) => [r.id, 0]))
+  const bump = (id: string) => counts.set(id, (counts.get(id) ?? 0) + 1)
+  for (const b of bookings)
+    if (b.status !== 'cancelled' && new Date(b.createdAt).getTime() >= cutoff)
+      bump(b.residentId)
+  for (const r of reservations)
+    if (r.status !== 'cancelled' && new Date(r.createdAt).getTime() >= cutoff)
+      bump(r.residentId)
+  for (const g of guests)
+    if (new Date(g.arrivalDate).getTime() >= cutoff) bump(g.hostResidentId)
+
+  const tiers = { 'Highly Active': 0, Active: 0, Occasional: 0, Dormant: 0 }
+  for (const count of counts.values()) {
+    if (count >= 6) tiers['Highly Active']++
+    else if (count >= 3) tiers.Active++
+    else if (count >= 1) tiers.Occasional++
+    else tiers.Dormant++
+  }
+  return Object.entries(tiers).map(([name, value]) => ({ name, value }))
+}
+
 export function guestFrequent(guests: GuestView[], limit = 5) {
   const cutoff = Date.now() - 90 * 86400000
   const counts = new Map<string, { name: string; visits: number }>()
@@ -119,5 +204,7 @@ export function guestFrequent(guests: GuestView[], limit = 5) {
     if (entry) entry.visits += 1
     else counts.set(key, { name: g.name.trim(), visits: 1 })
   }
-  return [...counts.values()].sort((a, b) => b.visits - a.visits).slice(0, limit)
+  return [...counts.values()]
+    .sort((a, b) => b.visits - a.visits)
+    .slice(0, limit)
 }

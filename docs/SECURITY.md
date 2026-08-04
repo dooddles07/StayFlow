@@ -67,6 +67,8 @@ Backend requires `DATABASE_URL` + `JWT_SECRET` (process exits at boot if missing
 
 The live demo password is shown in the root README's "Try It Live" section — seeded test accounts, not real user data. **Rotate before any production use** via the password-reset flow or `server/scripts/reset-test-passwords.js` (set `TEST_PASSWORD`, run with `--force` — this stack has no separate local database, so the script always targets whatever `DATABASE_URL` is in `.env`; `NODE_ENV` is not a reliable "is this prod" signal here and the guard doesn't trust it).
 
+**Known tradeoff:** all three demo logins have full write access to the live database — anyone with the published password can create, edit, or delete real rows (residents, bookings, notices, and so on). No automated reset job is configured, so the demo can be left in a messy state by a visitor. Accepted for a portfolio project; revisit (scheduled reset job, or read-only demo accounts) before this codebase backs a real building.
+
 ## Third-party services
 
 | Category                                                                      | Status                                                                                                                      |

@@ -40,7 +40,13 @@ export interface EmergencyContact {
   phone: string
 }
 
-export type StaffRole = 'Concierge' | 'Facilities Manager' | 'Guest Relations' | 'Dining Manager' | 'Security' | 'Operations'
+export type StaffRole =
+  | 'Concierge'
+  | 'Facilities Manager'
+  | 'Guest Relations'
+  | 'Dining Manager'
+  | 'Security'
+  | 'Operations'
 
 export interface StaffMember {
   id: string
@@ -51,7 +57,8 @@ export interface StaffMember {
   avatarSeed: string
 }
 
-export type FacilityCategory = 'Wellness' | 'Recreation' | 'Entertainment' | 'Sports' | 'Function'
+export type FacilityCategory =
+  'Wellness' | 'Recreation' | 'Entertainment' | 'Sports' | 'Function'
 export type FacilityStatus = 'open' | 'maintenance' | 'closed'
 
 export interface Facility {
@@ -105,7 +112,8 @@ export interface DiningTable {
   status: 'available' | 'reserved' | 'occupied'
 }
 
-export type DiningReservationStatus = 'confirmed' | 'pending' | 'cancelled' | 'arrived'
+export type DiningReservationStatus =
+  'confirmed' | 'pending' | 'cancelled' | 'arrived'
 
 export interface DiningReservation {
   id: string
@@ -137,7 +145,8 @@ export interface Guest {
   checkedOutAt?: string
 }
 
-export type EventCategory = 'Social' | 'Wellness' | 'Kids' | 'Seasonal' | 'Cultural'
+export type EventCategory =
+  'Social' | 'Wellness' | 'Kids' | 'Seasonal' | 'Cultural'
 
 export interface CommunityEvent {
   id: string
@@ -164,7 +173,8 @@ export interface Notice {
   pinned: boolean
 }
 
-export type NotificationKind = 'booking' | 'guest' | 'dining' | 'event' | 'notice' | 'system'
+export type NotificationKind =
+  'booking' | 'guest' | 'dining' | 'event' | 'notice' | 'system'
 
 export interface AppNotification {
   id: string
@@ -178,15 +188,4 @@ export interface AppNotification {
 export interface KpiSeriesPoint {
   label: string
   value: number
-}
-
-export interface AnalyticsData {
-  facilityUtilization: { name: string; utilization: number }[]
-  diningRevenue: { month: string; revenue: number }[]
-  memberEngagement: { name: string; value: number }[]
-  guestTraffic: { day: string; guests: number }[]
-  facilityPeakHours: { hour: string; bookings: number }[]
-  diningPopularTimes: { time: string; reservations: number }[]
-  memberGrowth: { month: string; active: number; new: number }[]
-  guestFrequent: { name: string; visits: number }[]
 }
