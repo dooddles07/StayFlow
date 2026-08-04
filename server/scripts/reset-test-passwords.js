@@ -4,7 +4,6 @@ import dotenv from 'dotenv'
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 import { BCRYPT_ROUNDS } from '../src/utils/password.js'
-import { env } from '../src/config/env.js'
 
 // Load the repo's single .env by file-relative path, not CWD — this script needs to
 // work whether it's run from root or from server/, and there's no server/.env to fall
@@ -22,11 +21,13 @@ const ACCOUNTS = [
 ]
 
 async function main() {
-  // DATABASE_URL points at prod (this stack has no separate local DB) — refuse to
-  // silently reset real accounts if NODE_ENV=production or --force isn't passed.
-  if (env.isProd && !process.argv.includes('--force')) {
+  // DATABASE_URL always points at prod in this stack (no separate local DB, and
+  // NODE_ENV is not a reliable signal here — local dev runs with NODE_ENV=development
+  // against the same DATABASE_URL). Require --force unconditionally rather than
+  // trusting NODE_ENV to tell prod and dev apart.
+  if (!process.argv.includes('--force')) {
     console.error(
-      'Refusing to run with NODE_ENV=production. Pass --force if you are certain this DATABASE_URL is not production.',
+      'Refusing to run without --force. This DATABASE_URL is production — pass --force if you are certain you want to reset these accounts.',
     )
     process.exit(1)
   }
