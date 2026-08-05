@@ -20,5 +20,7 @@ export const guestUpdateSchema = z.object({
   vehiclePlate: z.string().optional(),
   arrivalDate: dateInput.optional(),
   arrivalTime: nonEmptyString.optional(),
-  status: z.enum(['PENDING', 'APPROVED', 'CHECKED_IN', 'CHECKED_OUT']).optional(),
+  status: z
+    .enum(['PENDING', 'APPROVED', 'CHECKED_IN', 'CHECKED_OUT'])
+    .optional(),
 })

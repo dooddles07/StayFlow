@@ -9,8 +9,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const JWT_SECRET = 'test-only-secret-value-that-is-long-enough'
 process.env.JWT_SECRET = JWT_SECRET
 process.env.DATABASE_URL = 'postgresql://test/test'
+process.env.DIRECT_URL = 'postgresql://test/test'
 process.env.NODE_ENV = 'test'
 process.env.LOG_LEVEL = 'silent'
+// Readiness caches a healthy probe for a few seconds in production. These cases
+// each want a fresh probe; the cache itself is covered in health.routes.test.js.
+process.env.HEALTH_PROBE_CACHE_MS = '0'
 
 const notification = (over = {}) => ({
   id: 'notif-1',
@@ -241,7 +245,7 @@ describe('H6 — error responses do not leak schema internals', () => {
       category: 'Leisure',
       description: 'd',
       rules: [],
-      image: 'i',
+      image: '/images/facilities/pool.webp',
       capacity: 5,
       openHours: '9-5',
       rating: 4,

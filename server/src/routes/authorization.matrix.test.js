@@ -16,6 +16,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const JWT_SECRET = 'test-only-secret-value-that-is-long-enough'
 process.env.JWT_SECRET = JWT_SECRET
 process.env.DATABASE_URL = 'postgresql://test/test'
+process.env.DIRECT_URL = 'postgresql://test/test'
 process.env.NODE_ENV = 'test'
 // Hundreds of requests go through the real app here; the access log would bury
 // the assertions.

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 process.env.JWT_SECRET = 'test-only-secret-value-that-is-long-enough'
 process.env.DATABASE_URL = 'postgresql://test/test'
+process.env.DIRECT_URL = 'postgresql://test/test'
 process.env.LOG_LEVEL = 'silent'
 
 const { loginLimiter, forgotPasswordLimiter, changePasswordLimiter } =

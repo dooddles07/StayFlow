@@ -1,12 +1,12 @@
 import { z } from 'zod'
-import { nonEmptyString, positiveInt } from './shared.js'
+import { imageUrl, nonEmptyString, positiveInt } from './shared.js'
 
 export const facilityCreateSchema = z.object({
   name: nonEmptyString,
   category: nonEmptyString,
   description: nonEmptyString,
   rules: z.array(z.string()),
-  image: nonEmptyString,
+  image: imageUrl,
   capacity: positiveInt,
   openHours: nonEmptyString,
   location: nonEmptyString,

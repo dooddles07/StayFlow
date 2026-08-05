@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 process.env.JWT_SECRET = 'test-only-secret-value-that-is-long-enough'
 process.env.DATABASE_URL = 'postgresql://test/test'
+process.env.DIRECT_URL = 'postgresql://test/test'
 
 // The logger is the last thing standing between a Prisma error object (which
 // embeds query parameter values) or a request body and the log stream. If

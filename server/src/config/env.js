@@ -6,17 +6,17 @@ import dotenv from 'dotenv'
 // A bare `dotenv/config` resolves against the working directory, so running the
 // API from the repo root found the file and running it from server/ did not —
 // which is why a byte-identical copy of the secrets had been created at
-// server/.env. One file, one place to rotate. Values already present in the
-// environment (Render, CI) always win: dotenv does not overwrite.
+// server/.env. That second file is no longer read: two files that dotenv merges
+// first-wins had already drifted apart, so a key defined in both silently used
+// whichever copy loaded first. One file, one place to rotate. Values already
+// present in the environment (Render, CI) always win: dotenv does not overwrite.
 const here = path.dirname(fileURLToPath(import.meta.url))
-for (const candidate of [
-  path.resolve(here, '../../../.env'), // repo root
-  path.resolve(here, '../../.env'), // server/ — legacy location, still honoured
-]) {
-  dotenv.config({ path: candidate, quiet: true })
-}
+dotenv.config({ path: path.resolve(here, '../../../.env'), quiet: true })
 
-const required = ['DATABASE_URL', 'JWT_SECRET']
+// DIRECT_URL is read by schema.prisma for migrations and advisory locks. Left
+// out of this list it failed during `prisma migrate deploy` in the build rather
+// than at startup with the same clear message every other required var gets.
+const required = ['DATABASE_URL', 'DIRECT_URL', 'JWT_SECRET']
 for (const key of required) {
   if (!process.env[key]) {
     throw new Error(`Missing required env var: ${key}`)
@@ -64,8 +64,15 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   corsOrigins,
-  // Base URL of the frontend, used to build password-reset links.
-  appUrl: process.env.APP_URL || corsOrigins[0] || 'http://localhost:3000',
+  // Base URL of the frontend, used to build password-reset links and as the one
+  // Origin allowed on state-changing requests. The localhost fallback is scoped
+  // to development on purpose: production throws above if APP_URL is unset, so
+  // it can never be reached there, and leaving it unscoped meant an empty
+  // allowlist would have turned the origin check off in local development.
+  appUrl:
+    process.env.APP_URL ||
+    corsOrigins[0] ||
+    (isProd ? '' : 'http://localhost:3000'),
   // Email delivery (Resend). Without a key, mail is logged to the console only.
   resendApiKey: process.env.RESEND_API_KEY || '',
   // Must be a Resend-verified domain in production. The shared sandbox sender

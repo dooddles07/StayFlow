@@ -7,14 +7,9 @@ import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
 import * as Sentry from '@sentry/node'
 
-// server/src/config/env.js has not run yet, so load the same .env files it does.
+// server/src/config/env.js has not run yet, so load the same .env file it does.
 const here = path.dirname(fileURLToPath(import.meta.url))
-for (const candidate of [
-  path.resolve(here, '../.env'), // repo root
-  path.resolve(here, '.env'), // server/ — legacy location, still honoured
-]) {
-  dotenv.config({ path: candidate, quiet: true })
-}
+dotenv.config({ path: path.resolve(here, '../.env'), quiet: true })
 
 // No DSN => Sentry is never initialised and nothing leaves the process. That is
 // the default locally and in CI.

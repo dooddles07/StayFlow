@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 process.env.JWT_SECRET = 'test-only-secret-value-that-is-long-enough'
 process.env.DATABASE_URL = 'postgresql://test/test'
+process.env.DIRECT_URL = 'postgresql://test/test'
 
 vi.mock('../config/env.js', () => ({ env: { isProd: true } }))
 

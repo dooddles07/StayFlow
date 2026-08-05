@@ -1,11 +1,11 @@
 import { z } from 'zod'
-import { dateInput, nonEmptyString, positiveInt } from './shared.js'
+import { dateInput, imageUrl, nonEmptyString, positiveInt } from './shared.js'
 
 export const eventCreateSchema = z.object({
   title: nonEmptyString,
   category: nonEmptyString,
   description: nonEmptyString,
-  image: nonEmptyString,
+  image: imageUrl,
   date: dateInput,
   time: nonEmptyString,
   // Nullable, not just optional: the column is `endTime String?` and the admin

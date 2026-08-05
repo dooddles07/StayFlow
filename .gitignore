@@ -3,7 +3,10 @@ node_modules
 dist
 dist-ssr
 *.local
-.env
+# Every .env variant, not just the bare name — .env.production and .env.staging
+# hold the same secrets and were not covered before.
+.env*
+!.env.example
 .nitro
 .tanstack
 .wrangler

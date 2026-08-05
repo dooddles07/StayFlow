@@ -16,6 +16,7 @@ jobs:
       # secret-scan job below strict rather than needing an exception for CI's
       # own config.
       DATABASE_URL: postgresql://ci@localhost:5432/ci
+      DIRECT_URL: postgresql://ci@localhost:5432/ci
       JWT_SECRET: ci-only-placeholder-secret-not-a-real-credential-32chars
 
     steps:

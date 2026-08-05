@@ -1,11 +1,11 @@
 import { z } from 'zod'
-import { nonEmptyString, positiveInt } from './shared.js'
+import { imageUrl, nonEmptyString, positiveInt } from './shared.js'
 
 export const restaurantCreateSchema = z.object({
   name: nonEmptyString,
   cuisine: nonEmptyString,
   description: nonEmptyString,
-  image: nonEmptyString,
+  image: imageUrl,
   openHours: nonEmptyString,
   priceRange: nonEmptyString,
   rating: z.number(),
