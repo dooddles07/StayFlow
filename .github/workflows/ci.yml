@@ -32,8 +32,60 @@ jobs:
       - run: npm run lint
       - run: npm run lint:server
       - run: npm run typecheck
-      - run: npm test
+      # Coverage rather than a plain run, so the thresholds in vitest.config.ts
+      # are enforced here and not only when someone remembers to check.
+      - run: npm run test:coverage
       - run: npm run build
+
+  # The booking uniqueness guard is a partial unique index that Prisma cannot
+  # express, so it lives in raw SQL inside a migration. Nothing in the schema
+  # file mentions it, which means a future `db push` or a hand-edited migration
+  # could drop it and no other check would notice. Applying every migration to a
+  # real Postgres and then diffing it against the schema is what catches that.
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: stayflow_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/stayflow_ci
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/stayflow_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --prefix server
+      - name: Apply every migration from empty
+        run: npx prisma migrate deploy --schema=server/prisma/schema.prisma
+      # A plain `migrate diff` cannot be used here: the partial index is
+      # deliberately absent from the schema file, so diff would always report it
+      # as drift. Asserting the index exists checks the thing that matters.
+      - name: Assert the double-booking index survived
+        run: |
+          npx prisma db execute --schema=server/prisma/schema.prisma --stdin <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_indexes
+              WHERE indexname = 'bookings_facility_date_slot_active_key'
+            ) THEN
+              RAISE EXCEPTION
+                'bookings_facility_date_slot_active_key is missing — the database no longer prevents double-booking';
+            END IF;
+          END $$;
+          SQL
 
   audit:
     runs-on: ubuntu-latest

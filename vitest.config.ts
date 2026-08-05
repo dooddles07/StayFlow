@@ -18,5 +18,17 @@ export default defineConfig({
       'scripts/**/*.test.mjs',
     ],
     setupFiles: ['./vitest.setup.ts'],
+    // A ratchet, not a target. The numbers sit just under what the suite
+    // covers today so coverage can only go up: deleting a test to make a
+    // change pass now fails the run instead of passing quietly.
+    coverage: {
+      provider: 'v8',
+      thresholds: {
+        statements: 85,
+        branches: 75,
+        functions: 82,
+        lines: 87,
+      },
+    },
   },
 })
