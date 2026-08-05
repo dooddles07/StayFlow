@@ -4,7 +4,15 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Pooled (PgBouncer) host — what the running API uses. Neon's free plan allows
+  // very few direct connections and Prisma opens a pool per process.
+  url       = env("DATABASE_URL")
+  // Direct host — what the CLI uses. Prisma Migrate cannot run through PgBouncer's
+  // transaction pooling (advisory locks and DDL need one session), so `migrate
+  // deploy` in the Render build would fail against the pooled host. Required
+  // whenever DATABASE_URL points at a pooler; set it equal to DATABASE_URL for a
+  // non-pooled local database.
+  directUrl = env("DIRECT_URL")
 }
 
 enum MembershipTier {

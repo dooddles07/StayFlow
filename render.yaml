@@ -33,8 +33,15 @@ services:
       # closed to [] rather than a wildcard.
       - key: CORS_ORIGIN
         value: ""
-      # Set in the Render dashboard, not here.
+      # Set in the Render dashboard, not here. Use Neon's POOLED host (-pooler) —
+      # the running API opens a pool per process and the direct host allows too
+      # few connections for that on the free plan.
       - key: DATABASE_URL
+        sync: false
+      # Neon's DIRECT (non-pooled) host. The build step's `prisma migrate deploy`
+      # above needs one real session for advisory locks and DDL, which DATABASE_URL's
+      # PgBouncer pooling cannot provide — see directUrl in schema.prisma.
+      - key: DIRECT_URL
         sync: false
       # Mail delivery. The API refuses to boot in production without these two
       # (server/src/config/env.js): no key means reset links are never sent, and
