@@ -138,7 +138,7 @@ function StaffDashboard() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-gold">
           Operations
         </p>
-        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+        <h1 className="mt-1.5 font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           Today's Overview
         </h1>
       </div>

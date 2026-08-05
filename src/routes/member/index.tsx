@@ -1,6 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as React from 'react'
-import { CalendarPlus, CloudSun, Sunset, UserPlus, UtensilsCrossed, Waves } from 'lucide-react'
+import {
+  CalendarPlus,
+  CloudSun,
+  Sunset,
+  UserPlus,
+  UtensilsCrossed,
+  Waves,
+} from 'lucide-react'
 import { SectionHeader } from '#/components/stayflow/section-header'
 import { ReservationRow } from '#/components/stayflow/reservation-row'
 import { FacilityCard } from '#/components/stayflow/facility-card'
@@ -10,16 +17,16 @@ import { EmptyState } from '#/components/stayflow/empty-state'
 import { Button } from '#/components/ui/button'
 import { getNotices } from '#/lib/api/notice'
 import { getFacilities } from '#/lib/api/facility'
-import { getMyBookings  } from '#/lib/api/booking'
-import type {BookingView} from '#/lib/api/booking';
-import { getMyReservations  } from '#/lib/api/diningReservation'
-import type {ReservationView} from '#/lib/api/diningReservation';
+import { getMyBookings } from '#/lib/api/booking'
+import type { BookingView } from '#/lib/api/booking'
+import { getMyReservations } from '#/lib/api/diningReservation'
+import type { ReservationView } from '#/lib/api/diningReservation'
 import { getRestaurants } from '#/lib/api/restaurant'
 import { tierLabel } from '#/lib/api/resident'
 import { isPastDate } from '#/lib/history'
 import { useMyProfile } from '#/lib/store/member-profile'
-import { getWeather  } from '#/lib/weather'
-import type {WeatherSnapshot} from '#/lib/weather';
+import { getWeather } from '#/lib/weather'
+import type { WeatherSnapshot } from '#/lib/weather'
 import type { Facility, Notice } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/member/')({
@@ -41,7 +48,8 @@ function MemberDashboard() {
   const firstName = profile?.name.split(' ')[0] ?? 'Resident'
 
   const [facilities, setFacilities] = React.useState<Facility[]>([])
-  const [facilitiesStatus, setFacilitiesStatus] = React.useState<LoadStatus>('loading')
+  const [facilitiesStatus, setFacilitiesStatus] =
+    React.useState<LoadStatus>('loading')
   const loadFacilities = React.useCallback(() => {
     let active = true
     setFacilitiesStatus('loading')
@@ -60,7 +68,9 @@ function MemberDashboard() {
   }, [])
   React.useEffect(() => loadFacilities(), [loadFacilities])
 
-  const [restaurantCount, setRestaurantCount] = React.useState<number | null>(null)
+  const [restaurantCount, setRestaurantCount] = React.useState<number | null>(
+    null,
+  )
   React.useEffect(() => {
     let active = true
     getRestaurants()
@@ -72,7 +82,8 @@ function MemberDashboard() {
   }, [])
 
   const [weather, setWeather] = React.useState<WeatherSnapshot | null>(null)
-  const [weatherStatus, setWeatherStatus] = React.useState<LoadStatus>('loading')
+  const [weatherStatus, setWeatherStatus] =
+    React.useState<LoadStatus>('loading')
   React.useEffect(() => {
     let active = true
     getWeather()
@@ -91,12 +102,16 @@ function MemberDashboard() {
 
   const [bookings, setBookings] = React.useState<BookingView[]>([])
   const [reservations, setReservations] = React.useState<ReservationView[]>([])
-  const [upcomingStatus, setUpcomingStatus] = React.useState<LoadStatus>('loading')
+  const [upcomingStatus, setUpcomingStatus] =
+    React.useState<LoadStatus>('loading')
   const loadUpcoming = React.useCallback((residentId?: string) => {
     if (!residentId) return
     let active = true
     setUpcomingStatus('loading')
-    Promise.allSettled([getMyBookings(residentId), getMyReservations(residentId)]).then(([b, r]) => {
+    Promise.allSettled([
+      getMyBookings(residentId),
+      getMyReservations(residentId),
+    ]).then(([b, r]) => {
       if (!active) return
       // Show whatever succeeded rather than discarding both on a single failure.
       if (b.status === 'rejected' && r.status === 'rejected') {
@@ -116,7 +131,11 @@ function MemberDashboard() {
   // Match the facilities/dining list pages: only still-active requests whose date hasn't passed.
   const upcoming = [
     ...bookings
-      .filter((b) => (b.status === 'pending' || b.status === 'confirmed') && !isPastDate(b.date))
+      .filter(
+        (b) =>
+          (b.status === 'pending' || b.status === 'confirmed') &&
+          !isPastDate(b.date),
+      )
       .map((b) => ({
         id: b.id,
         date: b.date,
@@ -126,7 +145,11 @@ function MemberDashboard() {
         meta: `Party of ${b.partySize}`,
       })),
     ...reservations
-      .filter((r) => (r.status === 'pending' || r.status === 'confirmed') && !isPastDate(r.date))
+      .filter(
+        (r) =>
+          (r.status === 'pending' || r.status === 'confirmed') &&
+          !isPastDate(r.date),
+      )
       .map((r) => ({
         id: r.id,
         date: r.date,
@@ -139,10 +162,13 @@ function MemberDashboard() {
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 4)
 
-  const featuredFacilities = facilities.filter((f) => f.status === 'open').slice(0, 3)
+  const featuredFacilities = facilities
+    .filter((f) => f.status === 'open')
+    .slice(0, 3)
 
   const [notices, setNotices] = React.useState<Notice[]>([])
-  const [noticesStatus, setNoticesStatus] = React.useState<LoadStatus>('loading')
+  const [noticesStatus, setNoticesStatus] =
+    React.useState<LoadStatus>('loading')
   const loadNotices = React.useCallback(() => {
     let active = true
     setNoticesStatus('loading')
@@ -161,10 +187,16 @@ function MemberDashboard() {
   }, [])
   React.useEffect(() => loadNotices(), [loadNotices])
   const topNotices = [...notices]
-    .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.postedAt.localeCompare(a.postedAt))
+    .sort(
+      (a, b) =>
+        Number(b.pinned) - Number(a.pinned) ||
+        b.postedAt.localeCompare(a.postedAt),
+    )
     .slice(0, 3)
   const seenBaseline = profile?.noticesLastSeenAt
-  const isNewNotice = (n: Notice) => seenBaseline !== undefined && (seenBaseline === null || n.postedAt > seenBaseline)
+  const isNewNotice = (n: Notice) =>
+    seenBaseline !== undefined &&
+    (seenBaseline === null || n.postedAt > seenBaseline)
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -176,11 +208,15 @@ function MemberDashboard() {
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-surface/90 to-surface-hover/80" />
         <div className="relative">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-gold">Welcome back</p>
-          <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-gold">
+            Welcome back
+          </p>
+          <h1 className="mt-1.5 font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             {greeting()}, {firstName}
           </h1>
-          <p className="mt-1.5 text-sm text-muted-text">{profile?.unit} · {profile ? tierLabel(profile.tier) : ''} Member</p>
+          <p className="mt-1.5 text-sm text-muted-text">
+            {profile?.unit} · {profile ? tierLabel(profile.tier) : ''} Member
+          </p>
         </div>
         {weatherStatus === 'loading' ? (
           <div className="relative flex gap-3">
@@ -192,14 +228,18 @@ function MemberDashboard() {
             <div className="flex items-center gap-2.5 rounded-xl border border-border bg-canvas/40 px-4 py-3">
               <CloudSun className="size-5 text-accent-gold" />
               <div>
-                <p className="text-sm font-medium text-foreground">{weather.tempF}°F · {weather.condition}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {weather.tempF}°F · {weather.condition}
+                </p>
                 <p className="text-[11px] text-muted-text">San Francisco</p>
               </div>
             </div>
             <div className="flex items-center gap-2.5 rounded-xl border border-border bg-canvas/40 px-4 py-3">
               <Sunset className="size-5 text-accent-gold" />
               <div>
-                <p className="text-sm font-medium text-foreground">{weather.sunsetLabel}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {weather.sunsetLabel}
+                </p>
                 <p className="text-[11px] text-muted-text">Sunset tonight</p>
               </div>
             </div>
@@ -213,15 +253,34 @@ function MemberDashboard() {
       </div>
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <QuickActionCard icon={Waves} label="Book a Facility" description="Pool, gym & more" to="/member/facilities" />
+        <QuickActionCard
+          icon={Waves}
+          label="Book a Facility"
+          description="Pool, gym & more"
+          to="/member/facilities"
+        />
         <QuickActionCard
           icon={UtensilsCrossed}
           label="Reserve Dining"
-          description={restaurantCount === null ? 'Book a table' : `${restaurantCount} restaurant${restaurantCount === 1 ? '' : 's'}`}
+          description={
+            restaurantCount === null
+              ? 'Book a table'
+              : `${restaurantCount} restaurant${restaurantCount === 1 ? '' : 's'}`
+          }
           to="/member/dining"
         />
-        <QuickActionCard icon={UserPlus} label="Register Guest" description="Get a pass" to="/member/guests" />
-        <QuickActionCard icon={CalendarPlus} label="Browse Events" description="This week" to="/member/events" />
+        <QuickActionCard
+          icon={UserPlus}
+          label="Register Guest"
+          description="Get a pass"
+          to="/member/guests"
+        />
+        <QuickActionCard
+          icon={CalendarPlus}
+          label="Browse Events"
+          description="This week"
+          to="/member/events"
+        />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
@@ -230,10 +289,16 @@ function MemberDashboard() {
             title="Upcoming Reservations"
             action={
               <div className="flex shrink-0 items-center gap-3 text-xs font-medium">
-                <Link to="/member/facilities" className="text-accent-indigo-soft transition-colors hover:text-accent-gold">
+                <Link
+                  to="/member/facilities"
+                  className="text-accent-indigo-soft transition-colors hover:text-accent-gold"
+                >
                   Facilities
                 </Link>
-                <Link to="/member/dining" className="text-accent-indigo-soft transition-colors hover:text-accent-gold">
+                <Link
+                  to="/member/dining"
+                  className="text-accent-indigo-soft transition-colors hover:text-accent-gold"
+                >
                   Dining
                 </Link>
               </div>
@@ -242,18 +307,30 @@ function MemberDashboard() {
           {upcomingStatus === 'loading' ? (
             <div className="space-y-3">
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="h-16 animate-pulse rounded-2xl border border-border bg-surface" />
+                <div
+                  key={i}
+                  className="h-16 animate-pulse rounded-2xl border border-border bg-surface"
+                />
               ))}
             </div>
           ) : upcomingStatus === 'error' ? (
             <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-              <p className="text-sm text-muted-text">We couldn't load your reservations right now.</p>
-              <Button onClick={() => loadUpcoming(profile?.id)} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+              <p className="text-sm text-muted-text">
+                We couldn't load your reservations right now.
+              </p>
+              <Button
+                onClick={() => loadUpcoming(profile?.id)}
+                className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+              >
                 Retry
               </Button>
             </div>
           ) : upcoming.length === 0 ? (
-            <EmptyState icon={Waves} title="No upcoming reservations" description="Book a facility or reserve dining to see it here." />
+            <EmptyState
+              icon={Waves}
+              title="No upcoming reservations"
+              description="Book a facility or reserve dining to see it here."
+            />
           ) : (
             <div className="space-y-3">
               {upcoming.map((item) => (
@@ -270,17 +347,28 @@ function MemberDashboard() {
           )}
 
           <div className="mt-8">
-            <SectionHeader title="Featured Facilities" viewAllHref="/member/facilities" />
+            <SectionHeader
+              title="Featured Facilities"
+              viewAllHref="/member/facilities"
+            />
             {facilitiesStatus === 'loading' ? (
               <div className="grid gap-4 sm:grid-cols-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-40 animate-pulse rounded-2xl border border-border bg-surface" />
+                  <div
+                    key={i}
+                    className="h-40 animate-pulse rounded-2xl border border-border bg-surface"
+                  />
                 ))}
               </div>
             ) : facilitiesStatus === 'error' ? (
               <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-                <p className="text-sm text-muted-text">We couldn't load facilities right now.</p>
-                <Button onClick={loadFacilities} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+                <p className="text-sm text-muted-text">
+                  We couldn't load facilities right now.
+                </p>
+                <Button
+                  onClick={loadFacilities}
+                  className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+                >
                   Retry
                 </Button>
               </div>
@@ -295,24 +383,39 @@ function MemberDashboard() {
         </div>
 
         <div>
-          <SectionHeader title="Community Notices" viewAllHref="/member/notices" />
+          <SectionHeader
+            title="Community Notices"
+            viewAllHref="/member/notices"
+          />
           {noticesStatus === 'loading' ? (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-20 animate-pulse rounded-2xl border border-border bg-surface" />
+                <div
+                  key={i}
+                  className="h-20 animate-pulse rounded-2xl border border-border bg-surface"
+                />
               ))}
             </div>
           ) : noticesStatus === 'error' ? (
             <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-              <p className="text-sm text-muted-text">We couldn't load notices right now.</p>
-              <Button onClick={loadNotices} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+              <p className="text-sm text-muted-text">
+                We couldn't load notices right now.
+              </p>
+              <Button
+                onClick={loadNotices}
+                className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+              >
                 Retry
               </Button>
             </div>
           ) : (
             <div className="space-y-3">
               {topNotices.map((notice) => (
-                <NoticeCard key={notice.id} notice={notice} isNew={isNewNotice(notice)} />
+                <NoticeCard
+                  key={notice.id}
+                  notice={notice}
+                  isNew={isNewNotice(notice)}
+                />
               ))}
             </div>
           )}
