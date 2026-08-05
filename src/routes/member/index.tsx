@@ -202,8 +202,10 @@ function MemberDashboard() {
     <div className="mx-auto max-w-7xl">
       <div className="animate-fade-in relative mb-6 flex flex-col justify-between gap-6 overflow-hidden rounded-2xl border border-border p-6 sm:flex-row sm:items-center sm:p-8">
         <img
-          src="/images/hero/member-banner.png"
+          src="/images/hero/member-banner.webp"
           alt=""
+          decoding="async"
+          fetchPriority="high"
           className="pointer-events-none absolute inset-0 size-full object-cover"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-surface/90 to-surface-hover/80" />

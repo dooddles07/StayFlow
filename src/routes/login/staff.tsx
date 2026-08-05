@@ -27,8 +27,10 @@ function StaffLogin() {
     <div className="flex min-h-dvh bg-canvas">
       <div className="relative hidden w-[42%] flex-col justify-between overflow-hidden bg-surface p-10 lg:flex">
         <img
-          src="/images/hero/staff-login.png"
+          src="/images/hero/staff-login.webp"
           alt=""
+          decoding="async"
+          fetchPriority="high"
           className="pointer-events-none absolute inset-0 size-full object-cover"
         />
         <div className="pointer-events-none absolute inset-0 bg-surface/70" />

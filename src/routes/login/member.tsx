@@ -14,8 +14,10 @@ function MemberLogin() {
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-canvas px-6 py-16">
       <img
-        src="/images/hero/member-login.png"
+        src="/images/hero/member-login.webp"
         alt=""
+        decoding="async"
+        fetchPriority="high"
         className="pointer-events-none absolute inset-0 size-full object-cover"
       />
       <div className="pointer-events-none absolute inset-0 bg-canvas/70" />
