@@ -9,7 +9,7 @@ import { cn } from '#/lib/utils'
 export const Route = createFileRoute('/')({
   head: () => ({
     meta: [
-      { title: 'StayFlow by QUAN7UM — Choose Your Portal' },
+      { title: 'StayFlow — Choose Your Portal' },
       {
         name: 'description',
         content: 'Enter the Member, Staff, or Management portal for StayFlow.',
@@ -95,10 +95,7 @@ function LandingPage() {
         <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-accent-indigo/15">
           <img src="/logo.svg?v=3" alt="StayFlow" className="size-9" />
         </div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
-          by QUAN7UM
-        </p>
-        <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
           StayFlow
         </h1>
         <p className="mt-3 max-w-md text-sm text-muted-text sm:text-base">
