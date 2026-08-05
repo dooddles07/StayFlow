@@ -37,9 +37,22 @@ export async function uploadPhoto(file: File): Promise<string> {
     `https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`,
     { method: 'POST', body: form },
   )
-  if (!res.ok) throw new Error('Upload failed. Please try again.')
 
-  const body = (await res.json()) as { secure_url?: string }
-  if (!body.secure_url) throw new Error('Upload failed. Please try again.')
+  const body = (await res.json().catch(() => ({}))) as {
+    secure_url?: string
+    error?: { message?: string }
+  }
+
+  if (!res.ok || !body.secure_url) {
+    // Cloudinary says exactly what is wrong ("Invalid Signature", "Unknown API
+    // key", a permissions refusal). Showing the user a flat "try again" and
+    // dropping that on the floor makes an operator error indistinguishable from
+    // a corrupt file, so the reason goes to the console while the toast stays
+    // in plain language. The message is provider text — it carries no secret.
+    const reason = body.error?.message ?? `HTTP ${res.status}`
+    console.error(`[cloudinary] upload rejected: ${reason}`)
+    throw new Error(reason)
+  }
+
   return body.secure_url
 }
