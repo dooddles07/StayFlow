@@ -1,6 +1,6 @@
 # StayFlow — Schema
 
-> Source of truth is `server/prisma/schema.prisma` — this doc summarizes it. Business rules built on top of this schema: [RULES.md](RULES.md).
+> Source of truth is `server/prisma/schema.prisma`; this doc summarizes it. Business rules built on top of this schema: [RULES.md](RULES.md).
 
 **Datasource:** PostgreSQL. **PKs:** `cuid()` text ids on all models. **Migration:** `server/prisma/migrations/0_init`.
 
@@ -13,11 +13,11 @@ Enums: `MembershipTier`, `BookingStatus`, `FacilityStatus`, `TableStatus`, `Dini
 ## Keys / constraints / indexes
 
 - **Unique:** `residents.email`, `staff_members.email`, `guests.passNumber`, `users.email`, `users.residentId`, `users.staffId`, `users.resetTokenHash`, `event_rsvps (eventId,residentId)`.
-- **FKs:** `family_members`/`vehicles`/`bookings`/`dining_reservations`/`guests`/`event_rsvps` → `Resident`; `bookings` → `Facility`; `dining_tables`/`dining_reservations` → `Restaurant`; `notifications` → `Resident?`/`StaffMember?` (nullable, `onDelete: Cascade`); `users` → `Resident?`/`StaffMember?` (nullable, explicit `onDelete: Restrict` — a login can never be silently orphaned at the DB level, added 2026-07-22 after an incident where the implicit default for an optional FK, `SetNull`, let a staff record be deleted while silently orphaning its login). `ResidentModel.remove`/`StaffModel.remove` delete the linked `User` row in the same transaction before deleting the resident/staff row (fixed 2026-08-04) — the Restrict constraint stops a _silent_ orphan, not the delete action itself; without the explicit cascade, deleting anyone with a login 409'd permanently.
+- **FKs:** `family_members`/`vehicles`/`bookings`/`dining_reservations`/`guests`/`event_rsvps` → `Resident`; `bookings` → `Facility`; `dining_tables`/`dining_reservations` → `Restaurant`; `notifications` → `Resident?`/`StaffMember?` (nullable, `onDelete: Cascade`); `users` → `Resident?`/`StaffMember?` (nullable, explicit `onDelete: Restrict`, so a login can never be silently orphaned at the DB level. Added 2026-07-22 after an incident where the implicit default for an optional FK, `SetNull`, let a staff record be deleted while silently orphaning its login). `ResidentModel.remove` and `StaffModel.remove` delete the linked `User` row in the same transaction before deleting the resident or staff row (fixed 2026-08-04). The Restrict constraint stops a _silent_ orphan, not the delete action itself; without the explicit cascade, deleting anyone with a login 409'd permanently.
 - **Cascade delete:** `family_members`, `vehicles`, `event_rsvps`, `notifications` (on resident/staff delete).
 - **Restrict delete:** `users.residentId`/`users.staffId` (see above).
 - **Indexes:** `auth_events` on `userId`/`type`/`createdAt`; `notifications` on `residentId`/`staffId`; `bookings` on `[facilityId,date,status]`; `dining_tables` on `[restaurantId,status]`; `admin_action_events` on `[resourceType,resourceId]`/`actorUserId`/`createdAt` (all added 2026-07-22 as part of a performance pass on the highest-growth tables).
-- `auth_events` and `admin_action_events` intentionally have **no FK** to `users` — audit history outlives deleted accounts.
+- `auth_events` and `admin_action_events` intentionally have **no FK** to `users`, so audit history outlives deleted accounts.
 
 ## ER Diagram
 
@@ -79,11 +79,11 @@ erDiagram
 
 ## Schema-change workflow
 
-**Real migration files now, not `db push`.** Render's build step runs `prisma migrate deploy`, so a schema change only reaches production if it's a committed migration file — `db push` alone would change nothing live:
+**Real migration files now, not `db push`.** Render's build step runs `prisma migrate deploy`, so a schema change only reaches production if it's a committed migration file. `db push` alone would change nothing live:
 
 1. Edit `server/prisma/schema.prisma`.
 2. From repo root, with server's pinned binary (there's no `server/.env` for a `cd server`-relative invocation to find): `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <change-description>`.
 3. Commit the generated migration folder under `server/prisma/migrations/`.
-4. Push — Render's build (`npx prisma migrate deploy`) applies it before the new server version starts.
+4. Push. Render's build (`npx prisma migrate deploy`) applies it before the new server version starts.
 
-`server/prisma/migrations/` holds `0_init` (original schema) and `20260726072515_sync_missing_fields` (a baseline migration written after the fact to catch up fields that had been pushed straight to the database before this workflow existed — `AdminActionEvent`, `mustChangePassword`, the composite indexes, etc.). Everything from that point on goes through the normal `migrate dev` → commit → `migrate deploy` path above.
+`server/prisma/migrations/` holds `0_init` (original schema) and `20260726072515_sync_missing_fields` (a baseline migration written after the fact to catch up fields that had been pushed straight to the database before this workflow existed: `AdminActionEvent`, `mustChangePassword`, the composite indexes, and so on). Everything from that point on goes through the normal `migrate dev` → commit → `migrate deploy` path above.

@@ -16,11 +16,11 @@ Single-tenant web platform, three role-gated portals on one app:
 
 ## Users
 
-| Role | Who | Primary jobs-to-be-done |
-| --- | --- | --- |
-| Member | Resident | Book amenities, reserve dining, register guests, RSVP events, read notices |
-| Staff | Front desk / facilities | Confirm bookings, manage guest check-in/out, maintain facility/restaurant/table/event/notice data |
-| Management | Building admin | Everything Staff does, plus staff/resident directory management, issuing resident logins at intake, and analytics |
+| Role       | Who                     | Primary jobs-to-be-done                                                                                           |
+| ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Member     | Resident                | Book amenities, reserve dining, register guests, RSVP events, read notices                                        |
+| Staff      | Front desk / facilities | Confirm bookings, manage guest check-in/out, maintain facility/restaurant/table/event/notice data                 |
+| Management | Building admin          | Everything Staff does, plus staff/resident directory management, issuing resident logins at intake, and analytics |
 
 ## Core features
 
@@ -36,10 +36,10 @@ Single-tenant web platform, three role-gated portals on one app:
 
 ## Out of scope (current)
 
-- Payments / billing — no gateway integrated.
-- Background jobs / scheduled reminders — no queue or scheduler exists.
+- Payments and billing: no gateway integrated.
+- Scheduled reminders: no queue or job scheduler exists. The only recurring task is an in-process hourly retention sweep.
 - Third-party auth / SSO.
-- Multi-tenant support — single-tenant only.
+- Multi-tenant support: single-tenant only.
 
 ## Success criteria
 
@@ -49,7 +49,7 @@ Single-tenant web platform, three role-gated portals on one app:
 
 ## Roadmap / future improvements
 
-- Configure `RESEND_API_KEY` in the production environment — the mailer integration itself is built, just not turned on (falls back to console-logging reset/email-change links without it).
+- Configure `RESEND_API_KEY` in the production environment. The mailer integration itself is built, just not turned on; without a key it falls back to console-logging reset and email-change links.
 - Payment/billing if monetizing bookings or dining.
 - Anti-CSRF tokens for cookie-based mutations.
 - CI gate (lint + test + typecheck).

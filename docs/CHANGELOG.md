@@ -2,6 +2,23 @@
 
 > Full history: `git log`. This file curates notable changes; not every commit is listed.
 
+## 2026-08-05 — Free-tier scale work, image offload, observability, handover docs
+
+Everything here holds the $0/month hosting bill. See [HANDOVER.md](HANDOVER.md) for the resulting operating limits.
+
+- **feat(upload):** photos no longer live in Postgres. `POST /uploads/signature` (MANAGEMENT only, 30 per 15 min) returns a Cloudinary signature and the browser uploads the file directly, so only a URL reaches the API. No SDK: the signature is SHA-1 over `folder` + `timestamp` via `node:crypto`. Missing credentials return 503, never an unsigned upload.
+- **perf(server):** removed the 5 mb body carve-out on `/events`, `/facilities` and `/restaurants`. It existed solely for base64 photo data URIs; every endpoint now holds a flat 100 kb limit.
+- **feat(db):** split pooled and direct Neon connections. `DATABASE_URL` uses the PgBouncer host with `connection_limit=5`; `DIRECT_URL` uses the direct host, because Prisma Migrate needs a real session for advisory locks and DDL. Without the split, `migrate deploy` breaks on the pooled host.
+- **feat(observability):** Sentry on the API (`server/instrument.mjs`, loaded via `node --import` so its instrumentation patches modules before express or prisma load) and in the browser (`src/lib/observability.ts`). Errors only, 5xx only, request bodies and headers stripped before send. Inert without a DSN.
+- **feat(retention):** `startRetentionSweeper()` prunes `auth_events` past 90 days and read notifications past 180, hourly, on unref'd timers. Unread notifications are never pruned. Closes the unbounded-growth risk previously tracked in SECURITY.md.
+- **perf(auth):** password-reset mail is no longer awaited. The response is generic either way, so waiting on Resend only pinned an unauthenticated request open for the provider's round trip. Email-change mail is still awaited, since a failure there returns a 400 the user needs to see.
+- **chore(prisma):** moved CLI config to `server/prisma.config.ts`, replacing the `package.json#prisma` block that Prisma 7 removes. The config file also disables the CLI's own `.env` loading, so it loads the repo-root file by module-relative path.
+- **fix(events):** `endTime` accepts `null`. The column is `endTime String?` and the admin form sends `null` to clear it, but the schema was `z.string().optional()`, which takes `undefined` and rejects `null` — so saving any event without an end time returned a 400.
+- **fix(upload):** surface Cloudinary's rejection reason instead of a flat "try again". A `403 missing permissions (actions=["create"])` was indistinguishable from a corrupt file.
+- **fix(ci):** `no-unexpected-multiline` failure in `authorization.matrix.test.js`. Prettier wrapped `request(app)[method](path)` so a line began with `[`, an ASI hazard.
+- **chore(cleanup):** deleted the merged API+SSR+static Node server (`scripts/start.mjs` and its security-header module). The nitro plugin moved build output to `.output/` while that entry still imported `dist/server`, so `npm start` had been broken; neither Vercel nor Render invoked it. Also removed `.cursorrules`, `docs/superpowers/`, a one-off data-repair script, and ~40 MB of stale local build artifacts.
+- **docs:** new [HANDOVER.md](HANDOVER.md) covering services, credential locations and rotation, the four interacting free-tier budgets, and a break-fix runbook. README rewritten with a real developer section. ARCHITECTURE, SECURITY and CHANGELOG brought back in line with the split deployment.
+
 ## 2026-07-22 — Security audit, management-issued logins, performance pass
 
 - **feat(auth):** replace resident self-registration with management-issued logins — `POST /auth/register` removed entirely; `POST /residents/:id/create-login` (MANAGEMENT only) generates a temp password and returns it once. Residents must set their own password on first login (`mustChangePassword`, enforced server-side on every non-auth endpoint) via the existing change-password or reset-password flow, either of which clears the flag.

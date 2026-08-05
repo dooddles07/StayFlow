@@ -67,8 +67,8 @@ graph LR
   Routes --> UI
 ```
 
-- **Integrations / external APIs:** Resend (email) is the only wired provider, and only if `RESEND_API_KEY` is set — falls back to console-logging otherwise. No payment, SMS, maps, analytics SaaS, or third-party auth.
-- **Service communication:** single process; frontend↔backend over same-origin HTTP `/api`; backend↔DB over Prisma (Postgres wire protocol).
+- **Integrations / external APIs:** three, all optional and all fail soft except mail. Resend sends password-reset and email-change links; without `RESEND_API_KEY` the API refuses to boot in production and logs the link in development. Cloudinary hosts uploaded photos; without credentials the signature endpoint returns 503 and the admin UI asks for a URL. Sentry collects errors; without a DSN it never initialises. No payment, SMS, maps, analytics SaaS, or third-party auth.
+- **Service communication:** two services. The browser talks only to Vercel, which rewrites `/api/*` to Render server-side so the auth cookie is never sent cross-site. The API reaches Postgres through Prisma over Neon's pooled (PgBouncer) host; the Prisma CLI uses the direct host via `DIRECT_URL`, since migrations need a real session for advisory locks and DDL.
 
 ## End-to-End System Flow
 
@@ -144,7 +144,9 @@ graph LR
 
 ### Background Jobs / Queues / Scheduled Tasks
 
-> None present. No queue, worker, cron, or scheduler. All work is synchronous request/response. The one async side-effect is fire-and-forget audit logging (`logAuthEvent`).
+> No queue, worker, or cron service. One in-process timer: `startRetentionSweeper()` (`server/src/utils/retention.js`) runs hourly, plus once 60s after boot, pruning `auth_events` past their retention window and read notifications past theirs. Both timers are `unref`'d so they never hold the process open or interfere with graceful shutdown.
+>
+> Two fire-and-forget side effects: audit logging (`logAuthEvent`) and password-reset mail. Neither is awaited. The reset response is generic whether or not delivery succeeds, so waiting on Resend only pinned an unauthenticated request open for the provider's round trip. Email-change mail _is_ still awaited, because a delivery failure there returns a 400 and the user needs to know the link isn't coming.
 
 ### Error Handling Flow
 
@@ -214,34 +216,36 @@ StayFlow/
 
 ## Technology Stack
 
-| Purpose          | Technology                | Version   | Description                                                    |
-| ---------------- | ------------------------- | --------- | -------------------------------------------------------------- |
-| UI framework     | React                     | ^19.2     | Component UI, SSR-capable                                      |
-| Meta-framework   | TanStack Start / Router   | latest    | File routing, SSR, server functions                            |
-| Build tool       | Vite                      | ^8.0      | Dev server + bundler                                           |
-| Language         | TypeScript                | ^6.0      | Frontend types                                                 |
-| Styling          | Tailwind CSS              | ^4.1      | Utility-first + `@tailwindcss/vite`                            |
-| UI primitives    | Radix UI / shadcn pattern | ^1.6      | Accessible components                                          |
-| Icons            | lucide-react              | ^0.577    | Icon set                                                       |
-| Charts           | Recharts                  | ^3.9      | Analytics visuals                                              |
-| Client state     | zustand (+persist)        | ^5.0      | Auth/UI stores                                                 |
-| Dates            | date-fns                  | ^4.4      | Date math, booking slots                                       |
-| QR               | qrcode                    | ^1.5      | Guest-pass QR codes                                            |
-| Toasts           | in-house (`lib/toast.ts`) | —         | `useSyncExternalStore`-based; see note below                   |
-| Runtime          | Node.js                   | —         | Prod server + dev                                              |
-| API framework    | Express                   | ^4.21     | REST API                                                       |
-| ORM              | Prisma                    | ^6.3      | DB access + migrations                                         |
-| Database         | PostgreSQL                | —         | System of record                                               |
-| Auth             | jsonwebtoken              | ^9.0      | JWT sign/verify                                                |
-| Hashing          | bcryptjs                  | ^2.4      | Password hashing (cost 12)                                     |
-| Rate limiting    | express-rate-limit        | ^8.5      | General `/api` limiter + tighter login/password-reset limiters |
-| Security headers | helmet                    | ^8.3      | HSTS, nosniff, frameguard                                      |
-| CORS             | cors                      | ^2.8      | Allowlist-based                                                |
-| Logging          | morgan                    | ^1.10     | HTTP request logs                                              |
-| Tests            | Vitest + Testing Library  | ^4.1      | Unit/component tests                                           |
-| Lint/format      | ESLint + Prettier         | ^9 / ^3.8 | `@tanstack/eslint-config`                                      |
+| Purpose          | Technology                   | Version   | Description                                                           |
+| ---------------- | ---------------------------- | --------- | --------------------------------------------------------------------- |
+| UI framework     | React                        | ^19.2     | Component UI, SSR-capable                                             |
+| Meta-framework   | TanStack Start / Router      | latest    | File routing, SSR, server functions                                   |
+| Build tool       | Vite                         | ^8.0      | Dev server + bundler                                                  |
+| Language         | TypeScript                   | ^6.0      | Frontend types                                                        |
+| Styling          | Tailwind CSS                 | ^4.1      | Utility-first + `@tailwindcss/vite`                                   |
+| UI primitives    | Radix UI / shadcn pattern    | ^1.6      | Accessible components                                                 |
+| Icons            | lucide-react                 | ^0.577    | Icon set                                                              |
+| Charts           | Recharts                     | ^3.9      | Analytics visuals                                                     |
+| Client state     | zustand (+persist)           | ^5.0      | Auth/UI stores                                                        |
+| Dates            | date-fns                     | ^4.4      | Date math, booking slots                                              |
+| QR               | qrcode                       | ^1.5      | Guest-pass QR codes                                                   |
+| Toasts           | in-house (`lib/toast.ts`)    | —         | `useSyncExternalStore`-based; see note below                          |
+| Runtime          | Node.js                      | —         | Prod server + dev                                                     |
+| API framework    | Express                      | ^4.21     | REST API                                                              |
+| ORM              | Prisma                       | ^6.3      | DB access + migrations                                                |
+| Database         | PostgreSQL                   | —         | System of record                                                      |
+| Auth             | jsonwebtoken                 | ^9.0      | JWT sign/verify                                                       |
+| Hashing          | bcryptjs                     | ^2.4      | Password hashing (cost 12)                                            |
+| Rate limiting    | express-rate-limit           | ^8.5      | General `/api` limiter + tighter login/password-reset limiters        |
+| Security headers | helmet                       | ^8.3      | HSTS, nosniff, frameguard                                             |
+| CORS             | cors                         | ^2.8      | Allowlist-based                                                       |
+| Logging          | in-house (`utils/logger.js`) | —         | JSON lines with level, event, request id; replaced `morgan`           |
+| Error tracking   | @sentry/node · @sentry/react | ^10.69    | Errors only, inert without a DSN                                      |
+| Image hosting    | Cloudinary (no SDK)          | —         | Signed direct-from-browser upload; signature built with `node:crypto` |
+| Tests            | Vitest + Testing Library     | ^4.1      | Unit/component tests                                                  |
+| Lint/format      | ESLint + Prettier            | ^9 / ^3.8 | `@tanstack/eslint-config`                                             |
 
-**Why toasts are hand-rolled:** sonner's `<Toaster>` never receives its mount effect under this app's SSR shell — its internal `subscribe()` call never registers, in both the 1.x and 2.x implementations, so every `toast()` call silently no-ops. `lib/toast.ts` + `components/ui/toast-viewport.tsx` replace it with a minimal store on `useSyncExternalStore`, React's own primitive for external state + SSR, which sidesteps that class of bug entirely. Same `toast.success/error/info(message, { description? })` call shape at all 28 call sites.
+**Why toasts are hand-rolled:** sonner's `<Toaster>` never receives its mount effect under this app's SSR shell. Its internal `subscribe()` call never registers, in both the 1.x and 2.x implementations, so every `toast()` call silently no-ops. `lib/toast.ts` + `components/ui/toast-viewport.tsx` replace it with a minimal store on `useSyncExternalStore`, React's own primitive for external state + SSR, which sidesteps that class of bug entirely. Same `toast.success/error/info(message, { description? })` call shape at all 28 call sites.
 
 ## System Modules
 
@@ -270,7 +274,7 @@ Base path: `/api`. Auth via `stayflow_token` httpOnly cookie **or** `Authorizati
 
 ### Auth — `/api/auth`
 
-No public account-creation endpoint exists — see [RULES.md](RULES.md#resident-onboarding-no-self-registration).
+No public account-creation endpoint exists. See [RULES.md](RULES.md#resident-onboarding-no-self-registration).
 
 | Method | URL                | Purpose                                                         | Auth                                 | Request                         | Success                     | Errors        |
 | ------ | ------------------ | --------------------------------------------------------------- | ------------------------------------ | ------------------------------- | --------------------------- | ------------- |
@@ -285,7 +289,7 @@ No public account-creation endpoint exists — see [RULES.md](RULES.md#resident-
 
 ### Resource routers (all under `requireAuth`)
 
-Generic CRUD (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) applies to **residents, staff, facilities, restaurants, tables, events, notices** with the role gates in System Modules above — reads stay open to STAFF/MGMT (or wider); writes on restaurants/tables/events/notices/residents are MGMT-only since STAFF has no screens that use them. Extra endpoints:
+Generic CRUD (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) applies to **residents, staff, facilities, restaurants, tables, events, notices** with the role gates in System Modules above. Reads stay open to STAFF and MANAGEMENT or wider; writes on restaurants, tables, events, notices and residents are MANAGEMENT-only, since STAFF has no screens that use them. Extra endpoints:
 
 | Method              | URL                                                            | Purpose                                              | Role                |
 | ------------------- | -------------------------------------------------------------- | ---------------------------------------------------- | ------------------- |
@@ -310,9 +314,9 @@ Generic CRUD (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) applies 
 
 ## Deployment
 
-**Model:** split hosting, two services. Vercel builds and serves the frontend, and proxies `/api/*` server-side to a standalone Render service running the Express API — the browser only ever sees one origin, so the httpOnly auth cookie (`SameSite=Lax`) works normally.
+**Model:** split hosting, two services. Vercel builds and serves the frontend, and proxies `/api/*` server-side to a standalone Render service running the Express API. The browser only ever sees one origin, so the httpOnly auth cookie (`SameSite=Lax`) works normally.
 
-The merged API+SSR+static Node server that predated this split has been removed — the frontend build (`nitro` plugin, `.output/`) is Vercel's to serve, and Render runs `server/server.js` directly.
+The merged API+SSR+static Node server that predated this split has been removed. The frontend build (`nitro` plugin, `.output/`) is Vercel's to serve, and Render runs `server/server.js` directly.
 
 ```mermaid
 graph TD
@@ -326,8 +330,8 @@ graph TD
 
 - **Local dev (frontend + API together):** `npm install && npm run dev` (Vite on :3000). Backend env in root `.env` powers this path.
 - **Local dev (API standalone):** `cd server && npm install && npm run dev` (`node --watch`, :4000). `server/src/config/env.js` resolves the root `.env` from its own module path, so this works from either directory without a second copy of the file (see [SECURITY.md](SECURITY.md#environment-variables)).
-- **Push schema changes:** `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, commit the migration, then push — Render's build runs `prisma migrate deploy`; see [SCHEMA.md](SCHEMA.md#schema-change-workflow).
-- **Docker / Compose / Kubernetes:** none present. **CI:** `.github/workflows/ci.yml` — lint, typecheck, test, build, plus separate `npm audit` and tracked-file secret-scan jobs.
+- **Push schema changes:** `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, commit the migration, then push. Render's build runs `prisma migrate deploy`; see [SCHEMA.md](SCHEMA.md#schema-change-workflow).
+- **Docker / Compose / Kubernetes:** none present. **CI:** `.github/workflows/ci.yml` runs lint, typecheck, test and build, plus separate `npm audit` and tracked-file secret-scan jobs.
 
 ### Proxy chain and client IP
 
@@ -337,7 +341,7 @@ Two proxies sit in front of the API in production:
 browser → Vercel edge (rewrite /api/*) → Render router → Express
 ```
 
-This matters for anything that reads the caller's address. `app.set('trust proxy', …)` is 2 in production (overridable with `TRUST_PROXY_HOPS`), because trusting a single hop made `req.ip` resolve to the Render router — an address shared by every user — which silently converted all per-IP rate limits into global ones. `rateLimit.middleware.js` keys off the resolved client address and logs loudly if it cannot resolve one.
+This matters for anything that reads the caller's address. `app.set('trust proxy', …)` is 2 in production (overridable with `TRUST_PROXY_HOPS`), because trusting a single hop made `req.ip` resolve to the Render router, an address shared by every user, which silently converted all per-IP rate limits into global ones. `rateLimit.middleware.js` keys off the resolved client address and logs loudly if it cannot resolve one.
 
 ### Health checks
 
@@ -350,7 +354,7 @@ Both are mounted ahead of the rate limiter and access log, so continuous platfor
 
 ### Graceful shutdown
 
-`SIGTERM`/`SIGINT` stop accepting connections, wait for in-flight requests via `server.close()`, disconnect Prisma, then exit — with a 15s force-exit timer well inside Render's 30s SIGKILL window. Before this, every deploy dropped whatever was mid-request. `unhandledRejection` and `uncaughtException` are handled explicitly so the cause is logged rather than the process vanishing silently.
+`SIGTERM`/`SIGINT` stop accepting connections, wait for in-flight requests via `server.close()`, disconnect Prisma, then exit, with a 15s force-exit timer well inside Render's 30s SIGKILL window. Before this, every deploy dropped whatever was mid-request. `unhandledRejection` and `uncaughtException` are handled explicitly so the cause is logged rather than the process vanishing silently.
 
 ## Configuration Guide
 
@@ -384,7 +388,7 @@ Both are mounted ahead of the rate limiter and access log, so continuous platfor
 
 - **Static caching:** Vercel serves hashed build assets `immutable, max-age=1y` by default; other static files carry its standard revalidating cache headers.
 - **SSR:** TanStack Start server rendering for fast first paint.
-- **DB indexes:** unique constraints + composite/lookup indexes on the highest-growth tables (`auth_events`, `notifications`, `bookings`, `dining_tables`, `admin_action_events`) — see [SCHEMA.md](SCHEMA.md#keys--constraints--indexes). Migration `20260805090000` added the ones every list endpoint's `orderBy` needed, replaced the plain notification FK indexes with `(owner, createdAt)` composites that serve filter and sort together, and covered `event_rsvps.residentId` — whose absence made deleting a resident sequentially scan that table, since the composite unique leads with `eventId`.
+- **DB indexes:** unique constraints + composite/lookup indexes on the highest-growth tables (`auth_events`, `notifications`, `bookings`, `dining_tables`, `admin_action_events`). See [SCHEMA.md](SCHEMA.md#keys--constraints--indexes). Migration `20260805090000` added the ones every list endpoint's `orderBy` needed, replaced the plain notification FK indexes with `(owner, createdAt)` composites that serve filter and sort together, and covered `event_rsvps.residentId`, whose absence made deleting a resident sequentially scan that table, since the composite unique leads with `eventId`.
 - **Response compression:** `compression` middleware on the API; Render does not gzip Node responses itself.
 - **Client bundle:** recharts (~284 kB) no longer loads on the member, staff and management dashboards. `kpi-card` imported it just to draw a decorative sparkline; that is now an inline SVG (`charts/sparkline.tsx`) reproducing d3's `curveNatural` exactly. Recharts still backs the real charts on `/management/analytics`, where axes, tooltips and legends earn its cost.
 - **Pagination:** `notifications`/`bookings`/`dining-reservations`/`guests` list endpoints are bounded (`take`, capped) instead of unbounded `findMany`, with `select` narrowed to only the fields each client view actually reads instead of full related rows.
@@ -397,17 +401,17 @@ Both are mounted ahead of the rate limiter and access log, so continuous platfor
 - **Runner:** Vitest + `@testing-library/react` + `jsdom`; `supertest` for HTTP-level backend tests.
 - **Commands:** `npm test` → `vitest run`; `npm run test:watch`; `npm run test:coverage`.
 - **Authorization matrix** (`server/src/routes/authorization.matrix.test.js`): every guarded endpoint crossed with every role, driven over real HTTP through the real router and guard chain with Prisma mocked. Assertions are "403 or not 403" rather than exact status codes, so it stays an authorization contract instead of a change-detector. This is what proves making `buildCrudRouter`'s role lists mandatory did not widen or narrow access.
-- **Regression suite** (`hardening.regression.test.js`): one test per defect fixed in the production-readiness pass — query validation, notification ownership, logout revocation, error redaction, request ids, health probes, origin checks, body limits.
+- **Regression suite** (`hardening.regression.test.js`): one test per defect fixed in the production-readiness pass, covering query validation, notification ownership, logout revocation, error redaction, request ids, health probes, origin checks and body limits.
 - **Other backend units:** rate-limiter proxy keying and budget isolation, logger redaction, auth middleware, schema validation.
 - **Frontend:** component tests, plus a sparkline suite that pins the hand-rolled curve to d3's `curveNatural` output, since that component replaced a recharts chart.
 - **E2E:** none committed; UI verified manually through Playwright.
 
 ## Backup & Recovery
 
-- **Database:** managed by Neon — use Neon's point-in-time restore/branching + `pg_dump` for logical backups.
-- **File storage:** no user-uploaded files (images are static/remote references) — nothing app-side to back up.
-- **Recovery:** restore a Neon branch/snapshot → re-run `prisma migrate deploy` → redeploy the Render service.
-- **Disaster recovery:** no documented DR/runbook; relies on Neon's and Render/Vercel's platform durability.
+- **Database:** managed by Neon. Use Neon's point-in-time restore and branching, plus `pg_dump` for logical backups.
+- **Uploaded images:** held by Cloudinary, which stores them independently of this app. The database keeps only the URL, so a database restore does not lose images and an image loss does not corrupt the database. Cloudinary's free plan has no backup guarantee of its own.
+- **Recovery:** restore a Neon branch or snapshot, run `prisma migrate deploy` against the direct host, then redeploy the Render service.
+- **Disaster recovery:** relies on the platforms' own durability. Operational runbook lives in [HANDOVER.md](HANDOVER.md#when-something-breaks).
 
 ## Diagrams
 
@@ -507,12 +511,12 @@ classDiagram
 ## Maintenance Guide
 
 - **Update deps:** bump `package.json` / `server/package.json`, reinstall, run tests + lint.
-- **Schema change:** edit `schema.prisma` → `prisma migrate dev` from root, commit the migration folder (see [SCHEMA.md](SCHEMA.md#schema-change-workflow)) — Render applies it on deploy via `prisma migrate deploy`.
+- **Schema change:** edit `schema.prisma` → `prisma migrate dev` from root, commit the migration folder (see [SCHEMA.md](SCHEMA.md#schema-change-workflow)). Render applies it on deploy via `prisma migrate deploy`.
 - **Deploy:** push to GitHub → Vercel auto-builds the frontend, Render auto-builds/starts the API.
 - **Rollback:** redeploy the previous build on Vercel and/or Render; revert schema with a new down migration, never by hand-editing data or deleting an applied migration file.
-- **Rotate sample creds:** `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js --force` (`--force` is required unconditionally — the script has no way to tell a "safe" `DATABASE_URL` from production, so it always asks for confirmation).
+- **Rotate sample creds:** `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js --force` (`--force` is required unconditionally, because the script has no way to tell a "safe" `DATABASE_URL` from production, so it always asks for confirmation).
 - **Create STAFF/MGMT users:** manually via seed / Prisma Studio (no API endpoint by design).
-- **Create a resident login:** MANAGEMENT-only, via the app UI (Users page → Create Login / Add Member) or `POST /residents/:id/create-login` directly — no seed/Studio step needed.
+- **Create a resident login:** MANAGEMENT-only, via the app UI (Users page → Create Login / Add Member) or `POST /residents/:id/create-login` directly. No seed or Studio step needed.
 - **Schema change via CLI:** run from repo root using server's pinned binary + explicit schema path (there's no `server/.env` for a `cd server`-relative Prisma invocation to find): `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, then commit the generated migration.
 
 ## Credits
@@ -520,4 +524,4 @@ classDiagram
 - **Author / Developer:** Brix
 - **Contributors:** none documented.
 - **Company:** not specified.
-- **License:** MIT — see [LICENSE.md](../LICENSE.md).
+- **License:** MIT. See [LICENSE.md](../LICENSE.md).
