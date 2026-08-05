@@ -37,7 +37,7 @@ import {
   getNotices,
   updateNotice,
 } from '#/lib/api/notice'
-import type { Notice, NoticeCategory } from '#/lib/mock/types'
+import type { Notice, NoticeCategory } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/management/notices')({
   head: () => ({ meta: [{ title: 'Notices — StayFlow Management' }] }),

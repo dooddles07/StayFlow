@@ -22,7 +22,7 @@ import {
 import { ApiError } from '#/lib/api/client'
 import { getAllBookings, setBookingStatus } from '#/lib/api/booking'
 import type { BookingView } from '#/lib/api/booking'
-import type { BookingStatus } from '#/lib/mock/types'
+import type { BookingStatus } from '#/lib/domain/types'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/staff/bookings')({

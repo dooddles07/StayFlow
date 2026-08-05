@@ -28,7 +28,7 @@ import { useMyProfile } from '#/lib/store/member-profile'
 import { byHistorySort, isPastDate } from '#/lib/history'
 import type { HistorySort } from '#/lib/history'
 import { cn } from '#/lib/utils'
-import type { Facility, FacilityCategory } from '#/lib/mock/types'
+import type { Facility, FacilityCategory } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/member/facilities/')({
   head: () => ({ meta: [{ title: 'Facilities — StayFlow Member' }] }),

@@ -29,7 +29,7 @@ import { useMyProfile } from '#/lib/store/member-profile'
 import { clampPartySize, nextDays, toDateKey } from '#/lib/booking-slots'
 import { hideBrokenImg } from '#/lib/utils'
 import { RoutePending } from '#/components/stayflow/route-pending'
-import type { DiningReservation } from '#/lib/mock/types'
+import type { DiningReservation } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/member/dining/$id')({
   loader: async ({ params }) => {

@@ -38,7 +38,7 @@ import {
 } from '#/lib/api/restaurant'
 import { getAllTables } from '#/lib/api/table'
 import { clampPositiveInt } from '#/lib/booking-slots'
-import type { DiningTable, Restaurant } from '#/lib/mock/types'
+import type { DiningTable, Restaurant } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/management/restaurants')({
   head: () => ({ meta: [{ title: 'Restaurants — StayFlow Management' }] }),

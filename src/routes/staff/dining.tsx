@@ -31,7 +31,7 @@ import {
 import type { ReservationView } from '#/lib/api/diningReservation'
 import { timeToMinutes } from '#/lib/booking-slots'
 import { cn } from '#/lib/utils'
-import type { DiningTable, Restaurant } from '#/lib/mock/types'
+import type { DiningTable, Restaurant } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/staff/dining')({
   head: () => ({ meta: [{ title: 'Dining — StayFlow Staff' }] }),

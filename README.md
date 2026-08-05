@@ -9,6 +9,7 @@
 Residents book the pool and reserve dinner. The front desk knows who's arriving. Management sees the whole community at a glance.
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20App-6d5efc?style=for-the-badge)](https://stay-flow-alpha.vercel.app/)
+[![CI](https://img.shields.io/github/actions/workflow/status/dooddles07/StayFlow/ci.yml?branch=master&style=for-the-badge&label=CI)](https://github.com/dooddles07/StayFlow/actions/workflows/ci.yml)
 ![Status](https://img.shields.io/badge/Status-Live-4ade80?style=for-the-badge)
 ![Portfolio Project](https://img.shields.io/badge/Type-Portfolio%20Project-fbbf24?style=for-the-badge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE.md)
@@ -259,11 +260,15 @@ To roll back, redeploy the previous build in each dashboard. Never revert a sche
 
 ## Testing
 
-261 tests run under Vitest. The two worth knowing about:
+524 tests run under Vitest, and CI fails if coverage drops below the thresholds in `vitest.config.ts`. The ones worth knowing about:
 
 `server/src/routes/authorization.matrix.test.js` drives 151 real HTTP requests through the actual router and guard chain, asserting which roles get a 403 on which route. Adding a route without adding it here is how permissions quietly regress.
 
 `server/src/routes/hardening.regression.test.js` covers the security fixes so they can't be undone by accident.
+
+`server/src/controllers/*.test.js` covers what happens inside each endpoint — the booking slot conflict, the dining table hold and release, the guest pass lifecycle, and the login lockout. They share `server/src/test-support/api-harness.js`, which drives the real app over HTTP with only Prisma replaced.
+
+`src/lib/security-headers.test.ts` fails if `vercel.json` drifts from the header definitions in the app.
 
 ## Troubleshooting
 
@@ -297,6 +302,9 @@ To roll back, redeploy the previous build in each dashboard. Never revert a sche
 - Error tracking needs a Sentry DSN. Without one, failures are only visible in the platform's own log stream.
 - Rate-limit counters live in memory, so they are per-instance and reset on deploy. Correct on the current single-instance plan, wrong the moment a second instance runs.
 - Free-tier ceiling: one Render instance at 512 MB, Neon at 0.5 GB storage and 100 compute-hours per month. Comfortable for a single property. Not a 100,000-user deployment.
+- `auth_events` and `admin_action_events` are written but never read back. There is no screen and no endpoint for either — query the database directly when investigating an incident.
+- Two endpoints are live with no UI driving them: `POST /api/notifications` and the dining table CRUD. Both are role-guarded, validated and tested; they are kept because a future admin screen needs them, not because anything calls them today.
+- `server/scripts/reset-test-passwords.js` resets the three demo logins. It refuses to run without `--force` and without `TEST_PASSWORD` set, deliberately, because `DATABASE_URL` in this stack always points at production — there is no separate local database. Do not run it against a deployment with real residents.
 
 <br />
 

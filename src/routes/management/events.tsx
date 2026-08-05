@@ -40,7 +40,7 @@ import {
   updateEvent,
 } from '#/lib/api/event'
 import type { CommunityEventView } from '#/lib/api/event'
-import type { EventCategory } from '#/lib/mock/types'
+import type { EventCategory } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/management/events')({
   head: () => ({ meta: [{ title: 'Events — StayFlow Management' }] }),

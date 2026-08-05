@@ -1,10 +1,16 @@
 import { Link } from '@tanstack/react-router'
 import { MapPin, Star } from 'lucide-react'
 import { StatusPill } from './status-pill'
-import type { Facility } from '#/lib/mock/types'
+import type { Facility } from '#/lib/domain/types'
 import { cn, hideBrokenImg } from '#/lib/utils'
 
-export function FacilityCard({ facility, className }: { facility: Facility; className?: string }) {
+export function FacilityCard({
+  facility,
+  className,
+}: {
+  facility: Facility
+  className?: string
+}) {
   return (
     <Link
       to="/member/facilities/$id"
@@ -36,7 +42,9 @@ export function FacilityCard({ facility, className }: { facility: Facility; clas
             {facility.rating}
           </span>
         </div>
-        <p className="line-clamp-2 text-xs text-muted-text">{facility.description}</p>
+        <p className="line-clamp-2 text-xs text-muted-text">
+          {facility.description}
+        </p>
         <div className="mt-auto flex items-center gap-1 pt-1 text-[11px] text-muted-text/80">
           <MapPin className="size-3" />
           <span className="truncate">{facility.location}</span>

@@ -4,17 +4,18 @@ import * as React from 'react'
 import type { Portal } from '#/lib/hooks/use-portal-preference'
 import { getStoredPortal } from '#/lib/hooks/use-portal-preference'
 import { isPortalRoleMatch, useAuthStore } from '#/lib/store/auth-store'
+import { CANONICAL_LINK, publicPageMeta } from '#/lib/seo'
 import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/')({
+  // The only page anyone shares a link to, so it is the only one that carries
+  // preview tags. Every other route is behind a login and gets noindex instead.
   head: () => ({
-    meta: [
-      { title: 'StayFlow — Choose Your Portal' },
-      {
-        name: 'description',
-        content: 'Enter the Member, Staff, or Management portal for StayFlow.',
-      },
-    ],
+    meta: publicPageMeta(
+      'StayFlow — Choose Your Portal',
+      'One app for everything at your building. Residents book facilities and dining, the front desk tracks arrivals, and management sees the whole community at a glance.',
+    ),
+    links: [CANONICAL_LINK],
   }),
   component: LandingPage,
 })

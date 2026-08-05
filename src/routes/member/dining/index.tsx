@@ -35,7 +35,7 @@ import { useMyProfile } from '#/lib/store/member-profile'
 import { byHistorySort, isPastDate } from '#/lib/history'
 import type { HistorySort } from '#/lib/history'
 import { cn, hideBrokenImg } from '#/lib/utils'
-import type { Restaurant } from '#/lib/mock/types'
+import type { Restaurant } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/member/dining/')({
   head: () => ({ meta: [{ title: 'Dining — StayFlow Member' }] }),

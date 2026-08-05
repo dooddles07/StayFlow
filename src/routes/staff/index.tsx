@@ -22,7 +22,7 @@ import type { GuestView } from '#/lib/api/guest'
 import { getFacilities } from '#/lib/api/facility'
 import { timeToMinutes, toDateKey } from '#/lib/booking-slots'
 import { trailingDailyCounts } from '#/lib/live-analytics'
-import type { Facility } from '#/lib/mock/types'
+import type { Facility } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/staff/')({
   head: () => ({ meta: [{ title: 'Dashboard — StayFlow Staff' }] }),

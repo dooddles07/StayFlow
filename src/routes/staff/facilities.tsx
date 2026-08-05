@@ -8,7 +8,7 @@ import { Input } from '#/components/ui/input'
 import { cn } from '#/lib/utils'
 import { ApiError } from '#/lib/api/client'
 import { getFacilities, setFacilityStatus } from '#/lib/api/facility'
-import type { Facility, FacilityStatus } from '#/lib/mock/types'
+import type { Facility, FacilityStatus } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/staff/facilities')({
   head: () => ({ meta: [{ title: 'Facilities — StayFlow Staff' }] }),

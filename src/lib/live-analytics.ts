@@ -4,7 +4,7 @@ import type { BookingView } from './api/booking'
 import type { ReservationView } from './api/diningReservation'
 import type { GuestView } from './api/guest'
 import type { ResidentProfile } from './api/resident'
-import type { Facility } from './mock/types'
+import type { Facility } from './domain/types'
 
 const MONTH_LABELS = [
   'Jan',

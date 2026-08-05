@@ -1,23 +1,38 @@
 import { useNavigate } from '@tanstack/react-router'
 import * as React from 'react'
-import { CalendarDays, ClipboardList, Megaphone, UserCircle2, Users, UtensilsCrossed, Waves } from 'lucide-react'
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '#/components/ui/command'
+import {
+  CalendarDays,
+  ClipboardList,
+  Megaphone,
+  UserCircle2,
+  Users,
+  UtensilsCrossed,
+  Waves,
+} from 'lucide-react'
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '#/components/ui/command'
 import { useUiStore } from '#/lib/store/ui-store'
 import { useAuthStore } from '#/lib/store/auth-store'
 import { getFacilities } from '#/lib/api/facility'
 import { getRestaurants } from '#/lib/api/restaurant'
-import { getEvents  } from '#/lib/api/event'
-import type {CommunityEventView} from '#/lib/api/event';
-import { getAllResidents  } from '#/lib/api/resident'
-import type {ResidentProfile} from '#/lib/api/resident';
-import { getMyGuests, getAllGuests  } from '#/lib/api/guest'
-import type {GuestView} from '#/lib/api/guest';
-import { getAllBookings  } from '#/lib/api/booking'
-import type {BookingView} from '#/lib/api/booking';
+import { getEvents } from '#/lib/api/event'
+import type { CommunityEventView } from '#/lib/api/event'
+import { getAllResidents } from '#/lib/api/resident'
+import type { ResidentProfile } from '#/lib/api/resident'
+import { getMyGuests, getAllGuests } from '#/lib/api/guest'
+import type { GuestView } from '#/lib/api/guest'
+import { getAllBookings } from '#/lib/api/booking'
+import type { BookingView } from '#/lib/api/booking'
 import { getNotices } from '#/lib/api/notice'
 import { useCurrentPortal } from '#/lib/hooks/use-current-portal'
 import type { Portal } from '#/lib/hooks/use-portal-preference'
-import type { Facility, Notice, Restaurant } from '#/lib/mock/types'
+import type { Facility, Notice, Restaurant } from '#/lib/domain/types'
 
 const facilitiesListPath: Record<Portal, string> = {
   member: '/member/facilities',
@@ -62,20 +77,39 @@ export function GlobalSearch() {
 
   React.useEffect(() => {
     if (!searchOpen || !portal) return
-    getFacilities().then(setFacilities).catch(() => {})
-    getRestaurants().then(setRestaurants).catch(() => {})
-    getEvents().then(setEvents).catch(() => {})
+    getFacilities()
+      .then(setFacilities)
+      .catch(() => {})
+    getRestaurants()
+      .then(setRestaurants)
+      .catch(() => {})
+    getEvents()
+      .then(setEvents)
+      .catch(() => {})
     if (portal === 'management') {
-      getAllResidents().then(setResidents).catch(() => {})
-      getNotices().then(setNotices).catch(() => {})
+      getAllResidents()
+        .then(setResidents)
+        .catch(() => {})
+      getNotices()
+        .then(setNotices)
+        .catch(() => {})
     }
     if (portal === 'member') {
-      getNotices().then(setNotices).catch(() => {})
-      if (memberId) getMyGuests(memberId).then(setGuests).catch(() => {})
+      getNotices()
+        .then(setNotices)
+        .catch(() => {})
+      if (memberId)
+        getMyGuests(memberId)
+          .then(setGuests)
+          .catch(() => {})
     }
     if (portal === 'staff') {
-      getAllGuests().then(setGuests).catch(() => {})
-      getAllBookings().then(setBookings).catch(() => {})
+      getAllGuests()
+        .then(setGuests)
+        .catch(() => {})
+      getAllBookings()
+        .then(setBookings)
+        .catch(() => {})
     }
   }, [searchOpen, portal, memberId])
 
@@ -114,10 +148,16 @@ export function GlobalSearch() {
         {portal === 'management' && (
           <CommandGroup heading="Members">
             {residents.slice(0, 30).map((r) => (
-              <CommandItem key={r.id} value={`${r.name} ${r.unit}`} onSelect={() => go('/management/users')}>
+              <CommandItem
+                key={r.id}
+                value={`${r.name} ${r.unit}`}
+                onSelect={() => go('/management/users')}
+              >
                 <UserCircle2 />
                 <span>{r.name}</span>
-                <span className="ml-auto text-xs text-muted-text">{r.unit}</span>
+                <span className="ml-auto text-xs text-muted-text">
+                  {r.unit}
+                </span>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -127,11 +167,20 @@ export function GlobalSearch() {
             <CommandItem
               key={f.id}
               value={f.name}
-              onSelect={() => go(portal === 'member' ? '/member/facilities/$id' : facilitiesListPath[portal], f.id)}
+              onSelect={() =>
+                go(
+                  portal === 'member'
+                    ? '/member/facilities/$id'
+                    : facilitiesListPath[portal],
+                  f.id,
+                )
+              }
             >
               <Waves />
               <span>{f.name}</span>
-              <span className="ml-auto text-xs capitalize text-muted-text">{f.status}</span>
+              <span className="ml-auto text-xs capitalize text-muted-text">
+                {f.status}
+              </span>
             </CommandItem>
           ))}
         </CommandGroup>
@@ -140,30 +189,51 @@ export function GlobalSearch() {
             <CommandItem
               key={r.id}
               value={r.name}
-              onSelect={() => go(portal === 'member' ? '/member/dining/$id' : diningListPath[portal], r.id)}
+              onSelect={() =>
+                go(
+                  portal === 'member'
+                    ? '/member/dining/$id'
+                    : diningListPath[portal],
+                  r.id,
+                )
+              }
             >
               <UtensilsCrossed />
               <span>{r.name}</span>
-              <span className="ml-auto text-xs text-muted-text">{r.cuisine}</span>
+              <span className="ml-auto text-xs text-muted-text">
+                {r.cuisine}
+              </span>
             </CommandItem>
           ))}
         </CommandGroup>
         <CommandGroup heading="Events">
           {events.map((e) => (
-            <CommandItem key={e.id} value={e.title} onSelect={() => go(eventsListPath[portal])}>
+            <CommandItem
+              key={e.id}
+              value={e.title}
+              onSelect={() => go(eventsListPath[portal])}
+            >
               <CalendarDays />
               <span>{e.title}</span>
-              <span className="ml-auto text-xs text-muted-text">{e.date.slice(0, 10)}</span>
+              <span className="ml-auto text-xs text-muted-text">
+                {e.date.slice(0, 10)}
+              </span>
             </CommandItem>
           ))}
         </CommandGroup>
         {(portal === 'member' || portal === 'staff') && (
           <CommandGroup heading="Guests">
             {guests.map((g) => (
-              <CommandItem key={g.id} value={`${g.name} ${g.hostName ?? ''}`} onSelect={() => go(guestsListPath[portal])}>
+              <CommandItem
+                key={g.id}
+                value={`${g.name} ${g.hostName ?? ''}`}
+                onSelect={() => go(guestsListPath[portal])}
+              >
                 <Users />
                 <span>{g.name}</span>
-                <span className="ml-auto text-xs capitalize text-muted-text">{g.status}</span>
+                <span className="ml-auto text-xs capitalize text-muted-text">
+                  {g.status}
+                </span>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -178,7 +248,9 @@ export function GlobalSearch() {
               >
                 <ClipboardList />
                 <span>{b.facilityName}</span>
-                <span className="ml-auto text-xs text-muted-text">{b.residentName}</span>
+                <span className="ml-auto text-xs text-muted-text">
+                  {b.residentName}
+                </span>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -186,10 +258,16 @@ export function GlobalSearch() {
         {(portal === 'member' || portal === 'management') && (
           <CommandGroup heading="Notices">
             {notices.map((n) => (
-              <CommandItem key={n.id} value={n.title} onSelect={() => go(noticesListPath[portal])}>
+              <CommandItem
+                key={n.id}
+                value={n.title}
+                onSelect={() => go(noticesListPath[portal])}
+              >
                 <Megaphone />
                 <span>{n.title}</span>
-                <span className="ml-auto text-xs text-muted-text">{n.category}</span>
+                <span className="ml-auto text-xs text-muted-text">
+                  {n.category}
+                </span>
               </CommandItem>
             ))}
           </CommandGroup>

@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Guest, GuestStatus } from '#/lib/mock/types'
+import type { Guest, GuestStatus } from '#/lib/domain/types'
 
 type ApiGuestStatus = 'PENDING' | 'APPROVED' | 'CHECKED_IN' | 'CHECKED_OUT'
 
@@ -54,10 +54,13 @@ const toGuest = (g: GuestApiResponse): GuestView => ({
 
 // Member: only their own registered guests (server enforces this via requireOwnResidentParam).
 export const getMyGuests = (residentId: string) =>
-  api.get<GuestApiResponse[]>(`/guests/resident/${residentId}`).then((rows) => rows.map(toGuest))
+  api
+    .get<GuestApiResponse[]>(`/guests/resident/${residentId}`)
+    .then((rows) => rows.map(toGuest))
 
 // Staff/management: every guest, for the front-desk arriving/history views.
-export const getAllGuests = () => api.get<GuestApiResponse[]>('/guests').then((rows) => rows.map(toGuest))
+export const getAllGuests = () =>
+  api.get<GuestApiResponse[]>('/guests').then((rows) => rows.map(toGuest))
 
 export interface GuestRegistration {
   name: string
@@ -72,10 +75,14 @@ export const registerGuest = (data: GuestRegistration) =>
   api.post<GuestApiResponse>('/guests', data).then(toGuest)
 
 export const setGuestStatus = (id: string, status: GuestStatus) =>
-  api.put<GuestApiResponse>(`/guests/${id}`, { status: STATUS_TO_API[status] }).then(toGuest)
+  api
+    .put<GuestApiResponse>(`/guests/${id}`, { status: STATUS_TO_API[status] })
+    .then(toGuest)
 
-export const checkInGuest = (id: string) => api.post<GuestApiResponse>(`/guests/${id}/check-in`, {}).then(toGuest)
-export const checkOutGuest = (id: string) => api.post<GuestApiResponse>(`/guests/${id}/check-out`, {}).then(toGuest)
+export const checkInGuest = (id: string) =>
+  api.post<GuestApiResponse>(`/guests/${id}/check-in`, {}).then(toGuest)
+export const checkOutGuest = (id: string) =>
+  api.post<GuestApiResponse>(`/guests/${id}/check-out`, {}).then(toGuest)
 
 // Owner-guarded server-side — a resident can only cancel a guest they registered themselves.
 export const cancelGuest = (id: string) => api.del<void>(`/guests/${id}`)

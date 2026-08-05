@@ -81,6 +81,10 @@ function RootDocument({ children }: { children: ReactNode }) {
     initErrorTracking()
   }, [])
 
+  // Dark-only by design: the palette, the imagery and the contrast ratios in
+  // styles.css are built for it, and a half-finished light mode reads worse than
+  // a deliberate single theme. `color-scheme: dark` there keeps browser chrome
+  // (scrollbars, form controls) in step rather than flashing white.
   return (
     <html lang="en" className="dark">
       <head>

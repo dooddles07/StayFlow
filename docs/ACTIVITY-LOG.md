@@ -1,5 +1,74 @@
 # Activity Log
 
+Narrative record of what was done and why, newest first. `CHANGELOG.md` is the
+terse list of what changed; this file is the reasoning behind it.
+
+Last updated: 2026-08-05
+
+## 2026-08-05 — Launch hardening pass
+
+Second audit, this time aimed at the deploy itself. The security core held up:
+no missing authn or authz, no committed secrets, no endpoint without a role
+guard. What follows is what did not hold up.
+
+**Shipped blind.** Sentry was enabled but the build emitted no source maps, so
+every production stack trace was minified noise. Maps are published now — the
+repo is public MIT source, so there is nothing in them to protect.
+
+**The Cloudinary signature authorised too much.** It named only a folder and a
+timestamp, so one signature was good for unlimited uploads of any file type for
+Cloudinary's full validity window. It is now bound to a single generated
+`public_id` and an image format allowlist, and the client rejects the obvious
+cases before asking for one.
+
+**Prisma error text reached the logs.** A previous pass stopped the whole error
+object being dumped, but the same query argument values — residents' emails,
+names, phone numbers — live inside `.message`, which was still logged. The
+client now uses `errorFormat: 'minimal'` and the error middleware keeps only the
+code and the offending column names for any Prisma error.
+
+**The private portal was indexable.** `robots.txt` allowed everything, including
+all three login screens and the password recovery forms.
+
+**Rate limits were evadable.** The Render origin answers requests that never went
+through the Vercel edge, so `X-Forwarded-For` was caller-controlled and every
+per-IP budget with it. Over-long chains now share one bucket, and the flows worth
+protecting — login, forgot-password, reset — are keyed on the account rather than
+on an address, which no amount of address rotation helps.
+
+**`script-src 'unsafe-inline'`** made the CSP unable to stop the injected script
+it exists to stop. The router streams two inline scripts whose bodies change per
+route, so hashing was not an option; it mints a nonce per request instead and the
+matching policy goes out on the same response. That moved the policy out of
+`vercel.json`, which cannot produce a per-request value.
+
+**8.9 MB of hero PNGs** loaded above the fold on the landing page and every login
+and recovery screen. Now 307 KB of WebP, with `scripts/convert-heroes.mjs`
+keeping the conversion reproducible.
+
+**The portal shell trusted localStorage.** The stored user object decides which
+shell renders, and anyone with the console open can edit it. Every API call was
+authorised server-side so no data was ever reachable, but a tampered role
+rendered a management shell that looked like a breach. The three portal layouts
+now check the httpOnly session cookie during SSR, and the store asks `/auth/me`
+once per page load and takes the server's answer over the stored one. The email
+is no longer persisted at all.
+
+**Testing.** The suite went from 261 to 524. The gap was never the permission
+model — the authorization matrix already covered that — but what happens inside
+each endpoint: the booking slot conflict and its retry, the dining table hold and
+release, the guest pass lifecycle, and the login lockout. Coverage is now gated
+in CI, and a new job applies every migration to a real Postgres from empty and
+fails if the partial unique index behind the double-booking guard is missing.
+That index exists only as raw SQL, so nothing else would have noticed.
+
+Also fixed: `DIRECT_URL` is required at boot rather than failing later during
+`migrate deploy`; the drifted duplicate at `server/.env` is gone and no longer
+read; the readiness probe caches a healthy result and no longer returns the raw
+exception, which named the database host; image fields must be an https link or a
+path on this site; a root error boundary catches throws from the providers that
+sit outside every route.
+
 ## 2026-08-05 — Production readiness audit and remediation
 
 Full hostile review of the deployed system: all 88 API endpoints, the Prisma schema, both deploy configs, and the frontend. The existing gates were already green going in (typecheck clean, 0 lint errors, 47 tests passing) — every finding below sat in a blind spot none of them cover: production-only code paths, deploy configuration, fail-open defaults, and behaviour under load or failure.
@@ -7,7 +76,7 @@ Full hostile review of the deployed system: all 88 API endpoints, the Prisma sch
 ### Critical
 
 - **Password-reset tokens were being written to the production log stream.** `mailer.js` logged the full reset link whenever `RESEND_API_KEY` was unset, `env.js` only warned about it, and `render.yaml` never declared the key. Net effect: anyone with Render log access held a live account-takeover token for every reset request, while no user could ever actually complete a reset. Now fails closed — the API refuses to boot in production without `RESEND_API_KEY` and `APP_URL`, and the mailer will not print a link outside development.
-- **The HTML app shipped with no security headers at all.** helmet only ever covered the Express API; the frontend is served by Vercel, whose config had no `headers` block. No CSP, no HSTS, no frame protection — the portal was framable, so every authenticated action including the management destructive dialogs was clickjackable. Added a header set defined once in `scripts/security-headers.mjs`, mirrored into `vercel.json`, with a test that fails if the two ever drift.
+- **The HTML app shipped with no security headers at all.** helmet only ever covered the Express API; the frontend is served by Vercel, whose config had no `headers` block. No CSP, no HSTS, no frame protection — the portal was framable, so every authenticated action including the management destructive dialogs was clickjackable. Added a header set to `vercel.json`. (Correction, 2026-08-05: this entry originally claimed the headers were defined once in `scripts/security-headers.mjs` with a drift test. Neither file existed. The single definition and its drift test are real as of the pass below, and live in `src/lib/security-headers.ts` and `src/lib/security-headers.test.ts`.)
 - **`buildCrudRouter` failed open.** `readRoles ? requireRole(...) : noop` meant a forgotten role list silently produced open access rather than closed. Five routers had omitted it. Role lists are now mandatory and the builder throws at boot; the intended roles are declared explicitly on every router, preserving existing behaviour exactly — proven by the new 151-case authorization matrix.
 - **IDOR on notification delete.** Any STAFF user could delete any resident's or peer's notification; every sibling route on that model was owner-scoped. Fixed.
 
@@ -105,7 +174,7 @@ Manual end-to-end testing against the live production deployment (Vercel + Rende
 ### Known issues not fixed (flagged for follow-up)
 
 - **Corrupted booking record**: booking `cmrlv06ut0001w3mwx3fsq038` (Serenity Yoga Deck, 2026-08-01) has `timeSlot` stored as `7:00 AM <U+FFFD> 8:30 AM` — the en-dash was replaced with the Unicode replacement character at write time (likely a direct API call bypassing the UI, since the UI's slot constants are correctly encoded in `src/lib/booking-slots.ts`). The booking PUT endpoint only allows updating `status`, so this can't be corrected via the API — needs a direct DB fix (Prisma Studio) or a new migration if more rows are affected.
-- **Seed event dates are all in the past**: all 6 seeded community events (`evt-001`..`evt-006`) are dated 2026-07-18 through 2026-07-26, before the current date, so `/member/events` showed "No upcoming events" with no code-level bug. Worked around by creating a real future event ("Late Summer Rooftop Jazz Night", 2026-08-15) during testing — seed data should be refreshed with rolling/relative dates so the demo doesn't go stale again.
+- ~~**Seed event dates are all in the past**~~ — resolved. `server/prisma/seed.js` now dates its event with `daysFromNow(14)`, so a fresh seed always produces an upcoming event.
 
 ### Flows verified working end-to-end
 

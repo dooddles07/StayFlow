@@ -39,7 +39,7 @@ The API refuses to boot in production without `RESEND_API_KEY` and `APP_URL`. Th
 1. Get invited to all seven services above.
 2. **Rotate every credential.** Standard practice on any handover, and cheap: reset the Neon role password, issue a new Resend key, generate a fresh `JWT_SECRET`, roll the Cloudinary key. Rotating `JWT_SECRET` signs every user out and has no other effect.
 3. Clone and run locally. The README's [Running it locally](../README.md#running-it-locally) section takes about five minutes.
-4. Run `npm test`. 261 tests should pass. If they don't, fix that before anything else.
+4. Run `npm test`. 524 tests should pass. If they don't, fix that before anything else.
 5. Read [RULES.md](RULES.md). The permission model is the part of this codebase most likely to bite you.
 
 ### Rotating credentials

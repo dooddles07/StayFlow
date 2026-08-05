@@ -43,7 +43,7 @@ import type {
   Facility,
   FacilityCategory,
   FacilityStatus,
-} from '#/lib/mock/types'
+} from '#/lib/domain/types'
 
 export const Route = createFileRoute('/management/facilities')({
   head: () => ({ meta: [{ title: 'Facilities — StayFlow Management' }] }),

@@ -13,7 +13,7 @@ import { cancelEventRsvp, getEvents, rsvpToEvent } from '#/lib/api/event'
 import type { CommunityEventView } from '#/lib/api/event'
 import { useMyProfile } from '#/lib/store/member-profile'
 import { cn } from '#/lib/utils'
-import type { EventCategory } from '#/lib/mock/types'
+import type { EventCategory } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/member/events')({
   head: () => ({ meta: [{ title: 'Events — StayFlow Member' }] }),

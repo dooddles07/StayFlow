@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Booking, BookingStatus } from '#/lib/mock/types'
+import type { Booking, BookingStatus } from '#/lib/domain/types'
 
 type ApiBookingStatus = 'CONFIRMED' | 'PENDING' | 'CANCELLED'
 
@@ -50,10 +50,13 @@ const toBooking = (b: BookingApiResponse): BookingView => ({
 
 // Member: only their own bookings (server enforces via requireOwnResidentParam).
 export const getMyBookings = (residentId: string) =>
-  api.get<BookingApiResponse[]>(`/bookings/resident/${residentId}`).then((rows) => rows.map(toBooking))
+  api
+    .get<BookingApiResponse[]>(`/bookings/resident/${residentId}`)
+    .then((rows) => rows.map(toBooking))
 
 // Staff/management: every booking, for the approvals view.
-export const getAllBookings = () => api.get<BookingApiResponse[]>('/bookings').then((rows) => rows.map(toBooking))
+export const getAllBookings = () =>
+  api.get<BookingApiResponse[]>('/bookings').then((rows) => rows.map(toBooking))
 
 // Any authenticated role — just enough to know which slots are taken (no resident PII).
 export interface FacilitySlot {
@@ -63,8 +66,16 @@ export interface FacilitySlot {
 }
 export const getFacilityBookings = (facilityId: string) =>
   api
-    .get<{ date: string; timeSlot: string; status: ApiBookingStatus }[]>(`/bookings/facility/${facilityId}`)
-    .then((rows) => rows.map((r) => ({ date: r.date, timeSlot: r.timeSlot, status: STATUS_TO_VIEW[r.status] })))
+    .get<{ date: string; timeSlot: string; status: ApiBookingStatus }[]>(
+      `/bookings/facility/${facilityId}`,
+    )
+    .then((rows) =>
+      rows.map((r) => ({
+        date: r.date,
+        timeSlot: r.timeSlot,
+        status: STATUS_TO_VIEW[r.status],
+      })),
+    )
 
 export interface BookingInput {
   facilityId: string
@@ -75,11 +86,16 @@ export interface BookingInput {
 }
 
 // residentId is forced server-side for MEMBER callers; status starts PENDING.
-export const requestBooking = (data: BookingInput) => api.post<BookingApiResponse>('/bookings', data).then(toBooking)
+export const requestBooking = (data: BookingInput) =>
+  api.post<BookingApiResponse>('/bookings', data).then(toBooking)
 
 // Staff-only route — approve or reject a pending booking.
 export const setBookingStatus = (id: string, status: BookingStatus) =>
-  api.put<BookingApiResponse>(`/bookings/${id}`, { status: STATUS_TO_API[status] }).then(toBooking)
+  api
+    .put<BookingApiResponse>(`/bookings/${id}`, {
+      status: STATUS_TO_API[status],
+    })
+    .then(toBooking)
 
 // Owner-guarded server-side — a resident can only cancel a booking they made themselves.
 export const cancelBooking = (id: string) => api.del<void>(`/bookings/${id}`)

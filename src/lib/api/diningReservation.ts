@@ -1,5 +1,8 @@
 import { api } from './client'
-import type { DiningReservation, DiningReservationStatus } from '#/lib/mock/types'
+import type {
+  DiningReservation,
+  DiningReservationStatus,
+} from '#/lib/domain/types'
 
 type ApiStatus = 'CONFIRMED' | 'PENDING' | 'CANCELLED' | 'ARRIVED'
 
@@ -60,10 +63,17 @@ const toReservation = (r: ReservationApiResponse): ReservationView => ({
 
 // Member: only their own reservations (server enforces via requireOwnResidentParam).
 export const getMyReservations = (residentId: string) =>
-  api.get<ReservationApiResponse[]>(`/dining-reservations/resident/${residentId}`).then((rows) => rows.map(toReservation))
+  api
+    .get<ReservationApiResponse[]>(
+      `/dining-reservations/resident/${residentId}`,
+    )
+    .then((rows) => rows.map(toReservation))
 
 // Staff/management: every reservation, for the front-of-house view.
-export const getAllReservations = () => api.get<ReservationApiResponse[]>('/dining-reservations').then((rows) => rows.map(toReservation))
+export const getAllReservations = () =>
+  api
+    .get<ReservationApiResponse[]>('/dining-reservations')
+    .then((rows) => rows.map(toReservation))
 
 export interface ReservationInput {
   restaurantId: string
@@ -77,11 +87,21 @@ export interface ReservationInput {
 
 // residentId is forced server-side for MEMBER callers; status starts PENDING.
 export const requestReservation = (data: ReservationInput) =>
-  api.post<ReservationApiResponse>('/dining-reservations', data).then(toReservation)
+  api
+    .post<ReservationApiResponse>('/dining-reservations', data)
+    .then(toReservation)
 
 // Staff-only route — status transitions (confirm a pending request, mark arrived, decline).
-export const setReservationStatus = (id: string, status: DiningReservationStatus) =>
-  api.put<ReservationApiResponse>(`/dining-reservations/${id}`, { status: STATUS_TO_API[status] }).then(toReservation)
+export const setReservationStatus = (
+  id: string,
+  status: DiningReservationStatus,
+) =>
+  api
+    .put<ReservationApiResponse>(`/dining-reservations/${id}`, {
+      status: STATUS_TO_API[status],
+    })
+    .then(toReservation)
 
 // Owner-guarded server-side — a resident can only cancel a reservation they made themselves.
-export const cancelReservation = (id: string) => api.del<void>(`/dining-reservations/${id}`)
+export const cancelReservation = (id: string) =>
+  api.del<void>(`/dining-reservations/${id}`)

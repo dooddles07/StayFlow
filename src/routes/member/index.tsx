@@ -27,7 +27,7 @@ import { isPastDate } from '#/lib/history'
 import { useMyProfile } from '#/lib/store/member-profile'
 import { getWeather } from '#/lib/weather'
 import type { WeatherSnapshot } from '#/lib/weather'
-import type { Facility, Notice } from '#/lib/mock/types'
+import type { Facility, Notice } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/member/')({
   head: () => ({ meta: [{ title: 'Dashboard — StayFlow Member' }] }),

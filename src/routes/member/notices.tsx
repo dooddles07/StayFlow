@@ -11,14 +11,20 @@ import { markNoticesSeen } from '#/lib/api/resident'
 import { useMyProfile } from '#/lib/store/member-profile'
 import { Megaphone, Search, Sparkles } from 'lucide-react'
 import { cn } from '#/lib/utils'
-import type { Notice, NoticeCategory } from '#/lib/mock/types'
+import type { Notice, NoticeCategory } from '#/lib/domain/types'
 
 export const Route = createFileRoute('/member/notices')({
   head: () => ({ meta: [{ title: 'Notices — StayFlow Member' }] }),
   component: NoticesPage,
 })
 
-const categories: (NoticeCategory | 'All')[] = ['All', 'Important', 'Maintenance', 'Events', 'General']
+const categories: (NoticeCategory | 'All')[] = [
+  'All',
+  'Important',
+  'Maintenance',
+  'Events',
+  'General',
+]
 
 // Scrollable single-row tabs with a clear gold active state (matches the profile tabs).
 const tabTrigger =
@@ -27,14 +33,19 @@ const tabTrigger =
 function NoticesPage() {
   const { profile, setProfile } = useMyProfile()
   const [notices, setNotices] = React.useState<Notice[]>([])
-  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading')
-  const [category, setCategory] = React.useState<(typeof categories)[number]>('All')
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading',
+  )
+  const [category, setCategory] =
+    React.useState<(typeof categories)[number]>('All')
   const [query, setQuery] = React.useState('')
   const [unreadOnly, setUnreadOnly] = React.useState(false)
 
   // Snapshot the last-seen time on entry so "New" badges stay visible for this visit,
   // then stamp the feed as seen. `undefined` = not captured yet, `null` = never seen.
-  const [seenBaseline, setSeenBaseline] = React.useState<string | null | undefined>(undefined)
+  const [seenBaseline, setSeenBaseline] = React.useState<
+    string | null | undefined
+  >(undefined)
   const marked = React.useRef(false)
 
   React.useEffect(() => {
@@ -55,31 +66,49 @@ function NoticesPage() {
   }, [])
 
   React.useEffect(() => {
-    if (seenBaseline === undefined && profile) setSeenBaseline(profile.noticesLastSeenAt)
+    if (seenBaseline === undefined && profile)
+      setSeenBaseline(profile.noticesLastSeenAt)
   }, [profile, seenBaseline])
 
   React.useEffect(() => {
     if (status === 'ready' && seenBaseline !== undefined && !marked.current) {
       marked.current = true
-      markNoticesSeen().then(setProfile).catch(() => {})
+      markNoticesSeen()
+        .then(setProfile)
+        .catch(() => {})
     }
   }, [status, seenBaseline, setProfile])
 
-  const isNew = (n: Notice) => seenBaseline !== undefined && (seenBaseline === null || n.postedAt > seenBaseline)
+  const isNew = (n: Notice) =>
+    seenBaseline !== undefined &&
+    (seenBaseline === null || n.postedAt > seenBaseline)
 
   const q = query.trim().toLowerCase()
   const unreadCount = notices.filter(isNew).length
   const visible = notices
     .filter((n) => category === 'All' || n.category === category)
-    .filter((n) => q === '' || n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q))
+    .filter(
+      (n) =>
+        q === '' ||
+        n.title.toLowerCase().includes(q) ||
+        n.body.toLowerCase().includes(q),
+    )
     .filter((n) => !unreadOnly || isNew(n))
-    .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.postedAt.localeCompare(a.postedAt))
+    .sort(
+      (a, b) =>
+        Number(b.pinned) - Number(a.pinned) ||
+        b.postedAt.localeCompare(a.postedAt),
+    )
   const pinned = visible.filter((n) => n.pinned)
   const rest = visible.filter((n) => !n.pinned)
 
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader eyebrow="Community" title="Notices" description="Announcements and updates from StayFlow management." />
+      <PageHeader
+        eyebrow="Community"
+        title="Notices"
+        description="Announcements and updates from StayFlow management."
+      />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
@@ -110,7 +139,11 @@ function NoticesPage() {
         )}
       </div>
 
-      <Tabs value={category} onValueChange={(v) => setCategory(v as typeof category)} className="mb-6">
+      <Tabs
+        value={category}
+        onValueChange={(v) => setCategory(v as typeof category)}
+        className="mb-6"
+      >
         <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto bg-surface p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {categories.map((c) => (
             <TabsTrigger key={c} value={c} className={tabTrigger}>
@@ -123,38 +156,64 @@ function NoticesPage() {
       {status === 'loading' ? (
         <div className="animate-pulse space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-2xl border border-border bg-surface" />
+            <div
+              key={i}
+              className="h-24 rounded-2xl border border-border bg-surface"
+            />
           ))}
         </div>
       ) : status === 'error' ? (
         <div className="rounded-2xl border border-border bg-surface p-8 text-center">
-          <p className="text-sm text-muted-text">We couldn't load notices right now.</p>
-          <Button onClick={() => window.location.reload()} className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft">
+          <p className="text-sm text-muted-text">
+            We couldn't load notices right now.
+          </p>
+          <Button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
+          >
             Retry
           </Button>
         </div>
       ) : visible.length === 0 ? (
         <EmptyState
           icon={Megaphone}
-          title={q ? 'No notices match your search' : unreadOnly ? "You're all caught up" : 'No notices in this category'}
+          title={
+            q
+              ? 'No notices match your search'
+              : unreadOnly
+                ? "You're all caught up"
+                : 'No notices in this category'
+          }
         />
       ) : (
         <div className="space-y-6">
           {pinned.length > 0 && (
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent-gold">Pinned</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent-gold">
+                Pinned
+              </p>
               {pinned.map((notice) => (
-                <NoticeCard key={notice.id} notice={notice} isNew={isNew(notice)} />
+                <NoticeCard
+                  key={notice.id}
+                  notice={notice}
+                  isNew={isNew(notice)}
+                />
               ))}
             </div>
           )}
           {rest.length > 0 && (
             <div className="space-y-3">
               {pinned.length > 0 && (
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-text">More notices</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-text">
+                  More notices
+                </p>
               )}
               {rest.map((notice) => (
-                <NoticeCard key={notice.id} notice={notice} isNew={isNew(notice)} />
+                <NoticeCard
+                  key={notice.id}
+                  notice={notice}
+                  isNew={isNew(notice)}
+                />
               ))}
             </div>
           )}
