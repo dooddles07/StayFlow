@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowLeft, UserCircle2 } from 'lucide-react'
 import { LoginForm } from '#/components/stayflow/login-form'
+import { NOINDEX_META } from '#/lib/seo'
 
 export const Route = createFileRoute('/login/member')({
   head: () => ({
-    meta: [{ title: 'Member Sign In — StayFlow' }],
+    meta: [{ title: 'Member Sign In — StayFlow' }, ...NOINDEX_META],
   }),
   component: MemberLogin,
 })

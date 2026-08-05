@@ -13,6 +13,12 @@ import tailwindcss from '@tailwindcss/vite'
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
+  // Sentry is enabled in production (src/lib/observability.ts) and without
+  // source maps every reported stack trace is minified single-letter noise.
+  // The maps are published rather than hidden: this repo is public MIT source,
+  // so there is nothing to protect, and a reachable .map is what lets Sentry
+  // resolve a frame without an upload token in the build.
+  build: { sourcemap: true },
   plugins: [devtools(), tailwindcss(), tanstackStart(), nitro(), viteReact()],
 })
 

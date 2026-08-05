@@ -10,8 +10,10 @@ import { MemberProfileProvider, useMyProfile } from '#/lib/store/member-profile'
 import { getNotices } from '#/lib/api/notice'
 import { useAuthStore } from '#/lib/store/auth-store'
 import { clearStoredPortal } from '#/lib/hooks/use-portal-preference'
+import { NOINDEX_META } from '#/lib/seo'
 
 export const Route = createFileRoute('/member')({
+  head: () => ({ meta: [...NOINDEX_META] }),
   component: MemberLayout,
 })
 

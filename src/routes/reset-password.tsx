@@ -6,6 +6,7 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { api, ApiError } from '#/lib/api/client'
+import { NOINDEX_META } from '#/lib/seo'
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -14,7 +15,7 @@ export const Route = createFileRoute('/reset-password')({
     token: typeof search.token === 'string' ? search.token : undefined,
   }),
   head: () => ({
-    meta: [{ title: 'Set a new password — StayFlow' }],
+    meta: [{ title: 'Set a new password — StayFlow' }, ...NOINDEX_META],
   }),
   component: ResetPassword,
 })

@@ -4,6 +4,9 @@
   "license": "MIT",
   "type": "module",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "node --watch --import ./instrument.mjs server.js",
     "start": "node --import ./instrument.mjs server.js",

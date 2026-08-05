@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { env } from '../config/env.js'
 import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
@@ -8,7 +8,18 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 // list response that selected the column. The browser now uploads straight to
 // Cloudinary and only the resulting URL reaches this API. The account secret
 // stays here: the client gets a signature valid for one upload, not the key.
-const SIGNED_PARAM_KEYS = ['folder', 'timestamp']
+
+// Every field in the POST body except file/cloud_name/resource_type/api_key has
+// to be signed, so signing more fields is what constrains the upload rather than
+// merely describing it. A signature that named only folder+timestamp authorised
+// unlimited files of any type for Cloudinary's full one-hour validity window.
+const SIGNED_PARAM_KEYS = [
+  'allowed_formats',
+  'folder',
+  'public_id',
+  'timestamp',
+]
+const ALLOWED_FORMATS = 'jpg,jpeg,png,webp'
 
 // Cloudinary's scheme: the signed parameters sorted by key, joined as a query
 // string, with the API secret appended, hashed with SHA-1.
@@ -28,11 +39,20 @@ export const createUploadSignature = asyncHandler(async (req, res) => {
     throw ApiError.serviceUnavailable('Photo uploads are not configured.')
   }
 
-  const params = { folder, timestamp: Math.floor(Date.now() / 1000) }
+  // A per-signature public_id caps the blast radius at one asset: replaying the
+  // signature overwrites that same id instead of filling the folder.
+  const params = {
+    allowed_formats: ALLOWED_FORMATS,
+    folder,
+    public_id: randomUUID(),
+    timestamp: Math.floor(Date.now() / 1000),
+  }
   res.json({
     cloudName,
     apiKey,
+    allowedFormats: params.allowed_formats,
     folder: params.folder,
+    publicId: params.public_id,
     timestamp: params.timestamp,
     signature: sign(params, apiSecret),
   })

@@ -47,10 +47,27 @@ describe('createUploadSignature', () => {
     // ordering drifts, every upload is rejected with "Invalid Signature".
     const expected = createHash('sha1')
       .update(
-        `folder=${body.folder}&timestamp=${body.timestamp}${cloudinary.apiSecret}`,
+        `allowed_formats=${body.allowedFormats}` +
+          `&folder=${body.folder}` +
+          `&public_id=${body.publicId}` +
+          `&timestamp=${body.timestamp}` +
+          cloudinary.apiSecret,
       )
       .digest('hex')
     expect(body.signature).toBe(expected)
+  })
+
+  it('binds the signature to an image format allowlist', async () => {
+    const { body } = await invoke()
+    expect(body.allowedFormats).toBe('jpg,jpeg,png,webp')
+  })
+
+  it('issues a fresh public_id per signature so a replay cannot flood the folder', async () => {
+    const first = await invoke()
+    const second = await invoke()
+
+    expect(first.body.publicId).toBeTruthy()
+    expect(second.body.publicId).not.toBe(first.body.publicId)
   })
 
   it('never returns the API secret', async () => {

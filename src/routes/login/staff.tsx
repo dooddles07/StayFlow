@@ -7,10 +7,11 @@ import {
   Users,
 } from 'lucide-react'
 import { LoginForm } from '#/components/stayflow/login-form'
+import { NOINDEX_META } from '#/lib/seo'
 
 export const Route = createFileRoute('/login/staff')({
   head: () => ({
-    meta: [{ title: 'Staff Sign In — StayFlow' }],
+    meta: [{ title: 'Staff Sign In — StayFlow' }, ...NOINDEX_META],
   }),
   component: StaffLogin,
 })

@@ -41,25 +41,28 @@ export const errorMiddleware = (err, req, res, next) => {
     err.code === 'P2003' ||
     /foreign key constraint/i.test(err.message ?? '')
   ) {
-    return res
-      .status(409)
-      .json({
-        error:
-          "Can't remove this — other records still reference it. Remove those first.",
-      })
+    return res.status(409).json({
+      error:
+        "Can't remove this — other records still reference it. Remove those first.",
+    })
   }
 
   // Log named fields only. `console.error(err)` used to dump the whole Prisma
   // error object, and those embed the failing query's parameter values —
-  // emails, names, phone numbers — straight into the log stream.
+  // emails, names, phone numbers — straight into the log stream. The same
+  // values live inside `.message` and `.stack` of any Prisma error, so for
+  // those only the code and the offending column names are safe to keep.
+  const isPrismaError =
+    typeof err.name === 'string' && err.name.startsWith('Prisma')
   logger.error('request.unhandled_error', {
     requestId: req.id,
     method: req.method,
     path: req.originalUrl,
     name: err.name,
     code: err.code,
-    message: err.message,
-    stack: err.stack,
+    ...(isPrismaError
+      ? { target: err.meta?.target, message: '[redacted: prisma error text]' }
+      : { message: err.message, stack: err.stack }),
   })
   // The request id goes back to the caller so a support report can be tied to
   // the log line above without exposing anything about the failure itself.

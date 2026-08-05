@@ -5,10 +5,11 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { api, ApiError } from '#/lib/api/client'
+import { NOINDEX_META } from '#/lib/seo'
 
 export const Route = createFileRoute('/forgot-password')({
   head: () => ({
-    meta: [{ title: 'Reset your password — StayFlow' }],
+    meta: [{ title: 'Reset your password — StayFlow' }, ...NOINDEX_META],
   }),
   component: ForgotPassword,
 })

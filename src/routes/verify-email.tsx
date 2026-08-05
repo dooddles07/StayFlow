@@ -4,13 +4,14 @@ import { ArrowLeft, Loader2, MailCheck } from 'lucide-react'
 import { toast } from '#/lib/toast'
 import { Button } from '#/components/ui/button'
 import { api, ApiError } from '#/lib/api/client'
+import { NOINDEX_META } from '#/lib/seo'
 
 export const Route = createFileRoute('/verify-email')({
   validateSearch: (search: Record<string, unknown>): { token?: string } => ({
     token: typeof search.token === 'string' ? search.token : undefined,
   }),
   head: () => ({
-    meta: [{ title: 'Confirm your new email — StayFlow' }],
+    meta: [{ title: 'Confirm your new email — StayFlow' }, ...NOINDEX_META],
   }),
   component: VerifyEmail,
 })

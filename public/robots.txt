@@ -1,3 +1,13 @@
 # https://www.robotstxt.org/robotstxt.html
+# StayFlow is a private residential community portal. Only the marketing
+# landing page belongs in a search index; every other route is either behind a
+# login or is an account-recovery form that should never be crawled.
 User-agent: *
-Disallow:
+Allow: /$
+Disallow: /member/
+Disallow: /staff/
+Disallow: /management/
+Disallow: /login/
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email

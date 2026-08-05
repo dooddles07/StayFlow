@@ -3,8 +3,10 @@ import { AppShell } from '#/components/stayflow/app-shell'
 import { RoutePending } from '#/components/stayflow/route-pending'
 import { useRequireAuth } from '#/lib/hooks/use-require-auth'
 import { useAuthStore } from '#/lib/store/auth-store'
+import { NOINDEX_META } from '#/lib/seo'
 
 export const Route = createFileRoute('/management')({
+  head: () => ({ meta: [...NOINDEX_META] }),
   component: ManagementLayout,
 })
 
