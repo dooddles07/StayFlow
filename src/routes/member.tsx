@@ -1,4 +1,10 @@
-import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useNavigate,
+} from '@tanstack/react-router'
+import { hasSessionCookie } from '#/lib/auth-guard'
 import * as React from 'react'
 import { KeyRound, ShieldAlert } from 'lucide-react'
 import { AppShell } from '#/components/stayflow/app-shell'
@@ -13,6 +19,12 @@ import { clearStoredPortal } from '#/lib/hooks/use-portal-preference'
 import { NOINDEX_META } from '#/lib/seo'
 
 export const Route = createFileRoute('/member')({
+  // See the note in management.tsx — server-side cookie gate, client no-op.
+  beforeLoad: () => {
+    if (!hasSessionCookie()) {
+      throw redirect({ to: '/login/member', replace: true })
+    }
+  },
   head: () => ({ meta: [...NOINDEX_META] }),
   component: MemberLayout,
 })

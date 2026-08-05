@@ -28,6 +28,7 @@ import { requestReservation } from '#/lib/api/diningReservation'
 import { useMyProfile } from '#/lib/store/member-profile'
 import { clampPartySize, nextDays, toDateKey } from '#/lib/booking-slots'
 import { hideBrokenImg } from '#/lib/utils'
+import { RoutePending } from '#/components/stayflow/route-pending'
 import type { DiningReservation } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/member/dining/$id')({
@@ -42,6 +43,9 @@ export const Route = createFileRoute('/member/dining/$id')({
       throw err
     }
   },
+  // Without this the router shows the previous page until the loader resolves,
+  // which reads as a dead click on a slow connection.
+  pendingComponent: RoutePending,
   head: ({ loaderData }) => ({
     meta: [
       { title: `${loaderData?.restaurant.name ?? 'Restaurant'} — StayFlow` },

@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { hasSessionCookie } from '#/lib/auth-guard'
 import { AppShell } from '#/components/stayflow/app-shell'
 import { RoutePending } from '#/components/stayflow/route-pending'
 import { useRequireAuth } from '#/lib/hooks/use-require-auth'
@@ -6,6 +7,12 @@ import { useAuthStore } from '#/lib/store/auth-store'
 import { NOINDEX_META } from '#/lib/seo'
 
 export const Route = createFileRoute('/staff')({
+  // See the note in management.tsx — server-side cookie gate, client no-op.
+  beforeLoad: () => {
+    if (!hasSessionCookie()) {
+      throw redirect({ to: '/login/staff', replace: true })
+    }
+  },
   head: () => ({ meta: [...NOINDEX_META] }),
   component: StaffLayout,
 })

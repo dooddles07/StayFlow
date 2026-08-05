@@ -29,6 +29,7 @@ import { getFacilityBookings, requestBooking } from '#/lib/api/booking'
 import type { FacilitySlot } from '#/lib/api/booking'
 import { useMyProfile } from '#/lib/store/member-profile'
 import { cn, hideBrokenImg } from '#/lib/utils'
+import { RoutePending } from '#/components/stayflow/route-pending'
 
 export const Route = createFileRoute('/member/facilities/$id')({
   loader: async ({ params }) => {
@@ -42,6 +43,9 @@ export const Route = createFileRoute('/member/facilities/$id')({
       throw err
     }
   },
+  // Without this the router shows the previous page until the loader resolves,
+  // which reads as a dead click on a slow connection.
+  pendingComponent: RoutePending,
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.facility.name ?? 'Facility'} — StayFlow` }],
   }),

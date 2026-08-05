@@ -7,6 +7,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { TooltipProvider } from '#/components/ui/tooltip'
 import { ToastViewport } from '#/components/ui/toast-viewport'
 import { GlobalSearch } from '#/components/stayflow/global-search'
+import { RootErrorBoundary } from '#/components/stayflow/root-error-boundary'
 
 import appCss from '../styles.css?url'
 
@@ -86,11 +87,13 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <TooltipProvider delayDuration={200}>
-          {children}
-          <GlobalSearch />
-          <ToastViewport />
-        </TooltipProvider>
+        <RootErrorBoundary>
+          <TooltipProvider delayDuration={200}>
+            {children}
+            <GlobalSearch />
+            <ToastViewport />
+          </TooltipProvider>
+        </RootErrorBoundary>
         {/* Gated so the panel is provably dead code in a production bundle. */}
         {import.meta.env.DEV && (
           <TanStackDevtools

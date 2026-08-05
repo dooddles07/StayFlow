@@ -33,8 +33,10 @@ interface LoginResponse {
 interface AuthState {
   user: AuthUser | null
   hasHydrated: boolean
+  revalidated: boolean
   login: (email: string, password: string) => Promise<AuthUser>
   logout: () => Promise<void>
+  revalidate: () => Promise<void>
   changePassword: (
     currentPassword: string,
     newPassword: string,
@@ -50,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       hasHydrated: false,
+      revalidated: false,
       // The JWT lives in an httpOnly cookie set by the server — never stored in JS.
       // Only the non-sensitive user profile is persisted, purely for portal-gating UX.
       login: async (email, password) => {
@@ -57,8 +60,27 @@ export const useAuthStore = create<AuthState>()(
           email,
           password,
         })
-        set({ user })
+        set({ user, revalidated: true })
         return user
+      },
+      // The persisted copy of the user is editable by anyone with the console
+      // open, so the role it claims is only ever a hint about which shell to
+      // render. This asks the server who the session actually belongs to and
+      // replaces the local copy with that answer, which also refills the fields
+      // that are deliberately not persisted. Every API call is authorised
+      // server-side regardless, so a tampered role never reached data — it just
+      // rendered a shell the user could not use.
+      revalidate: async () => {
+        if (!useAuthStore.getState().user) return
+        try {
+          const user = await api.get<AuthUser>('/auth/me')
+          set({ user, revalidated: true })
+        } catch (err) {
+          // A 401 is already handled by the unauthorized handler below. Any
+          // other failure is a network blip, not a verdict on the session.
+          if (err instanceof ApiError && err.status === 401) return
+          set({ revalidated: true })
+        }
       },
       logout: async () => {
         try {
@@ -66,7 +88,7 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           // Clear local state regardless of network outcome.
         }
-        set({ user: null })
+        set({ user: null, revalidated: false })
       },
       changePassword: async (currentPassword, newPassword) => {
         // Server rotates the password and re-issues this session's cookie; other sessions are revoked.
@@ -93,7 +115,13 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'stayflow.auth',
-      partialize: (state) => ({ user: state.user }),
+      // The email never goes to localStorage: it is the one field here that
+      // identifies a real person, it is readable by any script on the origin,
+      // and the single screen that shows it can wait for revalidate() to refill
+      // it. Everything else is display scaffolding for the shell.
+      partialize: (state) => ({
+        user: state.user ? { ...state.user, email: '' } : null,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state) state.hasHydrated = true
       },
