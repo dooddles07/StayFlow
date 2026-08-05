@@ -98,7 +98,7 @@ function LandingPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
           by QUAN7UM
         </p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+        <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
           StayFlow
         </h1>
         <p className="mt-3 max-w-md text-sm text-muted-text sm:text-base">

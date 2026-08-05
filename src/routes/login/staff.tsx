@@ -46,7 +46,7 @@ function StaffLogin() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-indigo-soft">
             Staff Portal
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+          <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground">
             Run today's shift.
           </h1>
           <ul className="mt-6 space-y-3">

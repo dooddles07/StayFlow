@@ -49,7 +49,7 @@ function ManagementLogin() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
             Management Console
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+          <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground">
             Executive oversight, in one place.
           </h1>
           <p className="mt-3 text-sm text-muted-text">
