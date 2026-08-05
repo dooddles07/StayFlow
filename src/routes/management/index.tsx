@@ -20,6 +20,8 @@ import {
   facilityUtilization,
   guestTraffic,
   memberEngagement,
+  trailingDailyCounts,
+  trailingMemberCounts,
 } from '#/lib/live-analytics'
 import { getAllBookings } from '#/lib/api/booking'
 import { getAllGuests } from '#/lib/api/guest'
@@ -132,6 +134,15 @@ function ManagementDashboard() {
     diningByMonth[diningByMonth.length - 1]?.reservations ?? 0
   const engagement = memberEngagement(residents, bookings, reservations, guests)
 
+  const memberTrend = trailingMemberCounts(residents)
+  const bookingsTrend = trailingDailyCounts(
+    bookings.filter((b) => b.status !== 'cancelled').map((b) => b.date),
+  )
+  const diningDailyTrend = trailingDailyCounts(
+    reservations.filter((r) => r.status !== 'cancelled').map((r) => r.date),
+  )
+  const guestsTrend = trailingDailyCounts(guests.map((g) => g.arrivalDate))
+
   const alerts = facilities.filter((f) => f.status !== 'open')
 
   return (
@@ -150,21 +161,25 @@ function ManagementDashboard() {
           icon={Users}
           label="Total members"
           value={String(totalMembers)}
+          trend={memberTrend}
         />
         <KpiCard
           icon={ClipboardList}
           label="Bookings today"
           value={String(activeBookingsToday)}
+          trend={bookingsTrend}
         />
         <KpiCard
           icon={UtensilsCrossed}
           label="Dining reservations this month"
           value={String(monthlyReservations)}
+          trend={diningDailyTrend}
         />
         <KpiCard
           icon={UserCheck}
           label="Guests today"
           value={String(guestsToday)}
+          trend={guestsTrend}
         />
         <KpiCard
           icon={Building2}

@@ -21,6 +21,7 @@ import { getAllGuests } from '#/lib/api/guest'
 import type { GuestView } from '#/lib/api/guest'
 import { getFacilities } from '#/lib/api/facility'
 import { timeToMinutes, toDateKey } from '#/lib/booking-slots'
+import { trailingDailyCounts } from '#/lib/live-analytics'
 import type { Facility } from '#/lib/mock/types'
 
 export const Route = createFileRoute('/staff/')({
@@ -81,6 +82,14 @@ function StaffDashboard() {
     reservations.filter((d) => d.status === 'pending').length
 
   const alerts = facilities.filter((f) => f.status !== 'open')
+
+  const guestsTrend = trailingDailyCounts(guests.map((g) => g.arrivalDate))
+  const bookingsTrend = trailingDailyCounts(
+    bookings.filter((b) => b.status !== 'cancelled').map((b) => b.date),
+  )
+  const diningTrendData = trailingDailyCounts(
+    reservations.filter((r) => r.status !== 'cancelled').map((r) => r.date),
+  )
 
   const scheduleRows = [
     ...todaysBookings.map((b) => ({
@@ -168,16 +177,19 @@ function StaffDashboard() {
               icon={Users}
               label="Visitors today"
               value={String(todaysGuests.length)}
+              trend={guestsTrend}
             />
             <KpiCard
               icon={ClipboardList}
               label="Facility bookings"
               value={String(todaysBookings.length)}
+              trend={bookingsTrend}
             />
             <KpiCard
               icon={UtensilsCrossed}
               label="Dining reservations"
               value={String(todaysDining.length)}
+              trend={diningTrendData}
             />
             <KpiCard
               icon={AlertTriangle}

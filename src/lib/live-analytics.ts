@@ -1,5 +1,5 @@
 // Real analytics derived from live booking/reservation/resident/guest data.
-import { FACILITY_TIME_SLOTS } from './booking-slots'
+import { FACILITY_TIME_SLOTS, toDateKey } from './booking-slots'
 import type { BookingView } from './api/booking'
 import type { ReservationView } from './api/diningReservation'
 import type { GuestView } from './api/guest'
@@ -192,6 +192,43 @@ export function memberEngagement(
     else tiers.Dormant++
   }
   return Object.entries(tiers).map(([name, value]) => ({ name, value }))
+}
+
+// Trailing daily counts for KPI sparklines, derived from real record dates —
+// same honesty rule as the rest of this file: no synthetic/placeholder points.
+export function trailingDailyCounts(dates: string[], days = 7): number[] {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const keys: string[] = []
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    keys.push(toDateKey(d))
+  }
+  const counts = new Map(keys.map((k) => [k, 0]))
+  for (const date of dates) {
+    const key = toDateKey(new Date(date))
+    if (counts.has(key)) counts.set(key, counts.get(key)! + 1)
+  }
+  return keys.map((k) => counts.get(k) ?? 0)
+}
+
+// Cumulative member count at the end of each of the trailing N days, derived from
+// moveInDate — same "active" caveat as memberGrowth() above (no churn/login data exists).
+export function trailingMemberCounts(
+  residents: ResidentProfile[],
+  days = 7,
+): number[] {
+  const today = new Date()
+  today.setHours(23, 59, 59, 999)
+  const moveIns = residents.map((r) => new Date(r.moveInDate).getTime())
+  const out: number[] = []
+  for (let i = days - 1; i >= 0; i--) {
+    const cutoff = new Date(today)
+    cutoff.setDate(cutoff.getDate() - i)
+    out.push(moveIns.filter((t) => t <= cutoff.getTime()).length)
+  }
+  return out
 }
 
 export function guestFrequent(guests: GuestView[], limit = 5) {
