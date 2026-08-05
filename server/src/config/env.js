@@ -71,4 +71,22 @@ export const env = {
   // Must be a Resend-verified domain in production. The shared sandbox sender
   // (onboarding@resend.dev) only delivers to your own Resend account email.
   mailFrom: process.env.MAIL_FROM || 'StayFlow <onboarding@resend.dev>',
+  // Image hosting. The API never receives the file: it signs an upload the
+  // browser sends straight to Cloudinary, so photos never occupy a Postgres
+  // column or the request body. Unset => the signature endpoint 503s and the
+  // admin UI falls back to pasting a URL.
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+    apiKey: process.env.CLOUDINARY_API_KEY || '',
+    apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+    folder: process.env.CLOUDINARY_FOLDER || 'stayflow',
+  },
+  // Error tracking. Unset => Sentry is never initialised and nothing is sent.
+  sentryDsn: process.env.SENTRY_DSN || '',
+  // Row retention. Both tables grow per-request and would otherwise consume the
+  // whole database quota; 0 disables the prune for that table.
+  retention: {
+    authEventDays: Number(process.env.AUTH_EVENT_RETENTION_DAYS ?? 90),
+    notificationDays: Number(process.env.NOTIFICATION_RETENTION_DAYS ?? 180),
+  },
 }

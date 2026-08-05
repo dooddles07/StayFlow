@@ -2,6 +2,7 @@ import app from './src/app.js'
 import { env } from './src/config/env.js'
 import { prisma } from './src/config/db.js'
 import { logger } from './src/utils/logger.js'
+import { startRetentionSweeper } from './src/utils/retention.js'
 
 // How long in-flight requests get to finish before the process is forced down.
 // Render sends SIGKILL 30s after SIGTERM, so stay comfortably inside that.
@@ -49,6 +50,8 @@ const start = async () => {
       env: process.env.NODE_ENV ?? 'development',
     })
   })
+
+  startRetentionSweeper()
 }
 
 start().catch((err) => {

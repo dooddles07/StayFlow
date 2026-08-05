@@ -166,17 +166,19 @@ export const forgotPassword = asyncHandler(async (req, res) => {
       hashResetToken(rawToken),
       new Date(Date.now() + RESET_TOKEN_TTL_MS),
     )
-    // Swallow delivery failures: a send error must not flip the generic response and leak
-    // whether the account exists. Log server-side and move on.
-    try {
-      await deliverResetToken(user, rawToken)
-    } catch (err) {
+    // Not awaited. The response is generic whether or not delivery succeeds, so
+    // waiting on Resend only pinned an unauthenticated request open for the
+    // provider's round trip — and a provider outage would have held every
+    // forgot-password request until its timeout.
+    // Delivery failures must not flip the response and leak whether the account
+    // exists, so they are logged server-side and go no further.
+    deliverResetToken(user, rawToken).catch((err) => {
       logger.error('mail.reset_delivery_failed', {
         requestId: req.id,
         userId: user.id,
         message: err.message,
       })
-    }
+    })
   }
   logAuthEvent(req, AuthEventType.PASSWORD_RESET_REQUEST, {
     userId: user?.id ?? null,

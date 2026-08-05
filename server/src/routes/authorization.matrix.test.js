@@ -94,6 +94,7 @@ vi.mock('../middleware/rateLimit.middleware.js', () => {
     changeEmailLimiter: pass,
     confirmEmailLimiter: pass,
     createLoginLimiter: pass,
+    uploadSignatureLimiter: pass,
   }
 })
 
@@ -135,9 +136,14 @@ const tokenFor = (role) =>
   )
 
 const call = (method, path, role) => {
-  const req = request(app)
-    [method](path)
-    .set('Authorization', `Bearer ${tokenFor(role)}`)
+  // The agent is held in its own binding rather than chained off request(app):
+  // prettier wraps `request(app)[method](path)` onto a second line, and a line
+  // starting with `[` is an ASI hazard that no-unexpected-multiline rejects.
+  const agent = request(app)
+  const req = agent[method](path).set(
+    'Authorization',
+    `Bearer ${tokenFor(role)}`,
+  )
   return method === 'get' || method === 'delete' ? req : req.send({})
 }
 
@@ -207,6 +213,10 @@ const MATRIX = [
   ['post', '/api/guests/g-1/check-out', ['STAFF', 'MANAGEMENT']],
   ['post', '/api/notifications', ['STAFF', 'MANAGEMENT']],
   ['post', '/api/notifications/read-all', ['MANAGEMENT']],
+
+  // A signature is a write credential for the shared Cloudinary folder, and only
+  // MANAGEMENT edits the resources that carry a photo.
+  ['post', '/api/uploads/signature', ['MANAGEMENT']],
 
   // Self-service: any authenticated caller, scoped to their own record inside.
   ['get', '/api/residents/me', ROLES],

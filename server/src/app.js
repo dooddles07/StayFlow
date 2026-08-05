@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node'
 import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
@@ -47,18 +48,24 @@ app.use('/api', healthRouter)
 
 app.use(accessLog)
 
-// Only the three resources that store base64 photos as data URIs need a large
-// body. Applying 5mb everywhere meant an unauthenticated POST /api/auth/login
-// could hand the parser 5mb of JSON to chew on, per request.
-const largeJson = express.json({ limit: '5mb' })
-for (const path of ['/api/events', '/api/facilities', '/api/restaurants']) {
-  app.use(path, largeJson)
-}
+// One limit for every route. The 5mb carve-out for /events, /facilities and
+// /restaurants existed because those three stored base64 photo data URIs;
+// photos now upload straight from the browser to Cloudinary and only a URL
+// reaches this API, so no endpoint has a reason to accept a large body.
 app.use(express.json({ limit: '100kb' }))
 
 app.use('/api', originCheck, apiLimiter, routes)
 
 app.use(notFoundMiddleware)
+
+// Ahead of errorMiddleware, which converts everything into a JSON response and
+// would otherwise leave Sentry nothing to see. No-op unless instrument.mjs ran
+// with a DSN set. Expected 4xx (bad input, wrong role, rate limit) is not worth
+// an alert, so only 5xx and unhandled throws are reported.
+Sentry.setupExpressErrorHandler(app, {
+  shouldHandleError: (error) => (error.statusCode ?? 500) >= 500,
+})
+
 app.use(errorMiddleware)
 
 export default app

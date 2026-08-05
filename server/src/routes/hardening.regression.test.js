@@ -75,6 +75,7 @@ vi.mock('../middleware/rateLimit.middleware.js', () => {
     changeEmailLimiter: pass,
     confirmEmailLimiter: pass,
     createLoginLimiter: pass,
+    uploadSignatureLimiter: pass,
   }
 })
 

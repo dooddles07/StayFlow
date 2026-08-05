@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
+import * as React from 'react'
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { initErrorTracking } from '#/lib/observability'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { TooltipProvider } from '#/components/ui/tooltip'
@@ -72,6 +74,12 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: ReactNode }) {
+  // In an effect so it only ever runs in the browser — Sentry's React SDK has
+  // no business initialising during SSR.
+  React.useEffect(() => {
+    initErrorTracking()
+  }, [])
+
   return (
     <html lang="en" className="dark">
       <head>

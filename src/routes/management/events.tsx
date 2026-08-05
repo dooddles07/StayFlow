@@ -3,6 +3,7 @@ import * as React from 'react'
 import { toast } from '#/lib/toast'
 import { format, parseISO } from 'date-fns'
 import { Pencil, Plus, Trash2, Upload } from 'lucide-react'
+import { UploadUnavailableError, uploadPhoto } from '#/lib/api/upload'
 import { AnimatedTableRow } from '#/components/stayflow/animated-table-row'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { Button } from '#/components/ui/button'
@@ -108,15 +109,6 @@ function newDraft(): EventDraft {
   }
 }
 
-function readImageFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () => reject(new Error('Could not read that file.'))
-    reader.readAsDataURL(file)
-  })
-}
-
 function ManagementEventsPage() {
   const [events, setEvents] = React.useState<CommunityEventView[]>([])
   const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>(
@@ -126,6 +118,7 @@ function ManagementEventsPage() {
   const [deleteTarget, setDeleteTarget] =
     React.useState<CommunityEventView | null>(null)
   const [saving, setSaving] = React.useState(false)
+  const [uploading, setUploading] = React.useState(false)
   const photoInputRef = React.useRef<HTMLInputElement>(null)
   // Mirror saving/delete-in-flight but checked/updated synchronously — two clicks
   // before React re-renders (and disables the button) would both read the same
@@ -471,15 +464,20 @@ function ManagementEventsPage() {
                         )
                         return
                       }
+                      setUploading(true)
                       try {
-                        const dataUrl = await readImageFile(file)
+                        const url = await uploadPhoto(file)
                         setEditing((prev) =>
-                          prev ? { ...prev, image: dataUrl } : prev,
+                          prev ? { ...prev, image: url } : prev,
                         )
-                      } catch {
+                      } catch (err) {
                         toast.error(
-                          'Could not read that photo. Try a different file.',
+                          err instanceof UploadUnavailableError
+                            ? 'Photo uploads are not set up yet — paste a photo link instead.'
+                            : 'Could not upload that photo. Try a different file.',
                         )
+                      } finally {
+                        setUploading(false)
                       }
                     }}
                   />
@@ -489,6 +487,7 @@ function ManagementEventsPage() {
                     size="icon"
                     className="size-11 shrink-0 border-border"
                     aria-label="Upload a photo from your device"
+                    disabled={uploading}
                     onClick={() => photoInputRef.current?.click()}
                   >
                     <Upload className="size-4" />

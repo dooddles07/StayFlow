@@ -16,7 +16,9 @@ services:
       npm install --include=dev &&
       npx prisma generate &&
       npx prisma migrate deploy
-    startCommand: cd server && node server.js
+    # --import loads Sentry before anything else imports express or prisma; its
+    # auto instrumentation patches modules at load time. Inert without SENTRY_DSN.
+    startCommand: cd server && node --import ./instrument.mjs server.js
     # Plain Express route (server/src/routes/index.js) — no render, no DB call.
     healthCheckPath: /api/health
     envVars:
@@ -44,4 +46,17 @@ services:
       # Must be a Resend-verified domain. The default sandbox sender only
       # delivers to the Resend account owner's own address.
       - key: MAIL_FROM
+        sync: false
+      # Error tracking. Unset => Sentry never initialises and nothing is sent.
+      - key: SENTRY_DSN
+        sync: false
+      # Photo uploads. The browser uploads straight to Cloudinary using a
+      # signature this API produces, so the secret stays server-side and no
+      # image bytes pass through Render or Postgres. Unset => the signature
+      # endpoint 503s and the admin UI asks for a photo URL instead.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
         sync: false

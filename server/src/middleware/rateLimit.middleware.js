@@ -70,3 +70,10 @@ export const confirmEmailLimiter = build({ windowMs: ONE_HOUR, limit: 10 })
 // session mass-minting credentials. Ceiling set well above realistic front-desk bulk
 // onboarding (a batch of new residents in one sitting) while still bounding runaway abuse.
 export const createLoginLimiter = build({ windowMs: FIFTEEN_MIN, limit: 20 })
+
+// Each signature is one free-tier Cloudinary upload someone else is paying for,
+// so the ceiling is well below what a person editing photos by hand would need.
+export const uploadSignatureLimiter = build({
+  windowMs: FIFTEEN_MIN,
+  limit: 30,
+})

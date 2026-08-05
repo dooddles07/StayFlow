@@ -15,6 +15,7 @@ import guestRoutes from './guest.routes.js'
 import eventRoutes from './event.routes.js'
 import noticeRoutes from './notice.routes.js'
 import notificationRoutes from './notification.routes.js'
+import uploadRoutes from './upload.routes.js'
 
 const router = Router()
 
@@ -55,5 +56,6 @@ router.use(
   blockIfMustChangePassword,
   notificationRoutes,
 )
+router.use('/uploads', requireAuth, blockIfMustChangePassword, uploadRoutes)
 
 export default router

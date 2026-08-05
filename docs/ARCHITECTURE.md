@@ -305,6 +305,7 @@ Generic CRUD (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) applies 
 | POST                | `/notifications/:id/read`                                      | Mark read                                            | owner or STAFF/MGMT |
 | POST                | `/notifications/resident/:id/read-all` · `/staff/:id/read-all` | Mark all read (own feed)                             | owner               |
 | POST                | `/notifications/read-all`                                      | Mark all read (every notification)                   | **MGMT only**       |
+| POST                | `/uploads/signature`                                           | Signs one direct-to-Cloudinary photo upload          | **MGMT only**       |
 | GET                 | `/health`                                                      | Liveness → `{status:'ok',time}`                      | public              |
 
 ## Deployment
@@ -362,18 +363,22 @@ Both are mounted ahead of the rate limiter and access log, so continuous platfor
 | `server/prisma/schema.prisma`             | Data model, enums, datasource — see [SCHEMA.md](SCHEMA.md)           |
 | `server/src/config/env.js`                | Env validation + defaults (required: `DATABASE_URL`, `JWT_SECRET`)   |
 | `server/src/config/db.js`                 | Prisma client singleton                                              |
+| `server/instrument.mjs`                   | Sentry init, loaded ahead of every other import via `node --import`  |
+| `server/prisma.config.ts`                 | Prisma CLI config — replaces the removed `package.json#prisma` block |
+| `server/src/utils/retention.js`           | Hourly prune of `auth_events` and read `notifications`               |
 | `vercel.json`                             | Frontend build command, `/api/*` rewrite to Render, security headers |
 | `render.yaml`                             | API service: build/start commands, health check, env var contract    |
 
 ## Automation
 
-| Concern                     | Status                                                                                                     |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Cron jobs / Scheduled tasks | None in repo                                                                                               |
-| Queues / Background workers | None                                                                                                       |
-| Webhooks                    | None                                                                                                       |
-| Retries / timeouts          | Rate limiters (login 10/15min, password-reset/change/email-change 5/hr); account lock 15 min after 5 fails |
-| Async side-effects          | Audit logging (`logAuthEvent`) is fire-and-forget; failures logged to console, never block auth            |
+| Concern                     | Status                                                                                                                                                                                                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cron jobs / Scheduled tasks | One in-process timer: `startRetentionSweeper()` prunes `auth_events` and read `notifications` hourly (`server/src/utils/retention.js`). No cron service — the free plan has none, and these are the two tables that grow with traffic rather than with the size of the property |
+| Queues / Background workers | None                                                                                                                                                                                                                                                                            |
+| Webhooks                    | None                                                                                                                                                                                                                                                                            |
+| Retries / timeouts          | Rate limiters (login 10/15min, password-reset/change/email-change 5/hr); account lock 15 min after 5 fails                                                                                                                                                                      |
+| Async side-effects          | Audit logging (`logAuthEvent`) is fire-and-forget; failures logged to console, never block auth. Password-reset mail is also not awaited — the response is generic either way, so waiting on Resend only held an unauthenticated request open for the provider's round trip     |
+| Error tracking              | Sentry, errors only (`tracesSampleRate: 0`). API via `server/instrument.mjs` loaded with `node --import`; browser via `src/lib/observability.ts`. Both inert without a DSN, and both strip request bodies/headers before sending                                                |
 
 ## Performance
 

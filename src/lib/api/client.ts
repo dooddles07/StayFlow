@@ -1,8 +1,10 @@
 import { createIsomorphicFn } from '@tanstack/react-start'
 import { getRequestHeader, getRequestUrl } from '@tanstack/react-start/server'
 
-// Same-origin in production (frontend and API served by the same process/service).
-// Override with VITE_API_URL for local dev if running the backend separately.
+// Same-origin from the browser's point of view in production: Vercel rewrites
+// /api/* to the Render service server-side, so the auth cookie is never sent
+// cross-site. Override with VITE_API_URL for local dev if running the backend
+// on a different origin.
 const API_URL = import.meta.env.VITE_API_URL ?? '/api'
 
 export class ApiError extends Error {
@@ -79,8 +81,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     // Never for /auth/login itself: a failed login attempt is not an expired session,
     // even when a stale user is still persisted from a previous session, and must be
     // left for the login form's own catch block to show as a normal credentials error.
-    if (res.status === 401 && typeof window !== 'undefined' && path !== '/auth/login') onUnauthorized?.()
-    throw new ApiError(res.status, body.error ?? `Request failed with status ${res.status}`)
+    if (
+      res.status === 401 &&
+      typeof window !== 'undefined' &&
+      path !== '/auth/login'
+    )
+      onUnauthorized?.()
+    throw new ApiError(
+      res.status,
+      body.error ?? `Request failed with status ${res.status}`,
+    )
   }
 
   if (res.status === 204) return undefined as T
@@ -89,8 +99,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, data: unknown) => request<T>(path, { method: 'POST', body: JSON.stringify(data) }),
-  put: <T>(path: string, data: unknown) => request<T>(path, { method: 'PUT', body: JSON.stringify(data) }),
+  post: <T>(path: string, data: unknown) =>
+    request<T>(path, { method: 'POST', body: JSON.stringify(data) }),
+  put: <T>(path: string, data: unknown) =>
+    request<T>(path, { method: 'PUT', body: JSON.stringify(data) }),
   del: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
 }
 

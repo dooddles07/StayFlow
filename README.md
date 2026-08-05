@@ -219,8 +219,11 @@ Full env var reference: [docs/SECURITY.md](docs/SECURITY.md#environment-variable
 ### Known limitations
 
 - No payment/billing (see [docs/PRD.md](docs/PRD.md)).
-- No background jobs/scheduler — reminders and expiry are not automated.
+- No job scheduler — reminders and expiry are not automated. The one recurring task is an in-process hourly sweep that prunes old `auth_events` and read notifications.
 - Email delivery (Resend) only works with `RESEND_API_KEY` set — without it, reset/email-change links are logged to console instead of sent (dev and prod alike).
+- Photo uploads need Cloudinary credentials. Without them the admin UI asks for a photo URL instead of offering a file picker; nothing else changes.
+- Error tracking needs a Sentry DSN. Without one, Sentry never initialises and failures are only visible in the platform's own log stream.
+- Free-tier ceiling: single Render instance (512 MB, spins down after 15 min idle) and Neon's 0.5 GB storage / 100 CU-hours per month. Comfortable for a single property; not a 100k-user deployment. Point any uptime pinger at `/api/health`, which is deliberately database-free — `/api/health/ready` wakes Neon and would burn the compute budget.
 
 <br />
 

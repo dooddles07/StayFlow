@@ -5,8 +5,8 @@
   "type": "module",
   "version": "1.0.0",
   "scripts": {
-    "dev": "node --watch server.js",
-    "start": "node server.js",
+    "dev": "node --watch --import ./instrument.mjs server.js",
+    "start": "node --import ./instrument.mjs server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.3.0",
+    "@sentry/node": "^10.69.0",
     "bcryptjs": "^2.4.3",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
@@ -33,8 +34,5 @@
     "eslint": "^9.20.0",
     "globals": "^17.7.0",
     "prisma": "^6.3.0"
-  },
-  "prisma": {
-    "seed": "node prisma/seed.js"
   }
 }
