@@ -13,7 +13,6 @@
     "prisma:studio": "prisma studio",
     "seed": "node prisma/seed.js",
     "reset-test-passwords": "node scripts/reset-test-passwords.js",
-    "fix-corrupted-booking": "node scripts/fix-corrupted-booking.js",
     "lint": "eslint ."
   },
   "dependencies": {

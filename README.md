@@ -194,7 +194,7 @@ npm run dev                          # http://localhost:3000
 
 # 6. Test / build
 npm run test
-npm run build && npm run start       # local prod-style run only — actual prod is Render (API) + Vercel (frontend)
+npm run build                        # prod build — actual prod is Render (API) + Vercel (frontend)
 ```
 
 Full env var reference: [docs/SECURITY.md](docs/SECURITY.md#environment-variables). Schema workflow detail: [docs/SCHEMA.md](docs/SCHEMA.md#schema-change-workflow).

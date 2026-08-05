@@ -8,18 +8,18 @@
 graph TD
   User["User (Member / Staff / Management)"]
   Browser["Browser — React 19 SPA/SSR"]
-  Node["Node service — scripts/start.mjs"]
-  SSR["TanStack Start SSR handler<br/>(dist/server)"]
-  Static["Static assets<br/>(dist/client)"]
-  API["Express API app<br/>(server/src/app.js)"]
+  Vercel["Vercel — frontend host"]
+  SSR["TanStack Start SSR handler<br/>(nitro build, .output/server)"]
+  Static["Static assets<br/>(.output/public)"]
+  API["Express API app on Render<br/>(server/src/app.js)"]
   Prisma["Prisma ORM 6"]
   DB[("PostgreSQL")]
   Mail["Password-reset/email-change mailer<br/>(Resend — logs to console instead when RESEND_API_KEY unset)"]
 
-  User --> Browser --> Node
-  Node -->|"/api/*"| API
-  Node -->|"GET static file"| Static
-  Node -->|"everything else"| SSR
+  User --> Browser --> Vercel
+  Vercel -->|"rewrite /api/*"| API
+  Vercel -->|"GET static file"| Static
+  Vercel -->|"everything else"| SSR
   API --> Prisma --> DB
   API -.-> Mail
 ```
@@ -29,7 +29,7 @@ graph TD
 | Component       | Role                                                                                                         |
 | --------------- | ------------------------------------------------------------------------------------------------------------ |
 | Browser (React) | Renders portals, holds non-sensitive user profile in `zustand`+`persist`; JWT never touches JS               |
-| Node service    | `createServer` router: `/api` → Express, static file hit → serve `dist/client`, else → SSR `handler.fetch`   |
+| Vercel frontend | Serves the nitro build (static assets + TanStack Start SSR) and rewrites `/api/*` server-side to Render      |
 | Express API     | REST endpoints, auth, RBAC, rate limiting, security headers                                                  |
 | Prisma          | Typed DB access + migrations                                                                                 |
 | PostgreSQL      | System of record, hosted on Neon (free tier), connected via `DATABASE_URL` on Render                         |
@@ -163,13 +163,12 @@ graph LR
 
 ```
 StayFlow/
-├── scripts/start.mjs          # Prod entry: merges API + SSR + static into one Node server
-├── vite.config.ts             # Vite 8 + TanStack Start + Tailwind + React plugins
-├── package.json               # Frontend deps + scripts (dev/build/start/test/lint)
+├── vite.config.ts             # Vite 8 + TanStack Start + nitro + Tailwind + React plugins
+├── package.json               # Frontend deps + scripts (dev/build/test/lint)
 ├── components.json            # shadcn/ui config
 ├── .env / .env.example        # Single env file for frontend + backend (see SECURITY.md) — no server/.env
 ├── public/                    # Static public assets
-├── dist/                      # Build output (client + server) — generated
+├── .output/                   # Nitro build output (public + server) — generated
 ├── src/
 │   ├── router.tsx             # TanStack Router setup
 │   ├── routeTree.gen.ts       # Generated route tree (tsr)
@@ -312,13 +311,13 @@ Generic CRUD (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) applies 
 
 **Model:** split hosting, two services. Vercel builds and serves the frontend, and proxies `/api/*` server-side to a standalone Render service running the Express API — the browser only ever sees one origin, so the httpOnly auth cookie (`SameSite=Lax`) works normally.
 
-`scripts/start.mjs` (the merged API+SSR+static Node server) and the root `package.json` `build`/`start` scripts predate this split and are no longer what's deployed — they still work for a local prod-style smoke test, but neither Vercel nor Render invokes them.
+The merged API+SSR+static Node server that predated this split has been removed — the frontend build (`nitro` plugin, `.output/`) is Vercel's to serve, and Render runs `server/server.js` directly.
 
 ```mermaid
 graph TD
   Dev["git push → GitHub"] --> VercelBuild["Vercel build (frontend)"]
   Dev --> RenderBuild["Render build (API)"]
-  VercelBuild -->|"vite build"| VercelServe["Vercel — serves dist/client + SSR"]
+  VercelBuild -->|"vite build (nitro)"| VercelServe["Vercel — serves static assets + SSR"]
   RenderBuild -->|"npm install --include=dev && prisma generate && prisma migrate deploy"| RenderStart["Render — node server.js"]
   VercelServe -->|"rewrite /api/*"| RenderStart
   RenderStart --> PG[("PostgreSQL")]
@@ -354,16 +353,17 @@ Both are mounted ahead of the rate limiter and access log, so continuous platfor
 
 ## Configuration Guide
 
-| File                                      | Purpose                                                            |
-| ----------------------------------------- | ------------------------------------------------------------------ |
-| `vite.config.ts`                          | Vite plugins: devtools, tailwind, TanStack Start, React            |
-| `tsconfig.json` / `tsr.config.json`       | TS config + TanStack Router codegen                                |
-| `eslint.config.js` / `prettier.config.js` | Lint + format (`@tanstack/eslint-config`)                          |
-| `components.json`                         | shadcn/ui generator config                                         |
-| `server/prisma/schema.prisma`             | Data model, enums, datasource — see [SCHEMA.md](SCHEMA.md)         |
-| `server/src/config/env.js`                | Env validation + defaults (required: `DATABASE_URL`, `JWT_SECRET`) |
-| `server/src/config/db.js`                 | Prisma client singleton                                            |
-| `scripts/start.mjs`                       | Prod server: MIME map, static caching, API/SSR routing             |
+| File                                      | Purpose                                                              |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `vite.config.ts`                          | Vite plugins: devtools, tailwind, TanStack Start, React              |
+| `tsconfig.json` / `tsr.config.json`       | TS config + TanStack Router codegen                                  |
+| `eslint.config.js` / `prettier.config.js` | Lint + format (`@tanstack/eslint-config`)                            |
+| `components.json`                         | shadcn/ui generator config                                           |
+| `server/prisma/schema.prisma`             | Data model, enums, datasource — see [SCHEMA.md](SCHEMA.md)           |
+| `server/src/config/env.js`                | Env validation + defaults (required: `DATABASE_URL`, `JWT_SECRET`)   |
+| `server/src/config/db.js`                 | Prisma client singleton                                              |
+| `vercel.json`                             | Frontend build command, `/api/*` rewrite to Render, security headers |
+| `render.yaml`                             | API service: build/start commands, health check, env var contract    |
 
 ## Automation
 
@@ -377,7 +377,7 @@ Both are mounted ahead of the rate limiter and access log, so continuous platfor
 
 ## Performance
 
-- **Static caching:** hashed `assets/*` served `immutable, max-age=1y`; other static `max-age=1h` (`start.mjs`).
+- **Static caching:** Vercel serves hashed build assets `immutable, max-age=1y` by default; other static files carry its standard revalidating cache headers.
 - **SSR:** TanStack Start server rendering for fast first paint.
 - **DB indexes:** unique constraints + composite/lookup indexes on the highest-growth tables (`auth_events`, `notifications`, `bookings`, `dining_tables`, `admin_action_events`) — see [SCHEMA.md](SCHEMA.md#keys--constraints--indexes). Migration `20260805090000` added the ones every list endpoint's `orderBy` needed, replaced the plain notification FK indexes with `(owner, createdAt)` composites that serve filter and sort together, and covered `event_rsvps.residentId` — whose absence made deleting a resident sequentially scan that table, since the composite unique leads with `eventId`.
 - **Response compression:** `compression` middleware on the API; Render does not gzip Node responses itself.
