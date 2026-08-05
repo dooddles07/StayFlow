@@ -1,4 +1,20 @@
-import 'dotenv/config'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+import dotenv from 'dotenv'
+
+// Load the repo-root .env explicitly rather than relying on process.cwd().
+// A bare `dotenv/config` resolves against the working directory, so running the
+// API from the repo root found the file and running it from server/ did not —
+// which is why a byte-identical copy of the secrets had been created at
+// server/.env. One file, one place to rotate. Values already present in the
+// environment (Render, CI) always win: dotenv does not overwrite.
+const here = path.dirname(fileURLToPath(import.meta.url))
+for (const candidate of [
+  path.resolve(here, '../../../.env'), // repo root
+  path.resolve(here, '../../.env'), // server/ — legacy location, still honoured
+]) {
+  dotenv.config({ path: candidate, quiet: true })
+}
 
 const required = ['DATABASE_URL', 'JWT_SECRET']
 for (const key of required) {
@@ -11,17 +27,27 @@ for (const key of required) {
 // are trusted straight off the signed JWT payload, so this is the app's actual root of trust.
 const MIN_JWT_SECRET_LENGTH = 32
 if (process.env.JWT_SECRET.length < MIN_JWT_SECRET_LENGTH) {
-  throw new Error(`JWT_SECRET must be at least ${MIN_JWT_SECRET_LENGTH} characters (got ${process.env.JWT_SECRET.length}).`)
+  throw new Error(
+    `JWT_SECRET must be at least ${MIN_JWT_SECRET_LENGTH} characters (got ${process.env.JWT_SECRET.length}).`,
+  )
 }
 
 const isProd = process.env.NODE_ENV === 'production'
 
-// Without this key, forgotPassword/change-email links only ever get console-logged —
-// in production that's silent, permanent lockout for anyone who forgets their password.
-if (isProd && !process.env.RESEND_API_KEY) {
-  console.warn(
-    '[env] RESEND_API_KEY is not set in production — password-reset and email-change links will only be logged to the server console, never delivered.',
-  )
+// Fail closed rather than warn. Without a mail key the reset/email-change link is
+// never delivered (silent permanent lockout) and the only place it exists is the
+// server log, which turns the log stream into a store of live account-takeover
+// tokens. Without APP_URL the link is built against corsOrigins[0] — empty in the
+// Render deployment — and falls through to localhost, so it is unusable anyway.
+if (isProd) {
+  const requiredInProd = ['RESEND_API_KEY', 'APP_URL']
+  for (const key of requiredInProd) {
+    if (!process.env[key]) {
+      throw new Error(
+        `Missing required env var in production: ${key}. Password-reset and email-change flows cannot work without it.`,
+      )
+    }
+  }
 }
 
 // Fail closed: no wildcard default. Unset CORS_ORIGIN => [] (only same-origin allowed,

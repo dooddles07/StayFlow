@@ -2,18 +2,23 @@ import { EventModel } from '../models/event.model.js'
 import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
-import { pickAllowed } from '../utils/validate.js'
+import { pickAllowed, toFullDate } from '../utils/validate.js'
 import { logAdminAction } from '../utils/adminLog.js'
 
 const base = buildCrudController(EventModel, 'Event')
 
 // Matches src/lib/api/event.ts's writable fields.
-const FIELDS = ['title', 'category', 'description', 'image', 'date', 'time', 'endTime', 'location', 'capacity']
-
-// A bare "YYYY-MM-DD" makes Prisma's DateTime column throw an unhandled validation
-// error. Accept it defensively server-side too — same guard booking/dining/guest
-// controllers already have; this one was missing it.
-const toFullDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00.000Z` : value)
+const FIELDS = [
+  'title',
+  'category',
+  'description',
+  'image',
+  'date',
+  'time',
+  'endTime',
+  'location',
+  'capacity',
+]
 
 export const eventController = {
   ...base,
@@ -44,7 +49,9 @@ export const eventController = {
 
     // Capacity is a hard limit, not a UI hint — enforce it here so a direct API call
     // can't overbook. Already-attending residents re-confirming never count twice.
-    const alreadyAttending = event.rsvps.some((r) => r.residentId === residentId)
+    const alreadyAttending = event.rsvps.some(
+      (r) => r.residentId === residentId,
+    )
     if (!alreadyAttending && event.rsvps.length >= event.capacity) {
       throw ApiError.conflict('This event is fully booked')
     }

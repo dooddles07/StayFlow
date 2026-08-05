@@ -3,7 +3,11 @@ import { FacilityModel } from '../models/facility.model.js'
 import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
-import { pickAllowed, requirePositiveInt } from '../utils/validate.js'
+import {
+  pickAllowed,
+  requirePositiveInt,
+  toFullDate,
+} from '../utils/validate.js'
 import { logAdminAction } from '../utils/adminLog.js'
 
 const base = buildCrudController(BookingModel, 'Booking')
@@ -12,7 +16,14 @@ const base = buildCrudController(BookingModel, 'Booking')
 // sends directly — requireOwnResidentBody() (booking.routes.js) injects it into req.body
 // before this runs. Allowlisting (rather than spreading req.body and overriding status/
 // partySize after) also blocks a caller from supplying id/createdAt directly.
-const CREATE_FIELDS = ['residentId', 'facilityId', 'date', 'timeSlot', 'partySize', 'notes']
+const CREATE_FIELDS = [
+  'residentId',
+  'facilityId',
+  'date',
+  'timeSlot',
+  'partySize',
+  'notes',
+]
 
 // The staff UI only ever PUTs { status } (see setBookingStatus in src/lib/api/booking.ts) —
 // date/facilityId/partySize are set once at create and never revised after. Allowlisting to
@@ -29,11 +40,6 @@ const VALID_TRANSITIONS = {
   CANCELLED: [],
 }
 
-// A bare "YYYY-MM-DD" makes Prisma's DateTime column throw an unhandled validation
-// error. Accept it defensively server-side too — this bug shape has already hit
-// events, guests, and dining reservations.
-const toFullDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00.000Z` : value)
-
 // The client's party-size picker caps at facility.capacity, but that's UI-only — a
 // direct API call could skip it entirely. Enforce it here so a facility genuinely
 // can never take a booking bigger than it physically fits.
@@ -41,7 +47,9 @@ async function assertWithinCapacity(facilityId, partySize) {
   const facility = await FacilityModel.findById(facilityId)
   if (!facility) throw ApiError.badRequest('Facility not found.')
   if (partySize > facility.capacity) {
-    throw ApiError.badRequest(`Party of ${partySize} exceeds this facility's capacity of ${facility.capacity}.`)
+    throw ApiError.badRequest(
+      `Party of ${partySize} exceeds this facility's capacity of ${facility.capacity}.`,
+    )
   }
 }
 
@@ -56,7 +64,8 @@ export const bookingController = {
     // set it explicitly too so intent stays obvious here rather than purely by omission.
     data.status = 'PENDING'
     const booking = await BookingModel.createIfNoConflict(data)
-    if (!booking) throw ApiError.conflict('That slot was just taken. Pick another time.')
+    if (!booking)
+      throw ApiError.conflict('That slot was just taken. Pick another time.')
     res.status(201).json(booking)
   }),
   update: asyncHandler(async (req, res) => {
@@ -67,11 +76,14 @@ export const bookingController = {
     if ('status' in data && data.status !== current.status) {
       const allowed = VALID_TRANSITIONS[current.status] ?? []
       if (!allowed.includes(data.status)) {
-        throw ApiError.conflict(`Can't move a booking from ${current.status.toLowerCase()} to ${data.status.toLowerCase()}.`)
+        throw ApiError.conflict(
+          `Can't move a booking from ${current.status.toLowerCase()} to ${data.status.toLowerCase()}.`,
+        )
       }
     }
     const updated = await BookingModel.update(req.params.id, data)
-    if ('status' in data) logAdminAction(req, 'UPDATE', 'Booking', req.params.id)
+    if ('status' in data)
+      logAdminAction(req, 'UPDATE', 'Booking', req.params.id)
     res.json(updated)
   }),
   byResident: asyncHandler(async (req, res) => {

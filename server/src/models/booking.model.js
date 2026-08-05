@@ -23,11 +23,21 @@ export const BookingModel = {
   // unbounded full-table dump as history accumulates (same reasoning as
   // NotificationModel.findAll).
   findAll: ({ limit = 500 } = {}) =>
-    prisma.booking.findMany({ select: bookingSelect, orderBy: { createdAt: 'desc' }, take: Math.min(limit, 1000) }),
-  findById: (id) => prisma.booking.findUnique({ where: { id }, select: bookingSelect }),
+    prisma.booking.findMany({
+      select: bookingSelect,
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(limit, 1000),
+    }),
+  findById: (id) =>
+    prisma.booking.findUnique({ where: { id }, select: bookingSelect }),
   // Bounded same as findAll above — one resident's own history can't grow unbounded in
   // practice, but capping keeps this consistent with every other list query in the app.
-  findByResident: (residentId) => prisma.booking.findMany({ where: { residentId }, select: bookingSelect, take: 500 }),
+  findByResident: (residentId) =>
+    prisma.booking.findMany({
+      where: { residentId },
+      select: bookingSelect,
+      take: 500,
+    }),
   // No resident PII — just enough for the slot picker to know what's taken.
   // Bounded to today-forward: the picker only offers the next 14 days, so past
   // bookings are dead weight and the result set can't grow without bound.
@@ -35,7 +45,11 @@ export const BookingModel = {
     const startOfToday = new Date()
     startOfToday.setHours(0, 0, 0, 0)
     return prisma.booking.findMany({
-      where: { facilityId, status: { not: 'CANCELLED' }, date: { gte: startOfToday } },
+      where: {
+        facilityId,
+        status: { not: 'CANCELLED' },
+        date: { gte: startOfToday },
+      },
       select: { date: true, timeSlot: true, status: true },
     })
   },
@@ -52,7 +66,12 @@ export const BookingModel = {
         return await prisma.$transaction(
           async (tx) => {
             const conflict = await tx.booking.findFirst({
-              where: { facilityId: data.facilityId, date: data.date, timeSlot: data.timeSlot, status: { not: 'CANCELLED' } },
+              where: {
+                facilityId: data.facilityId,
+                date: data.date,
+                timeSlot: data.timeSlot,
+                status: { not: 'CANCELLED' },
+              },
             })
             if (conflict) return null
             return tx.booking.create({ data, select: bookingSelect })
@@ -60,12 +79,21 @@ export const BookingModel = {
           { isolationLevel: 'Serializable' },
         )
       } catch (err) {
+        // P2002 is the partial unique index added in the 20260805090000
+        // migration firing — the database catching a double-book this code did
+        // not. Same outcome for the caller as any other conflict.
+        if (err.code === 'P2002') return null
         if (err.code !== 'P2034') throw err
         if (attempt === 1) return null
       }
     }
+    // Both attempts hit a write conflict. Explicit null rather than falling off
+    // the end of the loop as undefined, which the caller reads as falsy anyway
+    // but which makes the contract ambiguous.
+    return null
   },
   create: (data) => prisma.booking.create({ data, select: bookingSelect }),
-  update: (id, data) => prisma.booking.update({ where: { id }, data, select: bookingSelect }),
+  update: (id, data) =>
+    prisma.booking.update({ where: { id }, data, select: bookingSelect }),
   remove: (id) => prisma.booking.delete({ where: { id } }),
 }

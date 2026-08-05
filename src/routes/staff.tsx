@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { AppShell } from '#/components/stayflow/app-shell'
+import { RoutePending } from '#/components/stayflow/route-pending'
 import { useRequireAuth } from '#/lib/hooks/use-require-auth'
 import { useAuthStore } from '#/lib/store/auth-store'
 
@@ -11,7 +12,7 @@ function StaffLayout() {
   const ready = useRequireAuth('staff')
   const user = useAuthStore((s) => s.user)
 
-  if (!ready) return null
+  if (!ready) return <RoutePending />
 
   return (
     <AppShell

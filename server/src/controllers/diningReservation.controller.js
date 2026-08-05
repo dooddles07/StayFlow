@@ -3,7 +3,11 @@ import { RestaurantModel } from '../models/restaurant.model.js'
 import { buildCrudController } from '../utils/crudController.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError } from '../utils/ApiError.js'
-import { pickAllowed, requirePositiveInt } from '../utils/validate.js'
+import {
+  pickAllowed,
+  requirePositiveInt,
+  toFullDate,
+} from '../utils/validate.js'
 import { logAdminAction } from '../utils/adminLog.js'
 
 const base = buildCrudController(DiningReservationModel, 'Dining reservation')
@@ -12,7 +16,16 @@ const base = buildCrudController(DiningReservationModel, 'Dining reservation')
 // client never sends directly — requireOwnResidentBody() (diningReservation.routes.js)
 // injects it into req.body before this runs. Allowlisting (rather than spreading req.body
 // and overriding status/tableId after) also blocks a caller from supplying id/createdAt.
-const CREATE_FIELDS = ['residentId', 'restaurantId', 'date', 'time', 'partySize', 'occasion', 'dietary', 'seating']
+const CREATE_FIELDS = [
+  'residentId',
+  'restaurantId',
+  'date',
+  'time',
+  'partySize',
+  'occasion',
+  'dietary',
+  'seating',
+]
 
 // The staff UI only ever PUTs { status } (see setReservationStatus in
 // src/lib/api/diningReservation.ts) — date/partySize/restaurantId are set once at create and
@@ -30,18 +43,15 @@ const VALID_TRANSITIONS = {
   CANCELLED: [],
 }
 
-// A bare "YYYY-MM-DD" makes Prisma's DateTime column throw an unhandled validation
-// error. Accept it defensively server-side too — this exact bug shape has already hit
-// events and guests; hardening it here rather than trusting every future caller.
-const toFullDate = (value) => (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00.000Z` : value)
-
 // The client's party-size input caps at restaurant.maxPartySize, but that's UI-only —
 // a direct API call could skip it entirely. Enforce it here too.
 async function assertWithinCapacity(restaurantId, partySize) {
   const restaurant = await RestaurantModel.findById(restaurantId)
   if (!restaurant) throw ApiError.badRequest('Restaurant not found.')
   if (partySize > restaurant.maxPartySize) {
-    throw ApiError.badRequest(`Party of ${partySize} exceeds this restaurant's max online party size of ${restaurant.maxPartySize}. Call the restaurant directly for larger groups.`)
+    throw ApiError.badRequest(
+      `Party of ${partySize} exceeds this restaurant's max online party size of ${restaurant.maxPartySize}. Call the restaurant directly for larger groups.`,
+    )
   }
 }
 
@@ -72,12 +82,20 @@ export const diningReservationController = {
     if ('status' in data && data.status !== current.status) {
       const allowed = VALID_TRANSITIONS[current.status] ?? []
       if (!allowed.includes(data.status)) {
-        throw ApiError.conflict(`Can't move a reservation from ${current.status.toLowerCase()} to ${data.status.toLowerCase()}.`)
+        throw ApiError.conflict(
+          `Can't move a reservation from ${current.status.toLowerCase()} to ${data.status.toLowerCase()}.`,
+        )
       }
 
       if (data.status === 'CONFIRMED' && !current.tableId) {
-        const table = await DiningReservationModel.assignTableIfAvailable(current.restaurantId, current.partySize)
-        if (!table) throw ApiError.conflict(`No available table seats a party of ${current.partySize} right now.`)
+        const table = await DiningReservationModel.assignTableIfAvailable(
+          current.restaurantId,
+          current.partySize,
+        )
+        if (!table)
+          throw ApiError.conflict(
+            `No available table seats a party of ${current.partySize} right now.`,
+          )
         data.tableId = table.id
       }
 
@@ -85,13 +103,21 @@ export const diningReservationController = {
         await DiningReservationModel.setTableStatus(current.tableId, 'OCCUPIED')
       }
 
-      if (data.status === 'CANCELLED' && current.tableId && current.status === 'CONFIRMED') {
-        await DiningReservationModel.setTableStatus(current.tableId, 'AVAILABLE')
+      if (
+        data.status === 'CANCELLED' &&
+        current.tableId &&
+        current.status === 'CONFIRMED'
+      ) {
+        await DiningReservationModel.setTableStatus(
+          current.tableId,
+          'AVAILABLE',
+        )
       }
     }
 
     const updated = await DiningReservationModel.update(req.params.id, data)
-    if ('status' in data) logAdminAction(req, 'UPDATE', 'DiningReservation', req.params.id)
+    if ('status' in data)
+      logAdminAction(req, 'UPDATE', 'DiningReservation', req.params.id)
     res.json(updated)
   }),
   byResident: asyncHandler(async (req, res) => {
@@ -105,9 +131,11 @@ export const diningReservationController = {
   remove: asyncHandler(async (req, res) => {
     // requireOwnerRecord already fetched this row for a MEMBER caller; STAFF/MANAGEMENT
     // never populate req.record here, so this still fetches for them.
-    const current = req.record ?? (await DiningReservationModel.findById(req.params.id))
+    const current =
+      req.record ?? (await DiningReservationModel.findById(req.params.id))
     if (!current) throw ApiError.notFound('Dining reservation not found')
-    if (current.tableId) await DiningReservationModel.setTableStatus(current.tableId, 'AVAILABLE')
+    if (current.tableId)
+      await DiningReservationModel.setTableStatus(current.tableId, 'AVAILABLE')
     await DiningReservationModel.remove(req.params.id)
     res.status(204).send()
   }),

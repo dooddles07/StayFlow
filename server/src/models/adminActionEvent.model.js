@@ -1,11 +1,7 @@
 import { prisma } from '../config/db.js'
 
+// Write-only by design, same as AuthEventModel: the `list` helper here was
+// routed nowhere and read by nothing. Query the table directly when auditing.
 export const AdminActionEventModel = {
   record: (data) => prisma.adminActionEvent.create({ data }),
-  list: ({ resourceType, resourceId, limit = 100 } = {}) =>
-    prisma.adminActionEvent.findMany({
-      where: { ...(resourceType ? { resourceType } : {}), ...(resourceId ? { resourceId } : {}) },
-      orderBy: { createdAt: 'desc' },
-      take: Math.min(limit, 500),
-    }),
 }

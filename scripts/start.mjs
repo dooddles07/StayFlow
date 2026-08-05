@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { Readable } from 'node:stream'
 import handler from '../dist/server/server.js'
 import apiApp from '../server/src/app.js'
+import { applySecurityHeaders } from './security-headers.mjs'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const clientDir = join(__dirname, '..', 'dist', 'client')
@@ -47,10 +48,14 @@ function serveStatic(req, res) {
 
 const server = createServer(async (req, res) => {
   try {
+    // The API sets its own headers via helmet; everything else is the HTML app
+    // and gets the same set Vercel applies in the split deployment.
     if (req.url.startsWith('/api')) {
       apiApp(req, res)
       return
     }
+
+    applySecurityHeaders(res)
 
     if (req.method === 'GET' || req.method === 'HEAD') {
       if (serveStatic(req, res)) return

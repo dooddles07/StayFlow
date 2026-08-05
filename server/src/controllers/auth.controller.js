@@ -1,11 +1,13 @@
 import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { AUTH_COOKIE, cookieOptions } from '../config/authCookie.js'
 import { env } from '../config/env.js'
 import { UserModel } from '../models/user.model.js'
 import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { AuthEventType, logAuthEvent } from '../utils/authLog.js'
+import { logger } from '../utils/logger.js'
 import { deliverEmailChange, deliverResetToken } from '../utils/mailer.js'
 import { BCRYPT_ROUNDS, assertValidPassword } from '../utils/password.js'
 
@@ -23,18 +25,6 @@ const signToken = (user) =>
     env.jwtSecret,
     { expiresIn: env.jwtExpiresIn },
   )
-
-export const AUTH_COOKIE = 'stayflow_token'
-
-// Matches the default JWT_EXPIRES_IN of 7d. httpOnly keeps the token out of JS (XSS can't read it),
-// SameSite=lax blocks it on cross-site requests, Secure enforced in production (https).
-const cookieOptions = {
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: env.isProd,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-  path: '/',
-}
 
 const setAuthCookie = (res, token) =>
   res.cookie(AUTH_COOKIE, token, cookieOptions)
@@ -136,13 +126,24 @@ export const login = asyncHandler(async (req, res) => {
     userId: user.id,
     email: user.email,
   })
-  const token = signToken(user)
-  setAuthCookie(res, token)
-  res.json({ token, user: sanitize(user) })
+  setAuthCookie(res, signToken(user))
+  // The token is deliberately not in the response body. It is delivered only as
+  // an httpOnly cookie, so no page script can ever read it — returning a copy in
+  // JSON gave away exactly the protection httpOnly buys.
+  res.json({ user: sanitize(user) })
 })
 
 export const logout = asyncHandler(async (req, res) => {
-  logAuthEvent(req, AuthEventType.LOGOUT)
+  // Clearing the cookie alone left a captured bearer token valid for the rest of
+  // its 7-day life. Bumping tokenVersion makes requireAuth reject it on the next
+  // request. Side effect, documented in docs/SECURITY.md: logout signs the user
+  // out on every device, which for a portal holding resident data is the safer
+  // default.
+  await UserModel.revokeSessions(req.user.sub)
+  logAuthEvent(req, AuthEventType.LOGOUT, {
+    userId: req.user.sub,
+    email: req.user.email,
+  })
   res.clearCookie(AUTH_COOKIE, { ...cookieOptions, maxAge: undefined })
   res.status(204).send()
 })
@@ -170,7 +171,11 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     try {
       await deliverResetToken(user, rawToken)
     } catch (err) {
-      console.error('[password-reset] delivery failed:', err.message)
+      logger.error('mail.reset_delivery_failed', {
+        requestId: req.id,
+        userId: user.id,
+        message: err.message,
+      })
     }
   }
   logAuthEvent(req, AuthEventType.PASSWORD_RESET_REQUEST, {
@@ -249,7 +254,11 @@ export const requestEmailChange = asyncHandler(async (req, res) => {
   try {
     await deliverEmailChange(user, email, rawToken)
   } catch (err) {
-    console.error('[email-change] delivery failed:', err.message)
+    logger.error('mail.email_change_delivery_failed', {
+      requestId: req.id,
+      userId: user.id,
+      message: err.message,
+    })
     throw ApiError.badRequest(
       'Could not send the verification email. Try again shortly.',
     )

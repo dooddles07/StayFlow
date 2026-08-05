@@ -1,5 +1,44 @@
 # Activity Log
 
+## 2026-08-05 — Production readiness audit and remediation
+
+Full hostile review of the deployed system: all 88 API endpoints, the Prisma schema, both deploy configs, and the frontend. The existing gates were already green going in (typecheck clean, 0 lint errors, 47 tests passing) — every finding below sat in a blind spot none of them cover: production-only code paths, deploy configuration, fail-open defaults, and behaviour under load or failure.
+
+### Critical
+
+- **Password-reset tokens were being written to the production log stream.** `mailer.js` logged the full reset link whenever `RESEND_API_KEY` was unset, `env.js` only warned about it, and `render.yaml` never declared the key. Net effect: anyone with Render log access held a live account-takeover token for every reset request, while no user could ever actually complete a reset. Now fails closed — the API refuses to boot in production without `RESEND_API_KEY` and `APP_URL`, and the mailer will not print a link outside development.
+- **The HTML app shipped with no security headers at all.** helmet only ever covered the Express API; the frontend is served by Vercel, whose config had no `headers` block. No CSP, no HSTS, no frame protection — the portal was framable, so every authenticated action including the management destructive dialogs was clickjackable. Added a header set defined once in `scripts/security-headers.mjs`, mirrored into `vercel.json`, with a test that fails if the two ever drift.
+- **`buildCrudRouter` failed open.** `readRoles ? requireRole(...) : noop` meant a forgotten role list silently produced open access rather than closed. Five routers had omitted it. Role lists are now mandatory and the builder throws at boot; the intended roles are declared explicitly on every router, preserving existing behaviour exactly — proven by the new 151-case authorization matrix.
+- **IDOR on notification delete.** Any STAFF user could delete any resident's or peer's notification; every sibling route on that model was owner-scoped. Fixed.
+
+### High
+
+- **Unwrapped async middleware was a remote process-kill.** `requireOwnerRecord` and `requireOwnNotification` were `async` but not wrapped in `asyncHandler`; Express 4 does not catch rejected promises, so a database hiccup on any of 9 routes became an unhandled rejection, which Node terminates on. On a single-instance plan that is a full outage.
+- **Rate limiting keyed on the wrong IP.** `trust proxy` was 1 against a two-proxy chain (Vercel → Render), so `req.ip` resolved to a shared upstream address. The 10-attempt login limiter was therefore a _global_ budget — ten bad logins from anyone locked out every user. Now resolves the real client address, with a regression test driving forwarded chains.
+- **Logout revoked nothing** — it cleared the cookie and left a captured bearer token valid for its remaining 7 days. Now bumps `tokenVersion`. Deliberate consequence: logout signs the user out on all devices.
+- **The login response returned the JWT in the body**, handing page JavaScript the very thing the httpOnly cookie exists to withhold. The frontend never read it; removed.
+- **`?limit=abc` returned a 500** (`Number('abc')` → `NaN` → Prisma `take: NaN`). Added a `validateQuery` middleware mirroring the existing `validateBody`.
+- **Error responses and logs leaked internals** — unique-constraint violations echoed the constraint's column names to the client, and `console.error(err)` dumped whole Prisma errors, which embed the failing query's parameter values (emails, names, phone numbers).
+- **5 MB request bodies were accepted on every endpoint**, including unauthenticated login. Now 100 kb by default, with the large limit scoped to the three routers that store base64 photos.
+
+### Medium
+
+Indexes for every list endpoint's `orderBy`, plus `event_rsvps.residentId` (whose absence made deleting a resident sequentially scan the table) and `(owner, createdAt)` composites on `notifications`. A partial unique index on `bookings` as a database-level backstop behind the application's Serializable double-booking check. Graceful shutdown with `server.close()` drain (deploys previously dropped in-flight requests). Structured JSON logging with request IDs and key redaction, replacing `morgan('dev')`. A readiness probe that actually touches the database. `Origin` checking as CSRF defence in depth. Per-flow rate limiters (five auth endpoints had shared one budget). Case-insensitive sign-in email. Response compression.
+
+### Frontend
+
+The three portal layouts rendered a bare `null` while auth resolved — a blank white page indistinguishable from a broken app. Toast live region made persistent so screen readers actually announce it, and `aria-current` added to nav. Recharts (~284 kB) removed from the member, staff and management dashboards: `kpi-card` was importing the whole charting library to draw a decorative sparkline, now an inline SVG whose curve is pinned by test to d3's `curveNatural` output. Recharts still backs the real charts on the analytics page.
+
+Note: an earlier read of a stale `dist/` suggested recharts was un-split and that routes had no error boundaries. Both were wrong — the current build already code-splits it, and `defaultErrorComponent` in `router.tsx` boundaries every route. Measured before changing.
+
+### Housekeeping
+
+Removed a 136 kB committed AI-review diff dump, 546 lines of never-imported UI components, and three unused dependencies. Consolidated `toFullDate` (copy-pasted into five controllers) and the duplicated `AUTH_COOKIE` literal. Deleted two unrouted audit-log `list` helpers that were dead code guarding sensitive data. Made `env.js` resolve the root `.env` from its own module path, which removes the reason a byte-identical second copy of the live secrets existed at `server/.env`.
+
+### Verification
+
+Tests went from 47 to 258. CI gained `npm audit` and a tracked-file secret scan as separate jobs. The database migration was dry-run against the real schema inside a transaction that rolls back — every statement valid, no duplicate bookings blocking the new unique index, nothing persisted. UI verified in Playwright across login, dashboard, logout and the auth redirect, with a before/after comparison confirming the sparkline swap is visually faithful.
+
 ## 2026-08-04 — Real-product copy pass, full QA sweep, toast system replaced
 
 Ran a full functional QA pass across all three portals (auth permutations, cross-role authorization blocks, CRUD flows per portal, account lockout, login rate limiting) plus a copy pass removing "demo" framing app-wide, per request to make the deployed instance read as a real product rather than a portfolio demo shell.

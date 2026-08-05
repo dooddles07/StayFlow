@@ -4,11 +4,22 @@ import * as React from 'react'
 import { navConfig } from './nav-config'
 import type { Portal } from '#/lib/hooks/use-portal-preference'
 import { cn } from '#/lib/utils'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '#/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '#/components/ui/sheet'
 
 const MAX_VISIBLE = 4
 
-export function MobileBottomNav({ portal, navBadges }: { portal: Portal; navBadges?: Partial<Record<string, boolean>> }) {
+export function MobileBottomNav({
+  portal,
+  navBadges,
+}: {
+  portal: Portal
+  navBadges?: Partial<Record<string, boolean>>
+}) {
   const location = useLocation()
   const [moreOpen, setMoreOpen] = React.useState(false)
   const items = navConfig[portal]
@@ -17,7 +28,9 @@ export function MobileBottomNav({ portal, navBadges }: { portal: Portal; navBadg
   const overflow = items.slice(MAX_VISIBLE)
 
   function isActive(to: string) {
-    return to === rootPath ? location.pathname === to : location.pathname.startsWith(to)
+    return to === rootPath
+      ? location.pathname === to
+      : location.pathname.startsWith(to)
   }
 
   return (
@@ -30,6 +43,7 @@ export function MobileBottomNav({ portal, navBadges }: { portal: Portal; navBadg
             <Link
               key={item.to}
               to={item.to}
+              aria-current={active ? 'page' : undefined}
               className={cn(
                 'relative flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium',
                 active ? 'text-accent-gold' : 'text-muted-text',
@@ -37,7 +51,9 @@ export function MobileBottomNav({ portal, navBadges }: { portal: Portal; navBadg
             >
               <Icon className="size-[19px]" />
               {item.label}
-              {navBadges?.[item.to] && <span className="absolute right-[28%] top-1.5 size-1.5 rounded-full bg-accent-gold" />}
+              {navBadges?.[item.to] && (
+                <span className="absolute right-[28%] top-1.5 size-1.5 rounded-full bg-accent-gold" />
+              )}
             </Link>
           )
         })}
@@ -47,7 +63,9 @@ export function MobileBottomNav({ portal, navBadges }: { portal: Portal; navBadg
             onClick={() => setMoreOpen(true)}
             className={cn(
               'relative flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium',
-              overflow.some((i) => isActive(i.to)) ? 'text-accent-gold' : 'text-muted-text',
+              overflow.some((i) => isActive(i.to))
+                ? 'text-accent-gold'
+                : 'text-muted-text',
             )}
           >
             <MoreHorizontal className="size-[19px]" />
@@ -60,7 +78,10 @@ export function MobileBottomNav({ portal, navBadges }: { portal: Portal; navBadg
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="border-border bg-surface text-foreground">
+        <SheetContent
+          side="bottom"
+          className="border-border bg-surface text-foreground"
+        >
           <SheetHeader>
             <SheetTitle className="text-foreground">More</SheetTitle>
           </SheetHeader>
@@ -72,15 +93,20 @@ export function MobileBottomNav({ portal, navBadges }: { portal: Portal; navBadg
                 <Link
                   key={item.to}
                   to={item.to}
+                  aria-current={active ? 'page' : undefined}
                   onClick={() => setMoreOpen(false)}
                   className={cn(
                     'relative flex flex-col items-center gap-2 rounded-xl border border-border px-3 py-4 text-xs font-medium',
-                    active ? 'border-accent-gold/50 bg-accent-indigo/10 text-accent-gold' : 'text-muted-text hover:text-foreground',
+                    active
+                      ? 'border-accent-gold/50 bg-accent-indigo/10 text-accent-gold'
+                      : 'text-muted-text hover:text-foreground',
                   )}
                 >
                   <Icon className="size-5" />
                   {item.label}
-                  {navBadges?.[item.to] && <span className="absolute right-3 top-3 size-1.5 rounded-full bg-accent-gold" />}
+                  {navBadges?.[item.to] && (
+                    <span className="absolute right-3 top-3 size-1.5 rounded-full bg-accent-gold" />
+                  )}
                 </Link>
               )
             })}

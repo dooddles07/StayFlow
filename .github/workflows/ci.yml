@@ -12,7 +12,10 @@ jobs:
     env:
       # Dummy values — the build step only runs `prisma generate` (schema validation,
       # no real connection) and `vite build`, neither of which talks to a database.
-      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      # Password-less on purpose: nothing here connects, and it keeps the
+      # secret-scan job below strict rather than needing an exception for CI's
+      # own config.
+      DATABASE_URL: postgresql://ci@localhost:5432/ci
       JWT_SECRET: ci-only-placeholder-secret-not-a-real-credential-32chars
 
     steps:
@@ -30,3 +33,44 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Separate job so a newly-disclosed advisory in a transitive dependency
+      # surfaces as its own red check rather than blocking the build signal.
+      # `high` is the threshold: moderate advisories in build-only tooling are
+      # noise on a project this size, a high/critical one is not.
+      - run: npm audit --audit-level=high
+      - run: npm audit --audit-level=high --prefix server
+
+  # Fails if a committed file contains something shaped like a live credential.
+  # The repo has had a 136 kB AI-review diff dump committed before; this is the
+  # cheap check that a real secret never follows it in.
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan tracked files for credential-shaped strings
+        run: |
+          set -uo pipefail
+          # Documentation and .example files legitimately carry placeholder
+          # connection strings, so they are excluded via git pathspecs (which
+          # belong on git ls-files, not on grep).
+          if git ls-files -z -- . ':!*.example' ':!*.md' ':!docs/**' \
+            | xargs -0 -r grep -nEI \
+              -e 'postgres(ql)?://[^ "'"'"']*:[^ "'"'"']*@' \
+              -e '(sk|rk|re)_(live|test)_[A-Za-z0-9]{16,}' \
+              -e 'BEGIN [A-Z ]*PRIVATE KEY'; then
+            echo "::error::A tracked file contains a credential-shaped string. Remove it and rotate the secret."
+            exit 1
+          fi
+          echo "No credential-shaped strings in tracked files."

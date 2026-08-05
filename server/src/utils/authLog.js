@@ -1,4 +1,5 @@
 import { AuthEventModel } from '../models/authEvent.model.js'
+import { logger } from './logger.js'
 
 export const AuthEventType = {
   LOGIN_SUCCESS: 'LOGIN_SUCCESS',
@@ -16,12 +17,24 @@ export const AuthEventType = {
 
 /**
  * Records an auth event. Fire-and-forget: audit logging must never break or delay the
- * auth flow, so failures are swallowed (and surfaced to the server console only).
+ * auth flow, so failures are not rethrown — but they are logged at error level,
+ * because a security audit trail with silent gaps is worse than no trail at all.
  */
-export function logAuthEvent(req, type, { userId = null, email = null, success = true } = {}) {
+export function logAuthEvent(
+  req,
+  type,
+  { userId = null, email = null, success = true } = {},
+) {
   const ip = req.ip ?? null
   const userAgent = req.headers['user-agent'] ?? null
-  AuthEventModel.record({ type, userId, email, ip, userAgent, success }).catch((err) => {
-    console.error(`[audit] failed to record ${type}:`, err.message)
-  })
+  AuthEventModel.record({ type, userId, email, ip, userAgent, success }).catch(
+    (err) => {
+      logger.error('audit.auth_event_write_failed', {
+        requestId: req.id,
+        type,
+        userId,
+        message: err.message,
+      })
+    },
+  )
 }

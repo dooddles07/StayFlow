@@ -4,6 +4,7 @@ import { KeyRound, ShieldAlert } from 'lucide-react'
 import { AppShell } from '#/components/stayflow/app-shell'
 import { Button } from '#/components/ui/button'
 import { ChangePasswordForm } from '#/components/stayflow/change-password-form'
+import { RoutePending } from '#/components/stayflow/route-pending'
 import { useRequireAuth } from '#/lib/hooks/use-require-auth'
 import { MemberProfileProvider, useMyProfile } from '#/lib/store/member-profile'
 import { getNotices } from '#/lib/api/notice'
@@ -28,9 +29,12 @@ function NoResidentLinked() {
         <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-accent-gold/15 text-accent-gold">
           <ShieldAlert className="size-7" />
         </div>
-        <h1 className="text-lg font-semibold text-foreground">Account not set up yet</h1>
+        <h1 className="text-lg font-semibold text-foreground">
+          Account not set up yet
+        </h1>
         <p className="mt-2 text-sm text-muted-text">
-          Your login works, but it isn't linked to a resident profile yet. Contact building management to finish setting up your account.
+          Your login works, but it isn't linked to a resident profile yet.
+          Contact building management to finish setting up your account.
         </p>
         <Button
           onClick={async () => {
@@ -63,9 +67,12 @@ function ForcedPasswordChange() {
           <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-accent-gold/15 text-accent-gold">
             <KeyRound className="size-7" />
           </div>
-          <h1 className="text-lg font-semibold text-foreground">Set your password</h1>
+          <h1 className="text-lg font-semibold text-foreground">
+            Set your password
+          </h1>
           <p className="mt-2 text-sm text-muted-text">
-            {user?.email ?? 'Your account'} was set up with a temporary password. Choose your own to continue.
+            {user?.email ?? 'Your account'} was set up with a temporary
+            password. Choose your own to continue.
           </p>
         </div>
         <ChangePasswordForm submitLabel="Set password and continue" />
@@ -97,7 +104,9 @@ function MemberShell() {
       getNotices()
         .then((notices) => {
           if (!active) return
-          setHasUnreadNotices(notices.some((n) => seen === null || n.postedAt > seen))
+          setHasUnreadNotices(
+            notices.some((n) => seen === null || n.postedAt > seen),
+          )
         })
         .catch(() => {})
     check()
@@ -130,7 +139,7 @@ function MemberLayout() {
   const ready = useRequireAuth('member')
   const mustChangePassword = useAuthStore((s) => s.user?.mustChangePassword)
 
-  if (!ready) return null
+  if (!ready) return <RoutePending />
   // Checked before MemberProfileProvider mounts — its GET /residents/me would 403
   // under blockIfMustChangePassword, and that error isn't handled gracefully by the
   // provider's status branching (only 404 is special-cased there).

@@ -4,27 +4,27 @@ import { ApiError } from '../utils/ApiError.js'
 import { pickAllowed } from '../utils/validate.js'
 import { logAdminAction } from '../utils/adminLog.js'
 
-const parseLimit = (raw) => (raw ? Number(raw) : undefined)
-
 const CREATE_FIELDS = ['kind', 'title', 'body', 'residentId', 'staffId']
+
+// Coerced and bounded by notificationListQuerySchema in the route chain, so this
+// is either a valid positive integer or absent — never NaN.
+const limitOf = (req) => req.validatedQuery?.limit
 
 export const notificationController = {
   list: asyncHandler(async (req, res) => {
-    res.json(
-      await NotificationModel.findAll({ limit: parseLimit(req.query.limit) }),
-    )
+    res.json(await NotificationModel.findAll({ limit: limitOf(req) }))
   }),
   byResident: asyncHandler(async (req, res) => {
     res.json(
       await NotificationModel.findByResident(req.params.residentId, {
-        limit: parseLimit(req.query.limit),
+        limit: limitOf(req),
       }),
     )
   }),
   byStaff: asyncHandler(async (req, res) => {
     res.json(
       await NotificationModel.findByStaff(req.params.staffId, {
-        limit: parseLimit(req.query.limit),
+        limit: limitOf(req),
       }),
     )
   }),

@@ -78,6 +78,9 @@ export function Sidebar({
             <Link
               key={item.to}
               to={item.to}
+              // Active state was communicated by colour alone; aria-current is
+              // how a screen reader is told which nav item is the current page.
+              aria-current={isActive ? 'page' : undefined}
               onClick={onNavigate}
               onMouseEnter={() => setHovered(item.to)}
               className={cn(

@@ -11,13 +11,29 @@ const resend = env.resendApiKey ? new Resend(env.resendApiKey) : null
  */
 async function sendMail({ to, subject, html, text, devLog }) {
   if (!resend) {
-    console.log(`[mailer] (no RESEND_API_KEY) would send "${subject}" to ${to} — ${devLog}`)
+    // env.js refuses to boot without a key in production, so this branch is
+    // development-only by construction. The guard is belt-and-braces: a link
+    // printed here contains a live single-use credential, and a log stream is
+    // not a place to put one.
+    if (!env.isProd) {
+      console.log(
+        `[mailer] (no RESEND_API_KEY) would send "${subject}" to ${to} — ${devLog}`,
+      )
+    }
     return
   }
-  const { error } = await resend.emails.send({ from: env.mailFrom, to, subject, html, text })
+  const { error } = await resend.emails.send({
+    from: env.mailFrom,
+    to,
+    subject,
+    html,
+    text,
+  })
   if (error) {
     // Surface to the caller so the auth flow can decide how to react, but keep the message generic upstream.
-    throw new Error(`Email delivery failed: ${error.message ?? 'unknown error'}`)
+    throw new Error(
+      `Email delivery failed: ${error.message ?? 'unknown error'}`,
+    )
   }
 }
 
@@ -35,7 +51,12 @@ export async function deliverResetToken(user, rawToken) {
   await sendMail({
     to: user.email,
     subject: 'Reset your StayFlow password',
-    html: wrap('Reset your password', 'We received a request to reset the password on your StayFlow account.', 'Set a new password', link),
+    html: wrap(
+      'Reset your password',
+      'We received a request to reset the password on your StayFlow account.',
+      'Set a new password',
+      link,
+    ),
     text: `Reset your StayFlow password: ${link}`,
     devLog: link,
   })
@@ -46,7 +67,12 @@ export async function deliverEmailChange(user, newEmail, rawToken) {
   await sendMail({
     to: newEmail,
     subject: 'Confirm your new StayFlow email',
-    html: wrap('Confirm your new email', 'Confirm this address to make it the new sign-in email for your StayFlow account.', 'Confirm email change', link),
+    html: wrap(
+      'Confirm your new email',
+      'Confirm this address to make it the new sign-in email for your StayFlow account.',
+      'Confirm email change',
+      link,
+    ),
     text: `Confirm your new StayFlow email: ${link}`,
     devLog: link,
   })

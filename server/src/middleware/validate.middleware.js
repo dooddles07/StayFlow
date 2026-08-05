@@ -12,3 +12,19 @@ export const validateBody = (schema) => (req, res, next) => {
   req.body = result.data
   next()
 }
+
+// Same idea for query strings. Untyped query params were being passed straight
+// into Prisma: ?limit=abc became take: NaN, which threw as an unmapped 500
+// instead of a 400. Parsed values land on req.validatedQuery because Express 5
+// makes req.query a getter, and reassigning it throws.
+export const validateQuery = (schema) => (req, res, next) => {
+  const result = schema.safeParse(req.query)
+  if (!result.success) {
+    throw ApiError.badRequest(
+      'Invalid query parameters',
+      result.error.flatten(),
+    )
+  }
+  req.validatedQuery = result.data
+  next()
+}

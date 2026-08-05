@@ -34,3 +34,14 @@ services:
       # Set in the Render dashboard, not here.
       - key: DATABASE_URL
         sync: false
+      # Mail delivery. The API refuses to boot in production without these two
+      # (server/src/config/env.js): no key means reset links are never sent, and
+      # no APP_URL means the link that would be sent points at localhost.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      # Must be a Resend-verified domain. The default sandbox sender only
+      # delivers to the Resend account owner's own address.
+      - key: MAIL_FROM
+        sync: false

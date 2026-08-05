@@ -325,9 +325,32 @@ graph TD
 ```
 
 - **Local dev (frontend + API together):** `npm install && npm run dev` (Vite on :3000). Backend env in root `.env` powers this path.
-- **Local dev (API standalone):** `cd server && npm install && npm run dev` (`node --watch`, :4000) — needs the vars from root `.env` supplied another way, since there's deliberately no `server/.env` (see [SECURITY.md](SECURITY.md#environment-variables)).
+- **Local dev (API standalone):** `cd server && npm install && npm run dev` (`node --watch`, :4000). `server/src/config/env.js` resolves the root `.env` from its own module path, so this works from either directory without a second copy of the file (see [SECURITY.md](SECURITY.md#environment-variables)).
 - **Push schema changes:** `./server/node_modules/.bin/prisma migrate dev --schema=server/prisma/schema.prisma --name <description>`, commit the migration, then push — Render's build runs `prisma migrate deploy`; see [SCHEMA.md](SCHEMA.md#schema-change-workflow).
-- **Docker / Compose / Kubernetes / GitHub Actions CI:** none present.
+- **Docker / Compose / Kubernetes:** none present. **CI:** `.github/workflows/ci.yml` — lint, typecheck, test, build, plus separate `npm audit` and tracked-file secret-scan jobs.
+
+### Proxy chain and client IP
+
+Two proxies sit in front of the API in production:
+
+```
+browser → Vercel edge (rewrite /api/*) → Render router → Express
+```
+
+This matters for anything that reads the caller's address. `app.set('trust proxy', …)` is 2 in production (overridable with `TRUST_PROXY_HOPS`), because trusting a single hop made `req.ip` resolve to the Render router — an address shared by every user — which silently converted all per-IP rate limits into global ones. `rateLimit.middleware.js` keys off the resolved client address and logs loudly if it cannot resolve one.
+
+### Health checks
+
+| Endpoint                | Purpose                                                                                                     | Touches DB |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- | ---------- |
+| `GET /api/health`       | Liveness — is the process serving? A database blip must not cause the platform to restart a healthy process | No         |
+| `GET /api/health/ready` | Readiness — can this instance actually serve? 503 with a bounded 2s probe timeout                           | Yes        |
+
+Both are mounted ahead of the rate limiter and access log, so continuous platform probes neither consume the shared `/api` request budget nor drown the logs.
+
+### Graceful shutdown
+
+`SIGTERM`/`SIGINT` stop accepting connections, wait for in-flight requests via `server.close()`, disconnect Prisma, then exit — with a 15s force-exit timer well inside Render's 30s SIGKILL window. Before this, every deploy dropped whatever was mid-request. `unhandledRejection` and `uncaughtException` are handled explicitly so the cause is logged rather than the process vanishing silently.
 
 ## Configuration Guide
 
@@ -356,7 +379,9 @@ graph TD
 
 - **Static caching:** hashed `assets/*` served `immutable, max-age=1y`; other static `max-age=1h` (`start.mjs`).
 - **SSR:** TanStack Start server rendering for fast first paint.
-- **DB indexes:** unique constraints + composite/lookup indexes on the highest-growth tables (`auth_events`, `notifications`, `bookings`, `dining_tables`, `admin_action_events`) — see [SCHEMA.md](SCHEMA.md#keys--constraints--indexes).
+- **DB indexes:** unique constraints + composite/lookup indexes on the highest-growth tables (`auth_events`, `notifications`, `bookings`, `dining_tables`, `admin_action_events`) — see [SCHEMA.md](SCHEMA.md#keys--constraints--indexes). Migration `20260805090000` added the ones every list endpoint's `orderBy` needed, replaced the plain notification FK indexes with `(owner, createdAt)` composites that serve filter and sort together, and covered `event_rsvps.residentId` — whose absence made deleting a resident sequentially scan that table, since the composite unique leads with `eventId`.
+- **Response compression:** `compression` middleware on the API; Render does not gzip Node responses itself.
+- **Client bundle:** recharts (~284 kB) no longer loads on the member, staff and management dashboards. `kpi-card` imported it just to draw a decorative sparkline; that is now an inline SVG (`charts/sparkline.tsx`) reproducing d3's `curveNatural` exactly. Recharts still backs the real charts on `/management/analytics`, where axes, tooltips and legends earn its cost.
 - **Pagination:** `notifications`/`bookings`/`dining-reservations`/`guests` list endpoints are bounded (`take`, capped) instead of unbounded `findMany`, with `select` narrowed to only the fields each client view actually reads instead of full related rows.
 - **Query dedupe:** ownership-check middleware stashes the record it fetches (`req.record`) so the handler that runs next doesn't re-fetch the same row.
 - **Client state:** zustand avoids over-fetching; profile persisted locally.
@@ -364,10 +389,13 @@ graph TD
 
 ## Testing
 
-- **Runner:** Vitest + `@testing-library/react` + `jsdom`.
-- **Command:** `npm run test` → `vitest run`.
-- **Scope present:** unit/component harness configured.
-- **Integration / E2E / coverage config:** none committed.
+- **Runner:** Vitest + `@testing-library/react` + `jsdom`; `supertest` for HTTP-level backend tests.
+- **Commands:** `npm test` → `vitest run`; `npm run test:watch`; `npm run test:coverage`.
+- **Authorization matrix** (`server/src/routes/authorization.matrix.test.js`): every guarded endpoint crossed with every role, driven over real HTTP through the real router and guard chain with Prisma mocked. Assertions are "403 or not 403" rather than exact status codes, so it stays an authorization contract instead of a change-detector. This is what proves making `buildCrudRouter`'s role lists mandatory did not widen or narrow access.
+- **Regression suite** (`hardening.regression.test.js`): one test per defect fixed in the production-readiness pass — query validation, notification ownership, logout revocation, error redaction, request ids, health probes, origin checks, body limits.
+- **Other backend units:** rate-limiter proxy keying and budget isolation, logger redaction, auth middleware, schema validation.
+- **Frontend:** component tests, plus a sparkline suite that pins the hand-rolled curve to d3's `curveNatural` output, since that component replaced a recharts chart.
+- **E2E:** none committed; UI verified manually through Playwright.
 
 ## Backup & Recovery
 

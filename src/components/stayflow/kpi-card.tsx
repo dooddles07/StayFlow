@@ -1,7 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { TrendingDown, TrendingUp } from 'lucide-react'
-import { useId } from 'react'
-import { Area, AreaChart, ResponsiveContainer } from 'recharts'
+import { Sparkline } from '#/components/stayflow/charts/sparkline'
 import { cn } from '#/lib/utils'
 
 interface KpiCardProps {
@@ -23,9 +22,7 @@ export function KpiCard({
   trend,
   className,
 }: KpiCardProps) {
-  const gradientId = useId()
-  const trendData =
-    trend && trend.length > 1 ? trend.map((v, i) => ({ i, v })) : null
+  const trendData = trend && trend.length > 1 ? trend : null
 
   return (
     <div
@@ -39,35 +36,7 @@ export function KpiCard({
           data-testid="kpi-sparkline"
           className="pointer-events-none absolute inset-y-0 right-0 w-2/5 opacity-70"
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={trendData}
-              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-            >
-              <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor="var(--color-accent-indigo-soft)"
-                    stopOpacity={0.35}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="var(--color-accent-indigo-soft)"
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-              </defs>
-              <Area
-                type="natural"
-                dataKey="v"
-                stroke="var(--color-accent-indigo-soft)"
-                strokeWidth={1.5}
-                fill={`url(#${gradientId})`}
-                isAnimationActive={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <Sparkline values={trendData} />
         </div>
       )}
 

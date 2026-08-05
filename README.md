@@ -180,8 +180,8 @@ git clone https://github.com/dooddles07/StayFlow.git && cd StayFlow
 # 2. Install frontend deps
 npm install
 
-# 3. Configure env — single file, repo root only (deliberately no server/.env)
-cp .env.example .env   # set DATABASE_URL, JWT_SECRET, VITE_API_URL (+ PORT/CORS_ORIGIN if running the standalone backend dev server)
+# 3. Configure env — single file at the repo root, found from either directory
+cp .env.example .env   # set DATABASE_URL, JWT_SECRET (32+ chars), VITE_API_URL (+ PORT/CORS_ORIGIN if running the standalone backend dev server)
 
 # 4. Backend deps + DB
 cd server && npm install
@@ -201,16 +201,20 @@ Full env var reference: [docs/SECURITY.md](docs/SECURITY.md#environment-variable
 
 ### Troubleshooting
 
-| Symptom                                                        | Likely cause                                                                                      | Fix                                                                                                   |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Server exits: `Missing required env var`                       | `DATABASE_URL`/`JWT_SECRET` unset                                                                 | Set them in the root `.env` or in Render's dashboard — there is no `server/.env`                      |
-| `Environment variable not found: DATABASE_URL` from Prisma CLI | Ran `cd server && prisma ...` — Prisma looks for `.env` in the CWD, and there's none in `server/` | Run from root instead: `./server/node_modules/.bin/prisma <cmd> --schema=server/prisma/schema.prisma` |
-| `401 Invalid or expired token` after reset                     | `tokenVersion` bumped → old session revoked                                                       | Sign in again                                                                                         |
-| Stuck on "Set your password" screen after login                | `mustChangePassword` still `true` — expected for a freshly management-issued login                | Complete the form (or use forgot-password) — both clear the flag                                      |
-| `429 Too many attempts` on login                               | rate limit / account lock                                                                         | Wait window (15 min lock, 15 min login window)                                                        |
-| CORS blocked in browser                                        | origin not in `CORS_ORIGIN`                                                                       | Add exact origin to allowlist                                                                         |
-| Reset link never arrives                                       | mailer is stubbed without `RESEND_API_KEY`                                                        | Check server console (dev); set `RESEND_API_KEY` (prod)                                               |
-| Debugging                                                      | —                                                                                                 | Watch morgan logs + `auth_events`/`admin_action_events` tables                                        |
+| Symptom                                                                | Likely cause                                                                                                                  | Fix                                                                                                                                   |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Server exits: `Missing required env var`                               | `DATABASE_URL`/`JWT_SECRET` unset                                                                                             | Set them in the root `.env` or in Render's dashboard                                                                                  |
+| Server exits: `Missing required env var in production: RESEND_API_KEY` | Deliberate. Without a mail key, reset links are never delivered and the only copy is the log — so production refuses to start | Set `RESEND_API_KEY` and `APP_URL` in Render's dashboard                                                                              |
+| Server exits: `JWT_SECRET must be at least 32 characters`              | Weak signing secret — every session would be forgeable offline                                                                | Generate one: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`                                        |
+| `Environment variable not found: DATABASE_URL` from Prisma CLI         | Prisma's CLI (unlike the API) still resolves `.env` from the CWD                                                              | Run from root: `./server/node_modules/.bin/prisma <cmd> --schema=server/prisma/schema.prisma`                                         |
+| `401 Invalid or expired token` after reset                             | `tokenVersion` bumped → old session revoked                                                                                   | Sign in again                                                                                                                         |
+| Stuck on "Set your password" screen after login                        | `mustChangePassword` still `true` — expected for a freshly management-issued login                                            | Complete the form (or use forgot-password) — both clear the flag                                                                      |
+| `429 Too many attempts` on login                                       | rate limit / account lock                                                                                                     | Wait window (15 min lock, 15 min login window)                                                                                        |
+| CORS blocked in browser                                                | origin not in `CORS_ORIGIN`                                                                                                   | Add exact origin to allowlist                                                                                                         |
+| Reset link never arrives                                               | In dev the mailer logs instead of sending; in prod the server would not have started without a key                            | Check the server console (dev); confirm `RESEND_API_KEY`/`MAIL_FROM` (prod)                                                           |
+| `403 Request origin is not allowed` on a write                         | The browser's `Origin` is not `APP_URL` or in `CORS_ORIGIN`                                                                   | Set `APP_URL` to the exact frontend origin                                                                                            |
+| Everyone hits `429` at once after one bad actor                        | Proxy depth misconfigured, so all callers key to a shared upstream IP                                                         | Set `TRUST_PROXY_HOPS` to the real number of proxies in front of the API                                                              |
+| Debugging                                                              | —                                                                                                                             | Logs are JSON lines; grep by the `X-Request-Id` returned on the failing response. Plus the `auth_events`/`admin_action_events` tables |
 
 ### Known limitations
 

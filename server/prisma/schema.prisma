@@ -161,23 +161,31 @@ model Booking {
 
   @@index([facilityId, date, status])
   @@index([residentId])
+  // Backs the default list ordering (booking.model.js findAll).
+  @@index([createdAt])
+  // NOTE: a partial unique index on (facilityId, date, timeSlot) WHERE status
+  // <> 'CANCELLED' also exists, created in migration
+  // 20260805090000_perf_indexes_and_booking_uniqueness. Prisma schema cannot
+  // express a partial index, so it lives in SQL only — do not "fix" the drift
+  // by dropping it. It is the database-level backstop behind
+  // BookingModel.createIfNoConflict.
   @@map("bookings")
 }
 
 model Restaurant {
-  id          String @id @default(cuid())
-  name        String
-  cuisine     String
-  description String
-  image       String
-  openHours   String
-  priceRange  String
-  rating      Float
-  location    String
+  id           String @id @default(cuid())
+  name         String
+  cuisine      String
+  description  String
+  image        String
+  openHours    String
+  priceRange   String
+  rating       Float
+  location     String
   // Largest party the online booking flow accepts. Real reservation systems cap
   // this well below the room's total seats — bigger parties call in for a private
   // room or a pushed-together table setup staff arrange manually.
-  maxPartySize Int @default(8)
+  maxPartySize Int    @default(8)
 
   tables       DiningTable[]
   reservations DiningReservation[]
@@ -219,6 +227,7 @@ model DiningReservation {
   @@index([restaurantId])
   @@index([residentId])
   @@index([tableId])
+  @@index([createdAt])
   @@map("dining_reservations")
 }
 
@@ -237,6 +246,10 @@ model Guest {
   checkedOutAt   DateTime?
 
   @@index([hostResidentId])
+  // Both guest list queries order by arrivalDate desc; the per-resident one
+  // filters by host first, so give it a composite.
+  @@index([arrivalDate])
+  @@index([hostResidentId, arrivalDate])
   @@map("guests")
 }
 
@@ -254,6 +267,7 @@ model CommunityEvent {
 
   rsvps EventRsvp[]
 
+  @@index([date])
   @@map("events")
 }
 
@@ -266,6 +280,11 @@ model EventRsvp {
   createdAt  DateTime       @default(now())
 
   @@unique([eventId, residentId])
+  // The composite unique above indexes eventId first, so it cannot serve a
+  // lookup by residentId alone — which is exactly what the Cascade FK does when
+  // a resident is deleted. Without this, that delete sequentially scans the
+  // whole table.
+  @@index([residentId])
   @@map("event_rsvps")
 }
 
@@ -278,43 +297,50 @@ model Notice {
   postedBy String
   pinned   Boolean  @default(false)
 
+  // Matches orderBy [{ pinned: desc }, { postedAt: desc }] in notice.model.js.
+  @@index([pinned, postedAt])
   @@map("notices")
 }
 
 model AppNotification {
-  id         String    @id @default(cuid())
+  id         String       @id @default(cuid())
   kind       String
   title      String
   body       String
-  createdAt  DateTime  @default(now())
-  read       Boolean   @default(false)
+  createdAt  DateTime     @default(now())
+  read       Boolean      @default(false)
   // Nullable: rows with no owner predate per-user scoping and are visible to no one
   // until backfilled, rather than leaking to every resident.
   residentId String?
-  resident   Resident? @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  resident   Resident?    @relation(fields: [residentId], references: [id], onDelete: Cascade)
   // A notification is owned by exactly one of resident/staff (or neither, pre-scoping) —
   // never both. Same nullable-until-backfilled reasoning as residentId above.
-  staffId String?
-  staff   StaffMember? @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staffId    String?
+  staff      StaffMember? @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
-  @@index([residentId])
-  @@index([staffId])
+  // Composite rather than plain FK indexes: every read of this table filters by
+  // owner and orders by createdAt desc, so the sort comes free from the index.
+  @@index([residentId, createdAt])
+  @@index([staffId, createdAt])
+  // markAllRead* filter on read = false; this is the fastest-growing table.
+  @@index([read])
+  @@index([createdAt])
   @@map("notifications")
 }
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String
-  role         PortalRole
-  displayName  String
-  createdAt    DateTime   @default(now())
-  tokenVersion Int        @default(0)
-  isActive     Boolean    @default(true)
+  id                 String     @id @default(cuid())
+  email              String     @unique
+  passwordHash       String
+  role               PortalRole
+  displayName        String
+  createdAt          DateTime   @default(now())
+  tokenVersion       Int        @default(0)
+  isActive           Boolean    @default(true)
   // Set when MANAGEMENT issues a resident login with a system-generated temp
   // password. Blocks all non-auth API access (see blockIfMustChangePassword) until
   // the resident sets their own password via change-password or reset-password.
-  mustChangePassword Boolean @default(false)
+  mustChangePassword Boolean    @default(false)
 
   failedLoginCount Int       @default(0)
   lockedUntil      DateTime?
@@ -363,14 +389,14 @@ model AuthEvent {
 // never write to, so every row here really is an admin action. Not related to User (no
 // FK), same reasoning as AuthEvent: deleting a user must not erase what they did.
 model AdminActionEvent {
-  id           String   @id @default(cuid())
+  id           String     @id @default(cuid())
   actorUserId  String
   actorEmail   String
   actorRole    PortalRole
   action       String
   resourceType String
   resourceId   String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime   @default(now())
 
   @@index([resourceType, resourceId])
   @@index([actorUserId])

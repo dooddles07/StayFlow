@@ -10,3 +10,9 @@ export const notificationCreateSchema = z.object({
   residentId: z.string().optional(),
   staffId: z.string().optional(),
 })
+
+// Upper bound matches the clamp already applied in notification.model.js, so a
+// caller asking for more gets a clear 400 rather than a silently smaller page.
+export const notificationListQuerySchema = z.object({
+  limit: z.coerce.number().int().positive().max(500).optional(),
+})
