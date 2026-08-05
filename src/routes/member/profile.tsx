@@ -4,34 +4,30 @@ import { toast } from '#/lib/toast'
 import {
   Car,
   Heart,
-  Pencil,
   PhoneCall,
-  Plus,
   Shield,
   SlidersHorizontal,
   User as UserIcon,
-  X,
 } from 'lucide-react'
 import { PageHeader } from '#/components/stayflow/page-header'
 import { UserAvatar } from '#/components/stayflow/user-avatar'
 import { ChangePasswordForm } from '#/components/stayflow/change-password-form'
 import { AvatarDialog } from '#/components/stayflow/profile/avatar-dialog'
-import { FamilyDialog } from '#/components/stayflow/profile/family-dialog'
-import { VehicleDialog } from '#/components/stayflow/profile/vehicle-dialog'
-import { DeleteButton } from '#/components/stayflow/profile/delete-button'
 import { EmailSection } from '#/components/stayflow/profile/email-section'
+import { PersonalTab } from '#/components/stayflow/profile/personal-tab'
+import { FamilyTab } from '#/components/stayflow/profile/family-tab'
+import { VehicleTab } from '#/components/stayflow/profile/vehicle-tab'
+import { EmergencyTab } from '#/components/stayflow/profile/emergency-tab'
+import { PreferencesTab } from '#/components/stayflow/profile/preferences-tab'
 import {
-  FieldError,
   computeErrors,
   errText,
   monthYear,
   tabTrigger,
 } from '#/components/stayflow/profile/profile-helpers'
+import type { ProfileErrors } from '#/components/stayflow/profile/profile-helpers'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs'
-import { Input } from '#/components/ui/input'
-import { Label } from '#/components/ui/label'
 import { Button } from '#/components/ui/button'
-import { Switch } from '#/components/ui/switch'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,12 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog'
-import {
-  removeFamilyMember,
-  removeVehicle,
-  tierLabel,
-  updateMyProfile,
-} from '#/lib/api/resident'
+import { tierLabel, updateMyProfile } from '#/lib/api/resident'
 import type { ResidentProfile, ResidentProfileUpdate } from '#/lib/api/resident'
 import { useMyProfile } from '#/lib/store/member-profile'
 
@@ -63,7 +54,6 @@ function ProfilePage() {
   // Mirrors saving but checked/updated synchronously — two clicks before React re-renders
   // (and disables the button) would both read the same stale false and both fire.
   const savingRef = React.useRef(false)
-  const [dietaryInput, setDietaryInput] = React.useState('')
 
   // Sync the editable copy when the identity loads/changes — but not on every
   // child mutation, so unsaved text edits aren't clobbered by a family/vehicle save.
@@ -107,7 +97,7 @@ function ProfilePage() {
   async function save(
     patch: Partial<ResidentProfileUpdate>,
     message: string,
-    keys: (keyof ReturnType<typeof computeErrors>)[],
+    keys: (keyof ProfileErrors)[],
   ) {
     if (!form || savingRef.current) return
     const errs = computeErrors(form)
@@ -172,39 +162,6 @@ function ProfilePage() {
   }
 
   const errors = computeErrors(form)
-
-  function addDietary() {
-    if (!form) return
-    const value = dietaryInput.trim()
-    if (!value) return
-    if (
-      form.preferences.dietary.some(
-        (d) => d.toLowerCase() === value.toLowerCase(),
-      )
-    ) {
-      setDietaryInput('')
-      return
-    }
-    setForm({
-      ...form,
-      preferences: {
-        ...form.preferences,
-        dietary: [...form.preferences.dietary, value],
-      },
-    })
-    setDietaryInput('')
-  }
-
-  function removeDietary(tag: string) {
-    if (!form) return
-    setForm({
-      ...form,
-      preferences: {
-        ...form.preferences,
-        dietary: form.preferences.dietary.filter((d) => d !== tag),
-      },
-    })
-  }
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -303,514 +260,58 @@ function ProfilePage() {
 
         <TabsContent
           value="personal"
-          className="space-y-4 rounded-2xl border border-border bg-surface p-5"
+          className="rounded-2xl border border-border bg-surface p-5"
         >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label
-                htmlFor="profile-name"
-                className="mb-1.5 text-xs text-muted-text"
-              >
-                Full name
-              </Label>
-              <Input
-                id="profile-name"
-                value={form.name}
-                aria-invalid={!!errors.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="border-border bg-canvas"
-              />
-              <FieldError msg={errors.name} />
-            </div>
-            <div>
-              <Label
-                htmlFor="profile-unit"
-                className="mb-1.5 text-xs text-muted-text"
-              >
-                Unit
-              </Label>
-              <Input
-                id="profile-unit"
-                value={form.unit}
-                readOnly
-                disabled
-                className="border-border bg-canvas"
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="profile-email"
-                className="mb-1.5 text-xs text-muted-text"
-              >
-                Email
-              </Label>
-              <Input
-                id="profile-email"
-                value={form.email}
-                readOnly
-                disabled
-                className="border-border bg-canvas"
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="profile-phone"
-                className="mb-1.5 text-xs text-muted-text"
-              >
-                Phone
-              </Label>
-              <Input
-                id="profile-phone"
-                value={form.phone}
-                aria-invalid={!!errors.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="border-border bg-canvas"
-              />
-              <FieldError msg={errors.phone} />
-            </div>
-          </div>
-          <Button
-            onClick={() =>
-              save(
-                { name: form.name.trim(), phone: form.phone.trim() },
-                'Personal details saved',
-                ['name', 'phone'],
-              )
-            }
-            disabled={
-              saving || !dirty.personal || !!errors.name || !!errors.phone
-            }
-            className="bg-accent-indigo text-white hover:bg-accent-indigo-soft"
-          >
-            {saving ? 'Saving…' : 'Save Changes'}
-          </Button>
+          <PersonalTab
+            form={form}
+            setForm={setForm}
+            errors={errors}
+            saving={saving}
+            dirty={dirty.personal}
+            save={save}
+          />
         </TabsContent>
 
         <TabsContent
           value="family"
           className="space-y-3 rounded-2xl border border-border bg-surface p-5"
         >
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-foreground">
-              Family members
-            </p>
-            <FamilyDialog
-              onSaved={setProfile}
-              trigger={
-                <Button
-                  size="sm"
-                  className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
-                >
-                  <Plus className="size-4" /> Add
-                </Button>
-              }
-            />
-          </div>
-          {profile.family.length === 0 ? (
-            <p className="text-sm text-muted-text">
-              No family members added yet.
-            </p>
-          ) : (
-            profile.family.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between rounded-xl border border-border bg-canvas px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {member.name}
-                  </p>
-                  <p className="text-xs text-muted-text">
-                    {member.relation} · Age {member.age}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <FamilyDialog
-                    initial={member}
-                    onSaved={setProfile}
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-11 text-muted-text hover:text-foreground"
-                        aria-label={`Edit ${member.name}`}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                    }
-                  />
-                  <DeleteButton
-                    label={member.name}
-                    onConfirm={() =>
-                      removeFamilyMember(member.id).then(setProfile)
-                    }
-                  />
-                </div>
-              </div>
-            ))
-          )}
+          <FamilyTab profile={profile} onSaved={setProfile} />
         </TabsContent>
 
         <TabsContent
           value="vehicles"
           className="space-y-3 rounded-2xl border border-border bg-surface p-5"
         >
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-foreground">
-              Registered vehicles
-            </p>
-            <VehicleDialog
-              onSaved={setProfile}
-              trigger={
-                <Button
-                  size="sm"
-                  className="gap-1.5 bg-accent-indigo text-white hover:bg-accent-indigo-soft"
-                >
-                  <Plus className="size-4" /> Add
-                </Button>
-              }
-            />
-          </div>
-          {profile.vehicles.length === 0 ? (
-            <p className="text-sm text-muted-text">No vehicles registered.</p>
-          ) : (
-            profile.vehicles.map((vehicle) => (
-              <div
-                key={vehicle.id}
-                className="flex items-center justify-between rounded-xl border border-border bg-canvas px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {vehicle.make} {vehicle.model}
-                  </p>
-                  <p className="text-xs text-muted-text">{vehicle.color}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs font-medium text-accent-gold">
-                    {vehicle.plate}
-                  </p>
-                  <VehicleDialog
-                    initial={vehicle}
-                    onSaved={setProfile}
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-11 text-muted-text hover:text-foreground"
-                        aria-label={`Edit ${vehicle.make} ${vehicle.model}`}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                    }
-                  />
-                  <DeleteButton
-                    label={`${vehicle.make} ${vehicle.model}`}
-                    onConfirm={() => removeVehicle(vehicle.id).then(setProfile)}
-                  />
-                </div>
-              </div>
-            ))
-          )}
+          <VehicleTab profile={profile} onSaved={setProfile} />
         </TabsContent>
 
         <TabsContent
           value="emergency"
-          className="space-y-4 rounded-2xl border border-border bg-surface p-5"
+          className="rounded-2xl border border-border bg-surface p-5"
         >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label
-                htmlFor="emergency-name"
-                className="mb-1.5 text-xs text-muted-text"
-              >
-                Contact name
-              </Label>
-              <Input
-                id="emergency-name"
-                value={form.emergencyContact.name}
-                aria-invalid={!!errors.emName}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    emergencyContact: {
-                      ...form.emergencyContact,
-                      name: e.target.value,
-                    },
-                  })
-                }
-                className="border-border bg-canvas"
-              />
-              <FieldError msg={errors.emName} />
-            </div>
-            <div>
-              <Label
-                htmlFor="emergency-relation"
-                className="mb-1.5 text-xs text-muted-text"
-              >
-                Relation
-              </Label>
-              <Input
-                id="emergency-relation"
-                value={form.emergencyContact.relation}
-                aria-invalid={!!errors.emRelation}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    emergencyContact: {
-                      ...form.emergencyContact,
-                      relation: e.target.value,
-                    },
-                  })
-                }
-                className="border-border bg-canvas"
-              />
-              <FieldError msg={errors.emRelation} />
-            </div>
-            <div className="sm:col-span-2">
-              <Label
-                htmlFor="emergency-phone"
-                className="mb-1.5 text-xs text-muted-text"
-              >
-                Phone
-              </Label>
-              <Input
-                id="emergency-phone"
-                value={form.emergencyContact.phone}
-                aria-invalid={!!errors.emPhone}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    emergencyContact: {
-                      ...form.emergencyContact,
-                      phone: e.target.value,
-                    },
-                  })
-                }
-                className="border-border bg-canvas"
-              />
-              <FieldError msg={errors.emPhone} />
-            </div>
-          </div>
-
-          <div className="border-t border-border pt-4">
-            <p className="mb-3 text-sm font-medium text-foreground">
-              Secondary contact{' '}
-              <span className="font-normal text-muted-text">· optional</span>
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label
-                  htmlFor="emergency2-name"
-                  className="mb-1.5 text-xs text-muted-text"
-                >
-                  Contact name
-                </Label>
-                <Input
-                  id="emergency2-name"
-                  value={form.emergencyContact2.name}
-                  aria-invalid={!!errors.em2Name}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      emergencyContact2: {
-                        ...form.emergencyContact2,
-                        name: e.target.value,
-                      },
-                    })
-                  }
-                  className="border-border bg-canvas"
-                />
-                <FieldError msg={errors.em2Name} />
-              </div>
-              <div>
-                <Label
-                  htmlFor="emergency2-relation"
-                  className="mb-1.5 text-xs text-muted-text"
-                >
-                  Relation
-                </Label>
-                <Input
-                  id="emergency2-relation"
-                  value={form.emergencyContact2.relation}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      emergencyContact2: {
-                        ...form.emergencyContact2,
-                        relation: e.target.value,
-                      },
-                    })
-                  }
-                  className="border-border bg-canvas"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Label
-                  htmlFor="emergency2-phone"
-                  className="mb-1.5 text-xs text-muted-text"
-                >
-                  Phone
-                </Label>
-                <Input
-                  id="emergency2-phone"
-                  value={form.emergencyContact2.phone}
-                  aria-invalid={!!errors.em2Phone}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      emergencyContact2: {
-                        ...form.emergencyContact2,
-                        phone: e.target.value,
-                      },
-                    })
-                  }
-                  className="border-border bg-canvas"
-                />
-                <FieldError msg={errors.em2Phone} />
-              </div>
-            </div>
-          </div>
-
-          <Button
-            onClick={() =>
-              save(
-                {
-                  emergencyName: form.emergencyContact.name.trim(),
-                  emergencyRelation: form.emergencyContact.relation.trim(),
-                  emergencyPhone: form.emergencyContact.phone.trim(),
-                  emergency2Name: form.emergencyContact2.name.trim(),
-                  emergency2Relation: form.emergencyContact2.relation.trim(),
-                  emergency2Phone: form.emergencyContact2.phone.trim(),
-                },
-                'Emergency contact saved',
-                ['emName', 'emRelation', 'emPhone', 'em2Name', 'em2Phone'],
-              )
-            }
-            disabled={
-              saving ||
-              !dirty.emergency ||
-              !!errors.emName ||
-              !!errors.emRelation ||
-              !!errors.emPhone ||
-              !!errors.em2Name ||
-              !!errors.em2Phone
-            }
-            className="bg-accent-indigo text-white hover:bg-accent-indigo-soft"
-          >
-            {saving ? 'Saving…' : 'Save Changes'}
-          </Button>
+          <EmergencyTab
+            form={form}
+            setForm={setForm}
+            errors={errors}
+            saving={saving}
+            dirty={dirty.emergency}
+            save={save}
+          />
         </TabsContent>
 
         <TabsContent
           value="preferences"
-          className="space-y-5 rounded-2xl border border-border bg-surface p-5"
+          className="rounded-2xl border border-border bg-surface p-5"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                Push notifications
-              </p>
-              <p className="text-xs text-muted-text">
-                Booking updates, guest arrivals, and reminders.
-              </p>
-            </div>
-            <Switch
-              checked={form.preferences.notifications}
-              onCheckedChange={(checked) =>
-                setForm({
-                  ...form,
-                  preferences: { ...form.preferences, notifications: checked },
-                })
-              }
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                Community newsletter
-              </p>
-              <p className="text-xs text-muted-text">
-                Monthly digest of events and announcements.
-              </p>
-            </div>
-            <Switch
-              checked={form.preferences.newsletter}
-              onCheckedChange={(checked) =>
-                setForm({
-                  ...form,
-                  preferences: { ...form.preferences, newsletter: checked },
-                })
-              }
-            />
-          </div>
-          <div>
-            <Label
-              htmlFor="dietary-input"
-              className="mb-1.5 text-xs text-muted-text"
-            >
-              Dietary preferences
-            </Label>
-            {form.preferences.dietary.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-2">
-                {form.preferences.dietary.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 rounded-full bg-accent-indigo/15 py-1 pl-3 pr-1.5 text-xs font-medium text-foreground"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeDietary(tag)}
-                      aria-label={`Remove ${tag}`}
-                      className="-m-1.5 flex size-7 items-center justify-center rounded-full text-muted-text transition-colors hover:text-red-500"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="flex gap-2">
-              <Input
-                id="dietary-input"
-                value={dietaryInput}
-                placeholder="e.g. Vegetarian, Gluten-free"
-                onChange={(e) => setDietaryInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addDietary()
-                  }
-                }}
-                className="border-border bg-canvas"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addDietary}
-                className="border-border"
-              >
-                Add
-              </Button>
-            </div>
-          </div>
-          <Button
-            onClick={() =>
-              save(
-                {
-                  notifications: form.preferences.notifications,
-                  newsletter: form.preferences.newsletter,
-                  dietary: form.preferences.dietary,
-                },
-                'Preferences saved',
-                [],
-              )
-            }
-            disabled={saving || !dirty.prefs}
-            className="bg-accent-indigo text-white hover:bg-accent-indigo-soft"
-          >
-            {saving ? 'Saving…' : 'Save Changes'}
-          </Button>
+          <PreferencesTab
+            form={form}
+            setForm={setForm}
+            errors={errors}
+            saving={saving}
+            dirty={dirty.prefs}
+            save={save}
+          />
         </TabsContent>
 
         <TabsContent

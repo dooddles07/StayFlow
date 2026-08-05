@@ -1,5 +1,5 @@
 import { ApiError } from '#/lib/api/client'
-import type { ResidentProfile } from '#/lib/api/resident'
+import type { ResidentProfile, ResidentProfileUpdate } from '#/lib/api/resident'
 
 export const errText = (err: unknown) =>
   err instanceof ApiError ? err.message : 'Something went wrong. Try again.'
@@ -13,6 +13,24 @@ export const phoneError = (v: string) =>
     : !PHONE_RE.test(v)
       ? 'Enter a valid phone number'
       : ''
+
+export type ProfileErrors = ReturnType<typeof computeErrors>
+
+// What every tab panel needs to edit its own slice and save it. Each tab sends
+// only the fields it owns and names only its own error keys, so saving one tab
+// can never persist another tab's unsaved or invalid edits.
+export interface ProfileTabProps {
+  form: ResidentProfile
+  setForm: (next: ResidentProfile) => void
+  errors: ProfileErrors
+  saving: boolean
+  dirty: boolean
+  save: (
+    patch: Partial<ResidentProfileUpdate>,
+    message: string,
+    keys: (keyof ProfileErrors)[],
+  ) => void
+}
 
 export function computeErrors(f: ResidentProfile) {
   const c2 = f.emergencyContact2
