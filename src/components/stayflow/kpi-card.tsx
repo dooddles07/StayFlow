@@ -59,7 +59,7 @@ export function KpiCard({
                 </linearGradient>
               </defs>
               <Area
-                type="monotone"
+                type="natural"
                 dataKey="v"
                 stroke="var(--color-accent-indigo-soft)"
                 strokeWidth={1.5}
