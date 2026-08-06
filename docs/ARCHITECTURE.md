@@ -186,13 +186,20 @@ StayFlow/
 │   ├── components/
 │   │   ├── stayflow/          # App components (app-shell, sidebar, kpi-card, charts/, qr-code…)
 │   │   │   ├── users/          # management/users.tsx split: tabs, form sheets, action dialogs
-│   │   │   └── profile/        # member/profile.tsx split: avatar/family/vehicle dialogs, email section
+│   │   │   ├── profile/        # member/profile.tsx split: one component per tab (personal/family/vehicles/emergency/preferences), avatar/family/vehicle dialogs, email section
+│   │   │   ├── events/         # management/events.tsx split: table (card+desktop), create/edit form sheet
+│   │   │   ├── facilities/     # management/facilities.tsx split: same shape as events/
+│   │   │   ├── guests/         # member/guests.tsx split: register form, list + history, pass detail/edit/cancel dialog
+│   │   │   ├── root-error-boundary.tsx  # catches throws from providers outside the router (TooltipProvider, GlobalSearch, ToastViewport)
+│   │   │   └── security-headers.test.ts # fails if vercel.json's static headers drift from src/lib/security-headers.ts
 │   │   └── ui/                # shadcn/Radix primitives (button, dialog, table, calendar…)
 │   └── lib/
 │       ├── api/client.ts      # fetch wrapper (credentials:include)
 │       ├── store/             # zustand: auth-store, ui-store, member-profile
 │       ├── hooks/             # use-require-auth, use-portal-preference
-│       ├── mock/               # Shared TS domain types (no data — see live-analytics.ts for derived stats)
+│       ├── domain/             # Shared TS domain types (no data — see live-analytics.ts for derived stats). Renamed from lib/mock 2026-08-06; the old name misled anyone grepping for fake data
+│       ├── csp.ts / security-headers.ts  # per-request CSP nonce + the static-header source of truth
+│       ├── auth-guard.ts       # server-side httpOnly-cookie check used by beforeLoad on the three portal layouts
 │       └── {avatar,booking-slots,export-csv,session,utils}.ts
 └── server/
     ├── server.js              # Standalone API entry (dev): prisma.$connect + app.listen
@@ -400,10 +407,13 @@ Both are mounted ahead of the rate limiter and access log, so continuous platfor
 
 - **Runner:** Vitest + `@testing-library/react` + `jsdom`; `supertest` for HTTP-level backend tests.
 - **Commands:** `npm test` → `vitest run`; `npm run test:watch`; `npm run test:coverage`.
+- **524 tests total.** CI runs `test:coverage` and fails the build if statements/branches/functions/lines drop below the thresholds in `vitest.config.ts` — a ratchet set just under what the suite covers today, so it can only go up.
 - **Authorization matrix** (`server/src/routes/authorization.matrix.test.js`): every guarded endpoint crossed with every role, driven over real HTTP through the real router and guard chain with Prisma mocked. Assertions are "403 or not 403" rather than exact status codes, so it stays an authorization contract instead of a change-detector. This is what proves making `buildCrudRouter`'s role lists mandatory did not widen or narrow access.
 - **Regression suite** (`hardening.regression.test.js`): one test per defect fixed in the production-readiness pass, covering query validation, notification ownership, logout revocation, error redaction, request ids, health probes, origin checks and body limits.
-- **Other backend units:** rate-limiter proxy keying and budget isolation, logger redaction, auth middleware, schema validation.
+- **Controller tests** (`server/src/controllers/*.test.js`, all 12 controllers): what happens inside each endpoint rather than who may call it — the booking slot conflict and its retry on a lost serialization race, the dining table hold/release across confirm/arrive/cancel, the full guest pass lifecycle, and login lockout/token revocation. Share `server/src/test-support/api-harness.js`, which drives the real app over HTTP with only Prisma replaced.
+- **Other backend units:** rate-limiter proxy keying, identity keying on login/reset, and budget isolation; logger redaction; auth middleware; schema validation; the CSP header drift check (`src/lib/security-headers.test.ts`).
 - **Frontend:** component tests, plus a sparkline suite that pins the hand-rolled curve to d3's `curveNatural` output, since that component replaced a recharts chart.
+- **Migration integrity** (CI job, not Vitest): applies every migration to a real Postgres from empty, then asserts the partial unique index behind the double-booking guard still exists — that index is raw SQL absent from `schema.prisma`, so nothing else would notice if a future change dropped it.
 - **E2E:** none committed; UI verified manually through Playwright.
 
 ## Backup & Recovery
@@ -511,7 +521,7 @@ classDiagram
 ## Maintenance Guide
 
 - **Update deps:** bump `package.json` / `server/package.json`, reinstall, run tests + lint.
-- **Schema change:** edit `schema.prisma` → `prisma migrate dev` from root, commit the migration folder (see [SCHEMA.md](SCHEMA.md#schema-change-workflow)). Render applies it on deploy via `prisma migrate deploy`.
+- **Schema change:** edit `schema.prisma` → `prisma migrate dev` using server's pinned binary (not a bare `npx prisma`, which resolves a fresh major from wherever it runs — there is no `prisma` package at the repo root), commit the migration folder (see [SCHEMA.md](SCHEMA.md#schema-change-workflow)). Render applies it on deploy via `prisma migrate deploy`.
 - **Deploy:** push to GitHub → Vercel auto-builds the frontend, Render auto-builds/starts the API.
 - **Rollback:** redeploy the previous build on Vercel and/or Render; revert schema with a new down migration, never by hand-editing data or deleting an applied migration file.
 - **Rotate sample creds:** `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js --force` (`--force` is required unconditionally, because the script has no way to tell a "safe" `DATABASE_URL` from production, so it always asks for confirmation).

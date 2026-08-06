@@ -98,7 +98,7 @@ The Cloudinary API key needs permission to create assets. A key scoped to the Me
 
 Push to `master`. Vercel rebuilds the frontend, Render rebuilds and restarts the API, and Render runs `prisma migrate deploy` during its build.
 
-`vercel.json` owns the frontend build command, the `/api/*` rewrite, and the security headers including CSP. `render.yaml` owns the API build and start commands, the health check path, and the environment variable contract.
+`vercel.json` owns the frontend build command, the `/api/*` rewrite, and the static security headers (HSTS, `frame-ancestors 'none'`, etc). `Content-Security-Policy` does not live there — it is minted per request by the SSR layer (`src/lib/csp.ts`) so `script-src` can carry a fresh nonce instead of `'unsafe-inline'`. `render.yaml` owns the API build and start commands, the health check path, and the environment variable contract.
 
 Two things to know about the database connection. `DATABASE_URL` points at Neon's **pooled** host, the one with `-pooler` in the hostname, because the running API opens a connection pool per process and the direct host allows too few connections on the free plan. `DIRECT_URL` points at the **direct** host, because Prisma Migrate needs one real session for advisory locks and DDL, which PgBouncer's transaction pooling cannot provide. Swapping these breaks deploys.
 
@@ -125,8 +125,6 @@ Start with the logs. Every request carries an `X-Request-Id` that is echoed on t
 Honest list. None of this is on fire.
 
 - **Rate-limit counters are in memory.** Correct on one instance, wrong the moment a second one runs. Needs a Redis store before scaling out.
-- **15 Zod fields accept `undefined` but not `null`** where the underlying column is nullable. Latent: no client sends `null` for them today. Same bug that broke saving an event with no end time, fixed for `endTime` only.
-- **`script-src` keeps `'unsafe-inline'`.** TanStack Start emits its hydration payload as an inline script and Vercel's static headers cannot carry a per-request nonce. Every other CSP directive is strict.
 - **Sample accounts have full write access.** Acceptable for a portfolio project. Rotate them with `TEST_PASSWORD=… node server/scripts/reset-test-passwords.js --force` before any real use.
 - **No load test.** Nothing establishes the throughput of any endpoint.
 - **Legacy base64 photos** still occupy Postgres rows, as described above.

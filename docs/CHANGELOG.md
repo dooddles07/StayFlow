@@ -2,6 +2,29 @@
 
 > Full history: `git log`. This file curates notable changes; not every commit is listed.
 
+## 2026-08-06 — Launch hardening pass
+
+Full audit aimed at the deploy itself, not just the app. Security core held up (no missing authn/authz, no committed secrets); everything below is what didn't.
+
+- **fix(observability):** Vite now emits source maps, so Sentry can resolve production stack traces instead of minified noise.
+- **fix(upload):** the Cloudinary signature now also covers a single generated `public_id` and an image-format allowlist. It used to name only `folder`+`timestamp`, so one signature authorised unlimited uploads of any type for the full validity window.
+- **fix(logging):** Prisma's client uses `errorFormat: 'minimal'`, and the error middleware redacts Prisma error text before logging it — the message embeds query argument values (emails, names, phone numbers), which a prior pass had stopped leaking via the whole-object dump but not via `.message` itself.
+- **fix(seo):** `robots.txt` stops indexing the private portal and the account-recovery forms; `noindex` meta added to every authenticated route tree; OG/Twitter/canonical tags and a sitemap added for the public landing page only.
+- **fix(ratelimit):** a forged `X-Forwarded-For` chain (reachable directly against the Render origin, bypassing the Vercel edge) now buckets into one shared key instead of minting a fresh per-IP budget; login/forgot-password/reset are additionally keyed on the account or token rather than the address.
+- **chore(deploy):** pinned Node 22 via `engines` + `.nvmrc`.
+- **perf(images):** the five hero PNGs (8.9 MB total, loaded on the landing page and every login/recovery screen) converted to WebP (307 KB total); `scripts/convert-heroes.mjs` keeps it reproducible.
+- **fix(csp):** `script-src` no longer needs `'unsafe-inline'`. The SSR layer (`src/lib/csp.ts`) mints a nonce per request and stamps it on the two inline scripts the router streams; the policy moved out of `vercel.json`, which cannot produce a per-request value. `src/lib/security-headers.test.ts` fails if the static headers in `vercel.json` drift from the source of truth.
+- **fix(health):** the readiness probe caches a healthy result for 5s so the unauthenticated, pre-rate-limiter route can't open a database connection per request; it no longer returns the raw exception, which named the database host and user.
+- **fix(auth):** the three portal layouts check the httpOnly session cookie server-side during SSR and redirect a signed-out visitor before streaming a shell; the client re-validates against `/auth/me` once per load instead of trusting the `role` in `localStorage`, which anyone with the console open can edit. Email is no longer persisted client-side.
+- **fix(ui):** a root error boundary catches throws from the providers that sit outside every route (previously a white page); the two loader routes show a pending state instead of the stale previous page while fetching.
+- **fix(env):** `DIRECT_URL` required at boot instead of failing later in `migrate deploy`; the drifted duplicate at `server/.env` deleted, and the fallback that used to read it removed entirely.
+- **fix(validation):** facility/event/restaurant `image` fields must be an https URL or a same-site path, not any string.
+- **test(api):** 273 new tests across all 12 controllers (booking slot conflicts and the retry on a lost race, dining table hold/release, the guest pass lifecycle, login lockout and token revocation, mass-assignment allowlists) — 261 → 524 total. Coverage is now gated in CI; a new job applies every migration to a real Postgres from empty and fails if the partial unique index behind the double-booking guard is missing, since it exists only as raw SQL and nothing else would notice.
+- **fix(validation):** 15 admin-editable Zod fields were `.optional()` (accepts `undefined`, rejects `null`) where the column is nullable — the same class of bug already fixed for `endTime` alone. All 15 now `.nullable()`.
+- **refactor(ui):** the four 500+ line route files (`profile.tsx`, `guests.tsx`, `events.tsx`, `facilities.tsx`) split into per-tab/per-concern components; no behavior change.
+- **docs:** corrected an ACTIVITY-LOG.md entry that claimed a security-headers drift test existed before it did; reconciled the test count across README/HANDOVER; renamed `src/lib/mock` to `src/lib/domain` (types only, never held data).
+- **ci:** two follow-up fixes after this pass merged — the migrations job's Postgres service uses trust auth (a hardcoded `postgres:postgres@` password tripped the secret scanner), and every `prisma` invocation in CI runs with `working-directory: server` (the pinned CLI lives there; a bare `npx prisma` from the repo root silently resolved an incompatible Prisma 7). `prisma db execute` additionally needs an explicit `--schema` flag — unlike `migrate deploy`/`validate`, it does not read the path from `server/prisma.config.ts`.
+
 ## 2026-08-05 — Free-tier scale work, image offload, observability, handover docs
 
 Everything here holds the $0/month hosting bill. See [HANDOVER.md](HANDOVER.md) for the resulting operating limits.
