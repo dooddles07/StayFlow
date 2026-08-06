@@ -18,7 +18,7 @@ Residents book the pool and reserve dinner. The front desk knows who's arriving.
 
 <br />
 
-<img src="docs/screenshots/landing.png?v=3" alt="StayFlow portal picker for Member, Staff, and Management" width="100%" />
+<img src="docs/screenshots/landing.png?v=4" alt="StayFlow portal picker for Member, Staff, and Management" width="100%" />
 
 <br />
 
@@ -52,45 +52,310 @@ The first request of the day can take up to 50 seconds. The API runs on a free R
 
 ## A Look Inside
 
+Three portals, one codebase. Every screen below is a live screenshot of the deployed app — nothing staged.
+
+<div align="center">
+
+**[Member](#member-portal) · [Staff](#staff-portal) · [Management](#management-portal) · [On a phone](#runs-great-on-a-phone)**
+
+</div>
+
+<br />
+
+### Signing in
+
+Each portal has its own sign-in screen — same account system underneath, different tone for who's using it.
+
+<table>
+<tr>
+<td width="33%">
+<img src="docs/screenshots/login-member.png?v=1" width="100%" alt="Member sign-in screen" />
+<sub align="center">Member</sub>
+</td>
+<td width="33%">
+<img src="docs/screenshots/login-staff.png?v=1" width="100%" alt="Staff sign-in screen" />
+<sub align="center">Staff</sub>
+</td>
+<td width="33%">
+<img src="docs/screenshots/login-management.png?v=1" width="100%" alt="Management sign-in screen" />
+<sub align="center">Management</sub>
+</td>
+</tr>
+</table>
+
+<br />
+
+### Member Portal
+
+What a resident sees: book amenities, reserve a table, register a guest, RSVP to events, and manage their household.
+
 <table>
 <tr>
 <td width="50%">
 
-**Resident dashboard**
+**Dashboard**
 <br />
 <sub>Weather, upcoming reservations, community notices, and one-tap shortcuts on the resident's home screen.</sub>
 <br /><br />
-<img src="docs/screenshots/member-dashboard.png?v=3" width="100%" alt="Resident dashboard showing upcoming reservations, weather, and quick actions" />
+<img src="docs/screenshots/member-dashboard.png?v=4" width="100%" alt="Resident dashboard showing upcoming reservations, weather, and quick actions" />
 
 </td>
 <td width="50%">
 
-**Booking amenities**
+**Facilities**
 <br />
 <sub>Browse the pool, gym, screening room, and more. See what's open, what's booked, and reserve a spot in a few taps.</sub>
 <br /><br />
-<img src="docs/screenshots/member-facilities.png?v=3" width="100%" alt="Facilities page with photos, ratings, and booking history" />
+<img src="docs/screenshots/member-facilities.png?v=4" width="100%" alt="Facilities page with photos, ratings, and booking history" />
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-**Runs great on a phone**
+**Facility detail & booking**
 <br />
-<sub>Most residents open this on their phone in the elevator, not at a desk, so it had to feel just as good there.</sub>
+<sub>Photos, amenities, and a live slot picker for the next two weeks — reserving a spot is a couple of taps.</sub>
 <br /><br />
-<img src="docs/screenshots/member-mobile.png?v=3" width="45%" alt="Mobile view of the resident dashboard" />
+<img src="docs/screenshots/member-facility-detail.png?v=1" width="100%" alt="Facility detail page with photo, amenities, and a booking slot picker" />
 
 </td>
 <td width="50%">
 
-**Management dashboard**
+**Dining**
+<br />
+<sub>Every restaurant in the building, with cuisine, price range, and rating up front.</sub>
+<br /><br />
+<img src="docs/screenshots/member-dining.png?v=1" width="100%" alt="Dining page listing the building's restaurants" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Restaurant detail & reservation**
+<br />
+<sub>Party size, seating preference, and a real-time table hold once the front desk confirms.</sub>
+<br /><br />
+<img src="docs/screenshots/member-dining-detail.png?v=1" width="100%" alt="Restaurant detail page with a dining reservation form" />
+
+</td>
+<td width="50%">
+
+**Guests**
+<br />
+<sub>Register a guest, get a QR pass on the spot, and see who's arrived, who's expected, and who's already left.</sub>
+<br /><br />
+<img src="docs/screenshots/member-guests.png?v=1" width="100%" alt="Guest registration page with a QR entry pass" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Events**
+<br />
+<sub>Community events with one-tap RSVP and a live headcount against capacity.</sub>
+<br /><br />
+<img src="docs/screenshots/member-events.png?v=1" width="100%" alt="Community events page with RSVP" />
+
+</td>
+<td width="50%">
+
+**Notices**
+<br />
+<sub>Building announcements, pinned items first, with unread tracking so nothing gets missed.</sub>
+<br /><br />
+<img src="docs/screenshots/member-notices.png?v=1" width="100%" alt="Notices page with pinned and unread announcements" />
+
+</td>
+</tr>
+<tr>
+<td width="100%" colspan="2">
+
+**Profile**
+<br />
+<sub>Personal details, family members, vehicles, emergency contacts, and account security — all one page, tabbed.</sub>
+<br /><br />
+<img src="docs/screenshots/member-profile.png?v=1" width="100%" alt="Resident profile page with personal, family, and vehicle tabs" />
+
+</td>
+</tr>
+</table>
+
+<br />
+
+### Staff Portal
+
+The front-desk console: confirm bookings, check guests in and out, and keep facility status current in real time.
+
+<table>
+<tr>
+<td width="50%">
+
+**Dashboard**
+<br />
+<sub>What needs attention right now — pending approvals, today's arrivals, and facility status at a glance.</sub>
+<br /><br />
+<img src="docs/screenshots/staff-dashboard.png?v=1" width="100%" alt="Staff dashboard with pending approvals and today's activity" />
+
+</td>
+<td width="50%">
+
+**Bookings**
+<br />
+<sub>Every facility booking across the building, with a one-tap approve or decline.</sub>
+<br /><br />
+<img src="docs/screenshots/staff-bookings.png?v=1" width="100%" alt="Staff bookings queue with approve and decline actions" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Dining**
+<br />
+<sub>Confirm dining reservations and mark tables as arrived, right from the same screen the host runs the floor from.</sub>
+<br /><br />
+<img src="docs/screenshots/staff-dining.png?v=1" width="100%" alt="Staff dining reservations screen" />
+
+</td>
+<td width="50%">
+
+**Facilities**
+<br />
+<sub>Flip a facility to maintenance or closed instantly — residents see the change the moment it happens.</sub>
+<br /><br />
+<img src="docs/screenshots/staff-facilities.png?v=1" width="100%" alt="Staff facility status management screen" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Guests**
+<br />
+<sub>Scan a pass or search by name to check a guest in or out at the door.</sub>
+<br /><br />
+<img src="docs/screenshots/staff-guests.png?v=1" width="100%" alt="Staff guest check-in and check-out screen" />
+
+</td>
+<td width="50%">
+
+**Events**
+<br />
+<sub>See who's RSVP'd to an upcoming event and track it against capacity.</sub>
+<br /><br />
+<img src="docs/screenshots/staff-events.png?v=1" width="100%" alt="Staff events screen with RSVP counts" />
+
+</td>
+</tr>
+</table>
+
+<br />
+
+### Management Portal
+
+Everything Staff can do, plus the resident/staff directory, analytics, and full administrative control.
+
+<table>
+<tr>
+<td width="50%">
+
+**Dashboard**
 <br />
 <sub>Total residents, today's bookings, dining revenue, facility usage, and guest traffic on one screen.</sub>
 <br /><br />
-<img src="docs/screenshots/management-dashboard.png?v=3" width="100%" alt="Management analytics dashboard with charts for revenue, utilization, and engagement" />
+<img src="docs/screenshots/management-dashboard.png?v=4" width="100%" alt="Management dashboard with occupancy and activity KPIs" />
 
+</td>
+<td width="50%">
+
+**Analytics**
+<br />
+<sub>Trend charts for revenue, utilization, and engagement over time — the numbers behind the dashboard.</sub>
+<br /><br />
+<img src="docs/screenshots/management-analytics.png?v=1" width="100%" alt="Management analytics dashboard with revenue and utilization charts" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Users**
+<br />
+<sub>The resident and staff directory, with login status and a one-click "issue login" for a new resident.</sub>
+<br /><br />
+<img src="docs/screenshots/management-users.png?v=1" width="100%" alt="Management users directory with login status" />
+
+</td>
+<td width="50%">
+
+**Facilities**
+<br />
+<sub>Add, edit, or retire an amenity — photos, capacity, hours, and status, all from one form.</sub>
+<br /><br />
+<img src="docs/screenshots/management-facilities.png?v=1" width="100%" alt="Management facility administration screen" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Restaurants**
+<br />
+<sub>Manage the building's dining venues — cuisine, price range, max party size, and photos.</sub>
+<br /><br />
+<img src="docs/screenshots/management-restaurants.png?v=1" width="100%" alt="Management restaurant administration screen" />
+
+</td>
+<td width="50%">
+
+**Events**
+<br />
+<sub>Create a community event with a photo, capacity, and location picker.</sub>
+<br /><br />
+<img src="docs/screenshots/management-events.png?v=1" width="100%" alt="Management event creation screen" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Notices**
+<br />
+<sub>Post a building-wide announcement, pin it, and it appears on every resident's dashboard instantly.</sub>
+<br /><br />
+<img src="docs/screenshots/management-notices.png?v=1" width="100%" alt="Management notice authoring screen" />
+
+</td>
+<td width="50%">
+
+**Reports**
+<br />
+<sub>Exportable reports on bookings, dining, and guest activity — CSV-injection-safe by design.</sub>
+<br /><br />
+<img src="docs/screenshots/management-reports.png?v=1" width="100%" alt="Management reports and export screen" />
+
+</td>
+</tr>
+</table>
+
+<br />
+
+### Runs great on a phone
+
+Most residents open this on their phone in the elevator, not at a desk, so it had to feel just as good there.
+
+<table>
+<tr>
+<td width="50%">
+<img src="docs/screenshots/member-mobile.png?v=4" width="70%" alt="Mobile view of the resident dashboard" />
+<br /><sub>Dashboard</sub>
+</td>
+<td width="50%">
+<img src="docs/screenshots/member-facilities-mobile.png?v=1" width="70%" alt="Mobile view of the facilities list, card layout" />
+<br /><sub>Facilities — card layout replaces the desktop table below a breakpoint</sub>
 </td>
 </tr>
 </table>
