@@ -67,14 +67,21 @@ jobs:
           cache: npm
 
       - run: npm ci --prefix server
+      # Both steps run from server/ so `npx` resolves the Prisma pinned in
+      # server/package.json. From the repo root there is no local prisma, so npx
+      # downloaded the latest major instead — which no longer accepts `url` and
+      # `directUrl` in a schema file and failed validation before touching the
+      # database.
       - name: Apply every migration from empty
-        run: npx prisma migrate deploy --schema=server/prisma/schema.prisma
+        working-directory: server
+        run: npx prisma migrate deploy
       # A plain `migrate diff` cannot be used here: the partial index is
       # deliberately absent from the schema file, so diff would always report it
       # as drift. Asserting the index exists checks the thing that matters.
       - name: Assert the double-booking index survived
+        working-directory: server
         run: |
-          npx prisma db execute --schema=server/prisma/schema.prisma --stdin <<'SQL'
+          npx prisma db execute --stdin <<'SQL'
           DO $$
           BEGIN
             IF NOT EXISTS (

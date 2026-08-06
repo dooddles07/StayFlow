@@ -11,13 +11,11 @@ import { defineConfig } from 'prisma/config'
 // same repo-root file server/src/config/env.js reads has to be loaded here by
 // module-relative path — resolving against process.cwd() would find it when the
 // CLI is run from the repo root and miss it when run from server/.
+//
+// dotenv never overwrites a variable that is already set, so a real environment
+// (Render, CI) still wins over this file.
 const here = path.dirname(fileURLToPath(import.meta.url))
-for (const candidate of [
-  path.resolve(here, '../.env'), // repo root
-  path.resolve(here, '.env'), // server/ — legacy location, still honoured
-]) {
-  dotenv.config({ path: candidate, quiet: true })
-}
+dotenv.config({ path: path.resolve(here, '../.env'), quiet: true })
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
