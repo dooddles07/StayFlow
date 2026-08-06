@@ -81,7 +81,7 @@ jobs:
       - name: Assert the double-booking index survived
         working-directory: server
         run: |
-          npx prisma db execute --stdin <<'SQL'
+          npx prisma db execute --schema=prisma/schema.prisma --stdin <<'SQL'
           DO $$
           BEGIN
             IF NOT EXISTS (
