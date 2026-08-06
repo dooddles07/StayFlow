@@ -49,10 +49,11 @@ Single-tenant web platform, three role-gated portals on one app:
 
 ## Roadmap / future improvements
 
-- Configure `RESEND_API_KEY` in the production environment. The mailer integration itself is built, just not turned on; without a key it falls back to console-logging reset and email-change links.
+Shipped since this list was first written — see [SECURITY.md](SECURITY.md) and [HANDOVER.md](HANDOVER.md) for detail: CI gate (lint + typecheck + coverage-gated tests + build + migration-drift check + secret scan), Origin-check CSRF middleware, and observability (structured JSON logs, request IDs, Sentry error tracking on API + browser).
+
+Still open:
+
 - Payment/billing if monetizing bookings or dining.
-- Anti-CSRF tokens for cookie-based mutations.
-- CI gate (lint + test + typecheck).
-- Integration/E2E test suite + coverage thresholds.
-- Background jobs (reminders, guest-pass expiry) via queue/scheduler.
-- Observability: structured logs, tracing, error tracking.
+- Background jobs (reminders, guest-pass expiry) via a real queue/scheduler — the only recurring task today is an in-process hourly retention sweep, which skips a cycle if the free-tier instance is idle/suspended.
+- Redis-backed rate limiting once more than one API instance runs (current counters are in-memory, correct only on a single instance).
+- Load testing — no endpoint throughput has been established.

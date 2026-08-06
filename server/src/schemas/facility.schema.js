@@ -12,7 +12,7 @@ export const facilityCreateSchema = z.object({
   location: nonEmptyString,
   rating: z.number(),
   status: z.enum(['OPEN', 'MAINTENANCE', 'CLOSED']).optional(),
-  statusReason: z.string().optional(),
+  statusReason: z.string().nullable().optional(),
 })
 
 // setFacilityStatus (frontend) PUTs only { status, statusReason } — update must

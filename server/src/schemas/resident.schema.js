@@ -39,11 +39,11 @@ export const residentSelfUpdateSchema = z.object({
   emergencyName: nonEmptyString.optional(),
   emergencyRelation: nonEmptyString.optional(),
   emergencyPhone: nonEmptyString.optional(),
-  emergency2Name: z.string().optional(),
-  emergency2Relation: z.string().optional(),
-  emergency2Phone: z.string().optional(),
+  emergency2Name: z.string().nullable().optional(),
+  emergency2Relation: z.string().nullable().optional(),
+  emergency2Phone: z.string().nullable().optional(),
   avatarSeed: nonEmptyString.optional(),
-  avatarStyle: z.string().optional(),
+  avatarStyle: z.string().nullable().optional(),
 })
 
 // name/relation required non-empty (already enforced inline via requireString);

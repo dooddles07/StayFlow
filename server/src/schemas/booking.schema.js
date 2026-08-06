@@ -7,7 +7,7 @@ export const bookingCreateSchema = z.object({
   date: dateInput,
   timeSlot: nonEmptyString,
   partySize: positiveInt,
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 export const bookingUpdateSchema = z.object({

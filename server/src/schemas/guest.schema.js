@@ -5,7 +5,7 @@ export const guestCreateSchema = z.object({
   hostResidentId: nonEmptyString,
   name: nonEmptyString,
   purpose: nonEmptyString,
-  vehiclePlate: z.string().optional(),
+  vehiclePlate: z.string().nullable().optional(),
   arrivalDate: dateInput,
   arrivalTime: nonEmptyString,
 })
@@ -17,7 +17,7 @@ export const guestUpdateSchema = z.object({
   hostResidentId: nonEmptyString.optional(),
   name: nonEmptyString.optional(),
   purpose: nonEmptyString.optional(),
-  vehiclePlate: z.string().optional(),
+  vehiclePlate: z.string().nullable().optional(),
   arrivalDate: dateInput.optional(),
   arrivalTime: nonEmptyString.optional(),
   status: z

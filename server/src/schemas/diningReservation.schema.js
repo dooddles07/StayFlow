@@ -7,8 +7,8 @@ export const diningReservationCreateSchema = z.object({
   date: dateInput,
   time: nonEmptyString,
   partySize: positiveInt,
-  occasion: z.string().optional(),
-  dietary: z.string().optional(),
+  occasion: z.string().nullable().optional(),
+  dietary: z.string().nullable().optional(),
   seating: nonEmptyString,
 })
 
